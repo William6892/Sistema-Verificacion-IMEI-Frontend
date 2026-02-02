@@ -1,4 +1,4 @@
-// Login.tsx - VERSIÓN CORREGIDA CON SERVICIOS
+// Login.tsx - VERSIÓN MEJORADA CON TIMEOUT Y MEJORES MENSAJES
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -17,6 +17,7 @@ const Login: React.FC = () => {
 
     try {
       // Usar el servicio de autenticación
+      console.log('🔐 Intentando login...');
       await authService.login(username, password);
       
       // Si llega aquí, el login fue exitoso
@@ -26,36 +27,43 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error('❌ Error en login:', err);
       
+      // 🔥 NUEVO: Manejar timeout específicamente
+      if (err.code === 'ECONNABORTED' && err.message.includes('timeout')) {
+        setError('⏱️ El servidor está tardando mucho en responder.\n' +
+                'Esto es normal en la primera petición (el servidor se despierta).\n' +
+                '⚡ Por favor, intenta de nuevo en 30 segundos.');
+      }
       // Manejo de errores específicos
-      if (err.response) {
+      else if (err.response) {
         // El backend respondió con un error
         switch (err.response.status) {
           case 401:
-            setError('Usuario o contraseña incorrectos');
+            setError('❌ Usuario o contraseña incorrectos');
             break;
           case 404:
-            setError('Endpoint de login no encontrado. Verifica la URL del backend.');
+            setError('🔍 Endpoint de login no encontrado. Verifica la URL del backend.');
             break;
           case 500:
-            setError('Error interno del servidor. Contacta al administrador.');
+            setError('🔧 Error interno del servidor.\n' + 
+                    (err.response.data?.message || 'Contacta al administrador.'));
             break;
           default:
             setError(`Error ${err.response.status}: ${err.response.data?.message || 'Error desconocido'}`);
         }
       } else if (err.request) {
         // No hubo respuesta del backend
-        setError('No se puede conectar al servidor. Verifica que:');
-        setError(prev => prev + '\n2. El puerto  esté disponible');
+        setError('🌐 No se puede conectar al servidor.\n' +
+                'Verifica que el backend esté funcionando:\n' +
+                '• URL: https://imei-api-p18o.onrender.com\n' +
+                '• El servidor puede estar iniciando (espera 1 minuto)');
       } else {
         // Error en la configuración de la petición
-        setError('Error en la petición: ' + err.message);
+        setError('⚠️ Error en la petición: ' + err.message);
       }
     } finally {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div style={{
@@ -154,6 +162,35 @@ const Login: React.FC = () => {
             />
           </div>
           
+          {/* 🔥 NUEVO: Mensaje de carga mejorado */}
+          {loading && (
+            <div style={{
+              background: '#e6f7ff',
+              border: '1px solid #91d5ff',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                border: '3px solid #91d5ff',
+                borderTop: '3px solid #1890ff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <div style={{ fontSize: '14px', color: '#0050b3' }}>
+                <strong>Conectando...</strong>
+                <div style={{ fontSize: '12px', marginTop: '2px', color: '#096dd9' }}>
+                  La primera vez puede tardar hasta 1 minuto
+                </div>
+              </div>
+            </div>
+          )}
+          
           {error && (
             <div style={{
               background: '#fff2f0',
@@ -165,11 +202,14 @@ const Login: React.FC = () => {
               fontSize: '14px'
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <span style={{ marginRight: '8px' }}>⚠️</span>
-                <div>
-                  <strong>Error:</strong> 
+                <span style={{ marginRight: '8px', fontSize: '16px' }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <strong>Error:</strong>
                   {error.split('\n').map((line, index) => (
-                    <div key={index} style={{ marginTop: index > 0 ? '4px' : '0' }}>
+                    <div key={index} style={{ 
+                      marginTop: index > 0 ? '4px' : '4px',
+                      lineHeight: '1.4'
+                    }}>
                       {line}
                     </div>
                   ))}
@@ -184,7 +224,7 @@ const Login: React.FC = () => {
             style={{
               width: '100%',
               padding: '16px',
-              background: !username || !password ? '#f5f5f5' : loading ? '#95d475' : '#1890ff',
+              background: !username || !password ? '#f5f5f5' : loading ? '#52c41a' : '#1890ff',
               color: !username || !password ? '#bfbfbf' : 'white',
               border: 'none',
               borderRadius: '8px',
@@ -221,7 +261,7 @@ const Login: React.FC = () => {
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }}></div>
-                Conectando...
+                Iniciando sesión...
               </>
             ) : (
               'Ingresar al sistema'
