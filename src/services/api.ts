@@ -1,8 +1,11 @@
-// src/services/api.ts - VERSIÓN LIMPIA
 import axios from 'axios';
 
-// URL base de tu backend .NET - IMPORTANTE: Puerto 5000
-const API_URL = 'http://localhost:5000/api';
+// URL base de tu backend .NET - PRODUCCIÓN
+// Usar variable de entorno o URL directa de Render
+const API_URL = process.env.REACT_APP_API_URL 
+  || 'https://imei-api-p18o.onrender.com/api';
+
+console.log('🔗 Conectando a API:', API_URL);
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
