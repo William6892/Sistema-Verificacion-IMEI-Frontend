@@ -1,6 +1,6 @@
 // src/App.tsx - Con wrappers y UserManagement
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import MainLayout from './components/Layout/MainLayout';
 import Dashboard from './components/Home/Dashboard';
