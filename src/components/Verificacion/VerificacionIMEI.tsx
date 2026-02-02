@@ -1,6 +1,6 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - CÁMARA EN LÍNEA
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN RESPONSIVE CON CÁMARA MÓVIL OPTIMIZADA
 import React, { useState, useEffect, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import './Verificacion.css';
 
 interface VerificacionIMEIProps {
@@ -15,16 +15,30 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   const [error, setError] = useState('');
   const [showCamera, setShowCamera] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const cameraContainerRef = useRef<HTMLDivElement>(null);
 
-  // Inicializar scanner cuando se muestra la cámara
+  // Detectar si es dispositivo móvil
   useEffect(() => {
-    if (showCamera && cameraContainerRef.current && !scannerRef.current) {
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const smallScreen = window.innerWidth <= 768;
+      setIsMobile(mobile || smallScreen);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Manejar scanner de cámara
+  useEffect(() => {
+    if (showCamera) {
       startScanner();
-    } else if (!showCamera && scannerRef.current) {
+    } else {
       stopScanner();
     }
     
@@ -33,61 +47,115 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, [showCamera]);
 
-  const startScanner = () => {
-    if (scannerRef.current) return;
+  const startScanner = async () => {
+    if (scannerRef.current || !cameraContainerRef.current) return;
     
     try {
-      scannerRef.current = new Html5QrcodeScanner(
-        "camera-container",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
-          aspectRatio: 1.7777778, // 16:9
-        },
-        false
-      );
+      const html5QrCode = new Html5Qrcode("camera-container");
+      scannerRef.current = html5QrCode;
       
-      scannerRef.current.render(
+      // Configuración optimizada para móviles
+      const qrboxSize = isMobile 
+        ? Math.min(250, window.innerWidth - 80)
+        : 300;
+      
+      const config = {
+        fps: 10,
+        qrbox: {
+          width: qrboxSize,
+          height: Math.floor(qrboxSize * 0.6)
+        },
+        aspectRatio: 1.777778,
+        disableFlip: false,
+      };
+
+      // Preferir cámara trasera en móviles
+      const cameraConfig = isMobile 
+        ? { facingMode: "environment" }
+        : { facingMode: "user" };
+
+      await html5QrCode.start(
+        cameraConfig,
+        config,
         (decodedText) => {
           handleScannedCode(decodedText);
         },
-        (error) => {
-          console.log('Error escaneando:', error);
+        (errorMessage) => {
+          // Silenciar errores de escaneo normal
         }
       );
       
       setScanning(true);
-    } catch (err) {
-      console.error('Error inicializando scanner:', err);
-      setError('No se pudo iniciar la cámara. Verifica los permisos.');
+      setError('');
+      
+    } catch (err: any) {
+      console.error('Error inicializando cámara:', err);
+      
+      let errorMsg = '❌ No se pudo iniciar la cámara.';
+      
+      if (err.name === 'NotAllowedError') {
+        errorMsg = '🚫 Permiso de cámara denegado. Por favor, permite el acceso en la configuración de tu navegador.';
+      } else if (err.name === 'NotFoundError') {
+        errorMsg = '📵 No se encontró ninguna cámara disponible.';
+      } else if (err.name === 'NotReadableError') {
+        errorMsg = '⚠️ La cámara está siendo usada por otra aplicación.';
+      } else if (err.name === 'OverconstrainedError') {
+        errorMsg = '🔄 Error de configuración. Intenta con otra cámara.';
+      }
+      
+      setError(errorMsg);
       setShowCamera(false);
+      setScanning(false);
     }
   };
 
-  const stopScanner = () => {
+  const stopScanner = async () => {
     if (scannerRef.current) {
-      scannerRef.current.clear();
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch (err) {
+        console.error('Error deteniendo scanner:', err);
+      }
       scannerRef.current = null;
     }
     setScanning(false);
   };
 
-  const handleScannedCode = (code: string) => {
-    setScanResult(code);
+  const handleScannedCode = async (code: string) => {
+    console.log('Código escaneado:', code);
     
-    // Extraer IMEI del código escaneado
+    // Intentar extraer IMEI (15-16 dígitos)
     const imeiMatch = code.match(/\b\d{15,16}\b/);
+    
     if (imeiMatch) {
       const scannedImei = imeiMatch[0];
       setImei(scannedImei);
-      setShowCamera(false); // Cerrar cámara
       
-      // Auto-verificar después de escanear
+      // Detener scanner
+      await stopScanner();
+      setShowCamera(false);
+      
+      // Vibración de éxito en móviles
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      
+      // Auto-verificar
       setTimeout(() => {
         handleVerificar(scannedImei);
-      }, 500);
+      }, 300);
+      
     } else {
-      setError('No se encontró un IMEI válido en el código escaneado.');
+      // Buscar cualquier secuencia larga de números
+      const longNumberMatch = code.match(/\d{10,}/);
+      if (longNumberMatch) {
+        const possibleImei = longNumberMatch[0].substring(0, 16);
+        setImei(possibleImei);
+        setError('⚠️ Número detectado. Verifica que sea correcto.');
+      }
     }
   };
 
@@ -112,6 +180,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       // SIMULAR LLAMADA A API - REEMPLAZA CON TU API REAL
       const mockResult = await mockVerificarIMEI(imeiToVerify);
       setResultado(mockResult);
+      
+      // Vibración de feedback en móviles
+      if (navigator.vibrate) {
+        navigator.vibrate(mockResult.valido ? [100] : [200, 100, 200]);
+      }
+      
     } catch (err: any) {
       setError(err.message || 'Error al verificar IMEI');
     } finally {
@@ -119,12 +193,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
   };
 
-  // Función de ejemplo para simular API
+  // Función mock para simular API
   const mockVerificarIMEI = async (imei: string): Promise<any> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         const imeiLastDigit = parseInt(imei.slice(-1));
-        const isValid = imeiLastDigit % 3 !== 0; // 66% válidos
+        const isValid = imeiLastDigit % 3 !== 0;
         
         if (isValid) {
           resolve({
@@ -149,22 +223,19 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     handleVerificar();
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
     setImei('');
     setResultado(null);
     setError('');
-    setScanResult('');
     if (showCamera) {
+      await stopScanner();
       setShowCamera(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (!/^\d$/.test(e.key) && 
-        e.key !== 'Backspace' && 
-        e.key !== 'Delete' && 
-        e.key !== 'Tab' &&
-        e.key !== 'Enter') {
+        !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
     }
     
@@ -188,7 +259,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   };
 
   const formatIMEI = (imei: string) => {
-    if (imei.length <= 15) return imei;
+    if (imei.length <= 8) return imei;
     const parts = [
       imei.substring(0, 2),
       imei.substring(2, 8),
@@ -208,211 +279,234 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
       {/* Formulario principal */}
       <div className="verificacion-card">
-        {/* Sección de cámara - EN LÍNEA */}
+        {/* Sección de cámara */}
         {showCamera ? (
-          <div className="camera-inline-section">
-            <div className="camera-header-inline">
-              <h3>📷 Escanear IMEI con cámara</h3>
+          <div className="camera-active-section">
+            <div className="camera-header">
+              <h3>📷 Escanear IMEI</h3>
               <button 
-                onClick={() => {
-                  stopScanner();
+                onClick={async () => {
+                  await stopScanner();
                   setShowCamera(false);
                 }}
-                className="btn-close-camera-inline"
+                className="btn-close-camera"
+                aria-label="Cerrar cámara"
               >
-                ✕ Cerrar cámara
+                ✕
               </button>
             </div>
             
-            <div className="camera-preview-container">
+            <div className="camera-container-wrapper">
               <div 
                 id="camera-container" 
                 ref={cameraContainerRef}
-                className="camera-preview"
+                className="camera-preview-box"
               />
               
-              <div className="camera-instructions-inline">
-                <div className="scan-guide">
-                  <div className="scan-box"></div>
+              {scanning && (
+                <div className="camera-overlay">
+                  <div className="scan-frame">
+                    <div className="scan-corner scan-corner-tl"></div>
+                    <div className="scan-corner scan-corner-tr"></div>
+                    <div className="scan-corner scan-corner-bl"></div>
+                    <div className="scan-corner scan-corner-br"></div>
+                    <div className="scan-line"></div>
+                  </div>
+                  
+                  <div className="camera-instructions">
+                    <p className="instruction-main">
+                      📸 Enfoca el código de barras o IMEI
+                    </p>
+                    <p className="instruction-sub">
+                      La detección es automática
+                    </p>
+                  </div>
                 </div>
-                <p className="instruction-text">
-                  📸 Enfoca el código de barras o número IMEI dentro del cuadro
-                </p>
-                <p className="instruction-subtext">
-                  💡 La cámara detectará automáticamente el IMEI
-                </p>
-              </div>
-            </div>
-            
-            <div className="camera-actions-inline">
-              <button
-                onClick={() => {
-                  stopScanner();
-                  setShowCamera(false);
-                }}
-                className="btn-cancel-scan"
-              >
-                Cancelar escaneo
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Botón para abrir cámara */
-          <div className="camera-section">
-            <button
-              onClick={() => {
-                setShowCamera(true);
-                setError('');
-              }}
-              className="btn-open-camera-inline"
-            >
-              <span className="btn-icon">📷</span>
-              Usar cámara para escanear IMEI
-            </button>
-            
-            <div className="option-divider">
-              <span className="divider-text">O ingresa manualmente</span>
-            </div>
-          </div>
-        )}
-
-        {/* Input manual - Siempre visible */}
-        <form onSubmit={handleSubmit} className="verificacion-form">
-          <div className="form-group">
-            <label htmlFor="imei">
-              <span className="label-icon">🔢</span>
-              Número IMEI
-            </label>
-            
-            <div className="imei-input-wrapper">
-              <input
-                id="imei"
-                type="text"
-                value={imei}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  setImei(value);
-                  if (error) setError('');
-                }}
-                onKeyDown={handleKeyPress}
-                placeholder="Ej: 358879090123456"
-                maxLength={20}
-                className="imei-input"
-                disabled={loading}
-                inputMode="numeric"
-              />
-              
-              {imei && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="btn-clear-input"
-                  title="Limpiar"
-                >
-                  ×
-                </button>
               )}
             </div>
             
-            <div className="imei-hints">
-              <span>💡 Puedes escanear con la cámara o teclear *#06# en el teléfono</span>
-            </div>
+            <button
+              onClick={async () => {
+                await stopScanner();
+                setShowCamera(false);
+              }}
+              className="btn-cancel-camera"
+            >
+              Cancelar escaneo
+            </button>
           </div>
+        ) : (
+          <>
+            {/* Botón para abrir cámara */}
+            <div className="camera-trigger-section">
+              <button
+                onClick={() => {
+                  setShowCamera(true);
+                  setError('');
+                }}
+                className="btn-camera-trigger"
+                type="button"
+              >
+                <svg className="camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Escanear con cámara</span>
+              </button>
+              
+              <div className="divider-with-text">
+                <span>O ingresa manualmente</span>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading || !imei.trim() || imei.length < 10}
-            className={`btn-verificar ${loading ? 'loading' : ''}`}
-          >
-            {loading ? 'VERIFICANDO...' : 'VERIFICAR IMEI'}
-          </button>
-        </form>
+            {/* Formulario de ingreso manual */}
+            <form onSubmit={handleSubmit} className="verification-form">
+              <div className="form-field">
+                <label htmlFor="imei" className="field-label">
+                  🔢 Número IMEI
+                </label>
+                
+                <div className="input-with-clear">
+                  <input
+                    id="imei"
+                    type="text"
+                    value={imei}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      setImei(value);
+                      if (error) setError('');
+                    }}
+                    onKeyDown={handleKeyPress}
+                    placeholder="358879090123456"
+                    maxLength={20}
+                    className="imei-field"
+                    disabled={loading}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                  />
+                  
+                  {imei && (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      className="btn-clear-field"
+                      aria-label="Limpiar"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                
+                <div className="field-hint">
+                  💡 Marca *#06# en tu teléfono para ver el IMEI
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !imei.trim() || imei.length < 10}
+                className={`btn-submit ${loading ? 'btn-loading' : ''}`}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Verificando...
+                  </>
+                ) : (
+                  'Verificar IMEI'
+                )}
+              </button>
+            </form>
+          </>
+        )}
 
         {/* Mensaje de error */}
-        {error && (
-          <div className="error-message">
-            <span className="error-icon">⚠️</span>
-            {error}
+        {error && !showCamera && (
+          <div className="alert alert-error">
+            <span className="alert-icon">⚠️</span>
+            <span className="alert-text">{error}</span>
           </div>
         )}
 
         {/* Resultado */}
-        {resultado && (
-          <div className={`resultado-card ${resultado.valido ? 'valido' : 'invalido'}`}>
-            <div className="resultado-header">
-              <div className="status-icon">
+        {resultado && !showCamera && (
+          <div className={`result-card ${resultado.valido ? 'result-valid' : 'result-invalid'}`}>
+            <div className="result-status">
+              <div className="status-badge">
                 {resultado.valido ? '✅' : '❌'}
               </div>
-              <div className="status-info">
-                <h3>{resultado.valido ? 'IMEI AUTORIZADO' : 'IMEI NO REGISTRADO'}</h3>
-                <p className="imei-display">{formatIMEI(imei)}</p>
+              <div className="status-text">
+                <h3 className="status-title">
+                  {resultado.valido ? 'IMEI AUTORIZADO' : 'IMEI NO REGISTRADO'}
+                </h3>
+                <p className="status-imei">{formatIMEI(imei)}</p>
               </div>
             </div>
             
             {resultado.valido ? (
-              <div className="resultado-details">
-                <div className="detail-item">
-                  <span className="detail-label">👤 Propietario:</span>
-                  <span className="detail-value">{resultado.personaNombre}</span>
+              <div className="result-info">
+                <div className="info-row">
+                  <span className="info-label">👤 Propietario</span>
+                  <span className="info-value">{resultado.personaNombre}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">🏢 Empresa:</span>
-                  <span className="detail-value">{resultado.empresaNombre}</span>
+                <div className="info-row">
+                  <span className="info-label">🏢 Empresa</span>
+                  <span className="info-value">{resultado.empresaNombre}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">📅 Registrado:</span>
-                  <span className="detail-value">{formatDate(resultado.fechaRegistro)}</span>
+                <div className="info-row">
+                  <span className="info-label">📅 Registrado</span>
+                  <span className="info-value">{formatDate(resultado.fechaRegistro)}</span>
                 </div>
               </div>
             ) : (
-              <div className="resultado-details">
-                <p className="error-description">
-                  El IMEI no está registrado en la base de datos.
-                  {userRole === 'Admin' && (
-                    <button className="btn-register-admin">
-                      📝 Registrar este IMEI
-                    </button>
-                  )}
-                </p>
+              <div className="result-message">
+                <p>El IMEI no está registrado en la base de datos.</p>
+                {userRole === 'Admin' && (
+                  <button className="btn-register-new">
+                    📝 Registrar este IMEI
+                  </button>
+                )}
               </div>
             )}
             
-            <div className="resultado-actions">
-              <button onClick={handleClear} className="btn-nueva-verificacion">
-                <span className="btn-icon">🔄</span>
-                Nueva Verificación
-              </button>
-            </div>
+            <button onClick={handleClear} className="btn-reset">
+              🔄 Nueva Verificación
+            </button>
           </div>
         )}
       </div>
 
-      {/* Información de ayuda */}
-      <div className="help-section">
-        <h3>📋 ¿Dónde encontrar el IMEI?</h3>
-        <div className="help-grid">
-          <div className="help-item">
-            <div className="help-icon">1️⃣</div>
-            <div className="help-text">
-              <strong>Tecla de marcado:</strong> *#06#
+      {/* Sección de ayuda */}
+      <div className="help-panel">
+        <h3 className="help-title">📋 ¿Dónde encontrar el IMEI?</h3>
+        <div className="help-items">
+          <div className="help-card">
+            <span className="help-number">1</span>
+            <div className="help-content">
+              <strong>Marcador</strong>
+              <p>*#06#</p>
             </div>
           </div>
-          <div className="help-item">
-            <div className="help-icon">2️⃣</div>
-            <div className="help-text">
-              <strong>Configuración:</strong> Ajustes → Acerca del teléfono
+          <div className="help-card">
+            <span className="help-number">2</span>
+            <div className="help-content">
+              <strong>Ajustes</strong>
+              <p>Acerca del teléfono</p>
             </div>
           </div>
-          <div className="help-item">
-            <div className="help-icon">3️⃣</div>
-            <div className="help-text">
-              <strong>Caja original:</strong> Etiqueta del empaque
+          <div className="help-card">
+            <span className="help-number">3</span>
+            <div className="help-content">
+              <strong>Caja</strong>
+              <p>Etiqueta del empaque</p>
             </div>
           </div>
-          <div className="help-item">
-            <div className="help-icon">4️⃣</div>
-            <div className="help-text">
-              <strong>Batería:</strong> Debajo (si es removible)
+          <div className="help-card">
+            <span className="help-number">4</span>
+            <div className="help-content">
+              <strong>Batería</strong>
+              <p>Debajo (si es removible)</p>
             </div>
           </div>
         </div>

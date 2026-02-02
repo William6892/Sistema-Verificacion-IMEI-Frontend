@@ -8,12 +8,12 @@ console.log('🔗 Conectando a API:', BASE_URL);
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,  // IMPORTANTE: Agregar /api aquí
+  baseURL: `${BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 15000,
+  timeout: 120000, // 🔥 CAMBIADO: 2 minutos en lugar de 15 segundos
 });
 
 // Interceptor para agregar el token a todas las peticiones
@@ -45,6 +45,12 @@ api.interceptors.response.use(
     });
     
     const status = error.response?.status;
+    
+    // 🔥 NUEVO: Manejar timeout
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      alert('⏱️ El servidor está tardando mucho en responder. Puede estar despertando (servicios gratuitos se duermen). Por favor, intenta de nuevo en unos segundos.');
+      return Promise.reject(error);
+    }
     
     // Si el error es 401 (no autorizado), redirigir al login
     if (status === 401) {
