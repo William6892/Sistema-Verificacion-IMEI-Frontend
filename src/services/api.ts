@@ -1,15 +1,14 @@
 import axios from 'axios';
 
-// URL base de tu backend .NET - PRODUCCIÓN
-// Usar variable de entorno o URL directa de Render
-const API_URL = process.env.REACT_APP_API_URL 
-  || 'https://imei-api-p18o.onrender.com/api';
+// Obtener URL base desde variable de entorno
+const BASE_URL = process.env.REACT_APP_API_URL 
+  || 'http://localhost:5000';  // Fallback para desarrollo local
 
-console.log('🔗 Conectando a API:', API_URL);
+console.log('🔗 Conectando a API:', BASE_URL);
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${BASE_URL}/api`,  // IMPORTANTE: Agregar /api aquí
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -24,6 +23,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
   (error) => {
@@ -37,6 +37,13 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.error('❌ Error en API:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data
+    });
+    
     const status = error.response?.status;
     
     // Si el error es 401 (no autorizado), redirigir al login
@@ -44,13 +51,12 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Solo redirigir si no estamos ya en login
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }
     
-    // Si es error 403 (prohibido), mostrar mensaje específico
+    // Si es error 403 (prohibido)
     if (status === 403) {
       alert('Acceso denegado. No tienes permisos suficientes.');
     }
@@ -58,6 +64,11 @@ api.interceptors.response.use(
     // Si es error 500 (error interno del servidor)
     if (status === 500) {
       alert('Error interno del servidor. Por favor, contacta al administrador.');
+    }
+    
+    // Si es error de red
+    if (error.code === 'ERR_NETWORK') {
+      alert('Error de conexión. Verifica que el servidor esté funcionando.');
     }
     
     return Promise.reject(error);
