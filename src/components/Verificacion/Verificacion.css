@@ -1,98 +1,214 @@
-/* src/components/Verificacion/Verificacion.css - VERSIÓN RESPONSIVE OPTIMIZADA */
+/* src/components/Verificacion/Verificacion.css - SAMSUNG STYLE MEJORADO */
 
 /* ========================================
-   VARIABLES Y RESET
+   VARIABLES SAMSUNG MEJORADAS
    ======================================== */
 :root {
-  --primary: #1890ff;
-  --primary-dark: #0050b3;
-  --success: #52c41a;
-  --success-dark: #389e0d;
-  --danger: #ff4d4f;
-  --danger-dark: #cf1322;
-  --warning: #faad14;
-  --gray-50: #fafafa;
-  --gray-100: #f5f5f5;
-  --gray-200: #e8e8e8;
-  --gray-300: #d9d9d9;
-  --gray-600: #595959;
-  --gray-800: #262626;
-  --white: #ffffff;
+  /* Samsung Colors - Azul principal */
+  --samsung-blue: #1428a0;
+  --samsung-blue-light: #1e40ff;
+  --samsung-blue-medium: #2d4ae3;
+  --samsung-blue-dark: #0d1b66;
+  --samsung-blue-bg: #f0f4ff;
+  --samsung-gradient: linear-gradient(135deg, #1428a0 0%, #1e40ff 50%, #4a7dff 100%);
+  --samsung-gradient-light: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f8faff 100%);
   
+  /* Sistema de colores */
+  --samsung-white: #ffffff;
+  --samsung-gray-light: #f9fafb;
+  --samsung-gray: #f0f4f8;
+  --samsung-gray-medium: #e1e8f0;
+  --samsung-gray-dark: #d1d9e6;
+  --samsung-text: #1a202c;
+  --samsung-text-medium: #4a5568;
+  --samsung-text-light: #718096;
+  
+  /* Estados */
+  --samsung-success: #38b2ac;
+  --samsung-error: #e53e3e;
+  --samsung-warning: #ed8936;
+  
+  /* Border Radius */
   --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
   
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+  /* Shadows - Más sutiles */
+  --shadow-sm: 0 1px 3px rgba(20, 40, 160, 0.05);
+  --shadow-md: 0 4px 12px rgba(20, 40, 160, 0.08);
+  --shadow-lg: 0 8px 24px rgba(20, 40, 160, 0.12);
+  --shadow-blue: 0 4px 16px rgba(20, 40, 160, 0.1);
+  --shadow-inner: inset 0 2px 4px rgba(20, 40, 160, 0.05);
   
+  /* Transitions */
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Layout */
+  --header-height: 60px;
+  --container-padding: 16px;
+  --card-padding: 20px;
 }
 
+/* ========================================
+   RESET Y BASE MEJORADOS
+   ======================================== */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  line-height: 1.5;
+  color: var(--samsung-text);
+}
+
 /* ========================================
-   CONTENEDOR PRINCIPAL
+   CONTENEDOR PRINCIPAL - RESPONSIVE
    ======================================== */
 .verificacion-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 16px;
+  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-gray-light) 100%);
+  padding: var(--container-padding);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.verificacion-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(135deg, 
+    rgba(20, 40, 160, 0.03) 0%, 
+    rgba(30, 64, 255, 0.02) 50%, 
+    rgba(74, 125, 255, 0.01) 100%);
+  z-index: 0;
+}
+
+/* Grid responsive para contenido */
+.verificacion-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
 @media (min-width: 768px) {
-  .verificacion-container {
-    padding: 32px;
+  .verificacion-content {
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .verificacion-content {
+    grid-template-columns: 3fr 1fr;
+    gap: 40px;
   }
 }
 
 /* ========================================
-   HEADER
+   HEADER - RESPONSIVE Y ELEGANTE
    ======================================== */
 .verificacion-header {
+  grid-column: 1 / -1;
+  background: var(--samsung-white);
+  border-radius: var(--radius-xl);
+  padding: 28px var(--card-padding);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--samsung-gray-medium);
   text-align: center;
-  margin-bottom: 24px;
-  color: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+
+.verificacion-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--samsung-gradient);
 }
 
 .verificacion-header h1 {
-  font-size: 24px;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  color: var(--samsung-blue-dark);
   line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .verificacion-header .subtitle {
-  font-size: 14px;
-  opacity: 0.95;
-  line-height: 1.4;
-}
-
-@media (min-width: 768px) {
-  .verificacion-header h1 {
-    font-size: 36px;
-  }
-  
-  .verificacion-header .subtitle {
-    font-size: 16px;
-  }
+  font-size: clamp(0.875rem, 2vw, 1.125rem);
+  color: var(--samsung-text-medium);
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0.9;
 }
 
 /* ========================================
-   TARJETA PRINCIPAL
+   TARJETA PRINCIPAL - RESPONSIVE
    ======================================== */
 .verificacion-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
+  background: var(--samsung-white);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
-  padding: 20px;
-  margin: 0 auto 24px;
-  max-width: 600px;
+  padding: var(--card-padding);
+  border: 1px solid var(--samsung-gray-medium);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.verificacion-card:hover {
+  box-shadow: var(--shadow-blue);
+}
+
+.verificacion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--samsung-gradient);
+}
+
+/* Responsive padding */
+@media (min-width: 640px) {
+  .verificacion-card {
+    padding: 24px;
+  }
 }
 
 @media (min-width: 768px) {
@@ -102,34 +218,43 @@
 }
 
 /* ========================================
-   SECCIÓN DE CÁMARA ACTIVA
+   CÁMARA - RESPONSIVE COMPLETO
    ======================================== */
 .camera-active-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .camera-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--gray-100);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--samsung-gray-medium);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .camera-header h3 {
-  font-size: 18px;
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--samsung-blue-dark);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .btn-close-camera {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border: none;
-  background: var(--gray-100);
-  color: var(--gray-600);
+  background: var(--samsung-gray);
+  color: var(--samsung-text);
   border-radius: 50%;
   font-size: 20px;
   cursor: pointer;
@@ -137,200 +262,143 @@
   align-items: center;
   justify-content: center;
   transition: var(--transition);
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
 .btn-close-camera:hover {
-  background: var(--danger);
-  color: var(--white);
-  transform: scale(1.1);
+  background: var(--samsung-error);
+  color: var(--samsung-white);
+  transform: rotate(90deg);
 }
 
+/* Contenedor de cámara responsive */
 .camera-container-wrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   background: #000;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  min-height: 300px;
+  box-shadow: var(--shadow-md);
+  aspect-ratio: 16/9;
+  max-height: 70vh;
 }
 
 .camera-preview-box {
   width: 100%;
-  min-height: 300px;
-}
-
-@media (min-width: 768px) {
-  .camera-preview-box {
-    min-height: 400px;
-  }
-}
-
-/* Overlay de escaneo */
-.camera-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
+  height: 100%;
+  background: #000;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
 }
 
+/* Marco de escaneo responsive */
 .scan-frame {
   position: relative;
-  width: 250px;
-  height: 150px;
-  max-width: 90%;
+  width: min(85%, 320px);
+  height: min(60%, 200px);
+  margin: 0 auto;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 480px) {
   .scan-frame {
-    width: 300px;
-    height: 200px;
+    width: 90%;
+    height: 50%;
   }
 }
 
-/* Esquinas del marco */
-.scan-corner {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  border: 3px solid var(--primary);
-  box-shadow: 0 0 10px rgba(24, 144, 255, 0.5);
-}
-
-.scan-corner-tl {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-  border-top-left-radius: 8px;
-}
-
-.scan-corner-tr {
-  top: 0;
-  right: 0;
-  border-left: none;
-  border-bottom: none;
-  border-top-right-radius: 8px;
-}
-
-.scan-corner-bl {
-  bottom: 0;
-  left: 0;
-  border-right: none;
-  border-top: none;
-  border-bottom-left-radius: 8px;
-}
-
-.scan-corner-br {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-  border-bottom-right-radius: 8px;
-}
-
-/* Línea de escaneo animada */
+/* Línea de escaneo optimizada */
 .scan-line {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  box-shadow: 0 0 10px var(--primary);
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--samsung-blue-light) 30%,
+    var(--samsung-blue) 50%,
+    var(--samsung-blue-light) 70%,
+    transparent
+  );
+  filter: drop-shadow(0 0 8px var(--samsung-blue-light));
   animation: scan 2s ease-in-out infinite;
 }
 
 @keyframes scan {
   0%, 100% {
-    transform: translateY(0);
+    top: 0;
     opacity: 0;
   }
-  50% {
+  10%, 90% {
     opacity: 1;
   }
-  100% {
-    transform: translateY(150px);
+  50% {
+    top: 50%;
   }
 }
 
-@media (min-width: 768px) {
-  @keyframes scan {
-    100% {
-      transform: translateY(200px);
-    }
-  }
-}
-
+/* Instrucciones responsive */
 .camera-instructions {
-  margin-top: 24px;
   text-align: center;
-  color: var(--white);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  color: var(--samsung-white);
+  padding: 0 16px;
+  width: 100%;
 }
 
 .instruction-main {
-  font-size: 16px;
+  font-size: clamp(1rem, 3vw, 1.125rem);
   font-weight: 600;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .instruction-sub {
-  font-size: 14px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
   opacity: 0.9;
-}
-
-.btn-cancel-camera {
-  width: 100%;
-  padding: 14px;
-  background: var(--gray-100);
-  color: var(--gray-800);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-cancel-camera:hover {
-  background: var(--gray-200);
-}
-
-.btn-cancel-camera:active {
-  transform: scale(0.98);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.4;
 }
 
 /* ========================================
-   BOTÓN DE ACTIVAR CÁMARA
+   BOTONES - RESPONSIVE Y ACCESIBLES
    ======================================== */
-.camera-trigger-section {
-  margin-bottom: 24px;
-}
-
-.btn-camera-trigger {
+.btn-camera-trigger,
+.btn-submit,
+.btn-reset,
+.btn-cancel-camera,
+.btn-register-new {
   width: 100%;
-  padding: 18px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: var(--white);
+  padding: clamp(16px, 4vw, 20px);
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
+  border-radius: var(--radius-lg);
+  font-size: clamp(0.875rem, 3vw, 1rem);
   font-weight: 600;
   cursor: pointer;
+  transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  transition: var(--transition);
-  box-shadow: var(--shadow-md);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 52px;
+}
+
+/* Botón principal - Cámara */
+.btn-camera-trigger {
+  background: var(--samsung-gradient);
+  color: var(--samsung-white);
+  box-shadow: var(--shadow-blue);
 }
 
 .btn-camera-trigger:hover {
@@ -342,17 +410,338 @@
   transform: translateY(0);
 }
 
-.camera-icon {
-  width: 24px;
-  height: 24px;
+/* Botón de envío */
+.btn-submit {
+  background: var(--samsung-blue);
+  color: var(--samsung-white);
+  box-shadow: var(--shadow-blue);
 }
 
-/* Divisor */
+.btn-submit:hover:not(:disabled) {
+  background: var(--samsung-blue-medium);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-submit:disabled {
+  background: var(--samsung-gray);
+  color: var(--samsung-text-light);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botón reset */
+.btn-reset {
+  background: transparent;
+  color: var(--samsung-blue);
+  border: 2px solid var(--samsung-blue);
+}
+
+.btn-reset:hover {
+  background: var(--samsung-blue);
+  color: var(--samsung-white);
+}
+
+/* Efecto ripple para todos los botones */
+.btn-camera-trigger::after,
+.btn-submit::after,
+.btn-reset::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.btn-camera-trigger:focus:not(:active)::after,
+.btn-submit:focus:not(:active)::after,
+.btn-reset:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   FORMULARIO - RESPONSIVE COMPLETO
+   ======================================== */
+.verification-form {
+  margin-bottom: 24px;
+}
+
+.form-field {
+  margin-bottom: clamp(20px, 5vw, 28px);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-weight: 600;
+  color: var(--samsung-blue-dark);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* Input responsive */
+.input-with-clear {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--samsung-gray-medium);
+  transition: var(--transition);
+  background: var(--samsung-white);
+}
+
+.input-with-clear:focus-within {
+  border-color: var(--samsung-blue);
+  box-shadow: 0 0 0 4px rgba(20, 40, 160, 0.1);
+}
+
+.imei-field {
+  width: 100%;
+  padding: clamp(16px, 4vw, 20px);
+  padding-right: 60px;
+  border: none;
+  font-size: clamp(0.875rem, 3vw, 1.125rem);
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: var(--samsung-text);
+  outline: none;
+  line-height: 1.5;
+}
+
+.imei-field::placeholder {
+  color: var(--samsung-text-light);
+  opacity: 0.6;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+/* Botón clear responsive */
+.btn-clear-field {
+  position: absolute;
+  right: clamp(12px, 3vw, 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  border: none;
+  background: var(--samsung-gray);
+  color: var(--samsung-text-light);
+  border-radius: 50%;
+  font-size: clamp(18px, 4vw, 24px);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 300;
+}
+
+.btn-clear-field:hover {
+  background: var(--samsung-blue);
+  color: var(--samsung-white);
+}
+
+/* ========================================
+   RESULTADO - RESPONSIVE Y ELEGANTE
+   ======================================== */
+.result-card {
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 5vw, 28px);
+  margin-top: 24px;
+  border: 2px solid;
+  animation: fadeInUp 0.4s ease-out;
+  background: var(--samsung-white);
+}
+
+.result-status {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 4vw, 24px);
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: clamp(40px, 10vw, 56px);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.status-text {
+  flex: 1;
+  min-width: min(200px, 100%);
+}
+
+.status-title {
+  font-size: clamp(1.125rem, 4vw, 1.375rem);
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.status-imei {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-family: 'SF Mono', 'Monaco', monospace;
+  color: var(--samsung-text);
+  word-break: break-all;
+  letter-spacing: 0.5px;
+}
+
+/* Info rows responsive */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(12px, 3vw, 16px) 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 600;
+  color: var(--samsung-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.info-value {
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  color: var(--samsung-text);
+  text-align: right;
+  font-weight: 500;
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ========================================
+   PANEL DE AYUDA - RESPONSIVE GRID
+   ======================================== */
+.help-panel {
+  background: var(--samsung-white);
+  border-radius: var(--radius-xl);
+  padding: clamp(20px, 5vw, 28px);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--samsung-gray-medium);
+  position: relative;
+  overflow: hidden;
+}
+
+.help-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--samsung-gradient);
+}
+
+.help-title {
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  font-weight: 700;
+  color: var(--samsung-blue-dark);
+  margin-bottom: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Grid responsive para ayuda */
+.help-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(16px, 4vw, 20px);
+}
+
+.help-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: clamp(16px, 4vw, 20px);
+  background: var(--samsung-gray-light);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--samsung-gray-medium);
+  transition: var(--transition);
+  height: 100%;
+}
+
+.help-card:hover {
+  background: var(--samsung-white);
+  border-color: var(--samsung-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.help-number {
+  width: clamp(32px, 8vw, 36px);
+  height: clamp(32px, 8vw, 36px);
+  min-width: clamp(32px, 8vw, 36px);
+  background: var(--samsung-gradient);
+  color: var(--samsung-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  flex-shrink: 0;
+}
+
+.help-content {
+  flex: 1;
+}
+
+.help-content strong {
+  display: block;
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 600;
+  color: var(--samsung-blue-dark);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.help-content p {
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  color: var(--samsung-text-medium);
+  line-height: 1.5;
+}
+
+/* ========================================
+   DIVISOR RESPONSIVE
+   ======================================== */
 .divider-with-text {
   display: flex;
   align-items: center;
-  margin: 24px 0;
-  gap: 16px;
+  margin: clamp(24px, 6vw, 32px) 0;
+  gap: clamp(16px, 4vw, 20px);
 }
 
 .divider-with-text::before,
@@ -360,443 +749,90 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--gray-200);
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--samsung-blue-light),
+    transparent
+  );
 }
 
 .divider-with-text span {
-  color: var(--gray-600);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* ========================================
-   FORMULARIO
-   ======================================== */
-.verification-form {
-  margin-bottom: 20px;
-}
-
-.form-field {
-  margin-bottom: 20px;
-}
-
-.field-label {
-  display: block;
-  font-size: 14px;
+  color: var(--samsung-blue);
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
   font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 8px;
-}
-
-.input-with-clear {
-  position: relative;
-}
-
-.imei-field {
-  width: 100%;
-  padding: 14px 40px 14px 16px;
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  transition: var(--transition);
-  background: var(--white);
-}
-
-.imei-field:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.1);
-}
-
-.imei-field:disabled {
-  background: var(--gray-50);
-  cursor: not-allowed;
-}
-
-.btn-clear-field {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--gray-200);
-  color: var(--gray-600);
-  border-radius: 50%;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-clear-field:hover {
-  background: var(--gray-300);
-}
-
-.field-hint {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.4;
-}
-
-/* Botón de envío */
-.btn-submit {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn-submit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-submit:disabled {
-  background: var(--gray-200);
-  color: var(--gray-600);
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.btn-loading {
-  background: var(--warning) !important;
-}
-
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--white);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 /* ========================================
-   ALERTAS
+   ALERTAS RESPONSIVE
    ======================================== */
 .alert {
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
+  padding: clamp(16px, 4vw, 20px);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.alert-error {
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  color: var(--danger-dark);
-}
-
-.alert-icon {
-  font-size: 18px;
-  flex-shrink: 0;
+  gap: clamp(12px, 3vw, 16px);
+  margin-bottom: 24px;
+  animation: slideIn 0.3s ease-out;
+  flex-wrap: wrap;
 }
 
 .alert-text {
   flex: 1;
-}
-
-/* ========================================
-   RESULTADO
-   ======================================== */
-.result-card {
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-top: 24px;
-  border: 2px solid;
-}
-
-.result-valid {
-  background: #f6ffed;
-  border-color: var(--success);
-}
-
-.result-invalid {
-  background: #fff2f0;
-  border-color: var(--danger);
-}
-
-.result-status {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid currentColor;
-  opacity: 0.3;
-}
-
-.result-valid .result-status {
-  border-color: var(--success);
-}
-
-.result-invalid .result-status {
-  border-color: var(--danger);
-}
-
-.status-badge {
-  font-size: 48px;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.status-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.status-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  line-height: 1.2;
-}
-
-.result-valid .status-title {
-  color: var(--success-dark);
-}
-
-.result-invalid .status-title {
-  color: var(--danger-dark);
-}
-
-.status-imei {
-  font-size: 16px;
-  font-family: 'SF Mono', 'Monaco', monospace;
-  color: var(--gray-600);
-  word-break: break-all;
-}
-
-@media (min-width: 768px) {
-  .status-title {
-    font-size: 22px;
-  }
-  
-  .status-imei {
-    font-size: 18px;
-  }
-}
-
-/* Info del resultado */
-.result-info {
-  margin-bottom: 20px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--gray-100);
-  gap: 16px;
-}
-
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray-600);
-  flex-shrink: 0;
-}
-
-.info-value {
-  font-size: 14px;
-  color: var(--gray-800);
-  text-align: right;
-  word-break: break-word;
-}
-
-@media (min-width: 768px) {
-  .info-label,
-  .info-value {
-    font-size: 16px;
-  }
-}
-
-.result-message {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: var(--white);
-  border-radius: var(--radius-sm);
-  text-align: center;
-}
-
-.result-message p {
-  color: var(--gray-800);
-  margin-bottom: 12px;
+  min-width: min(200px, 100%);
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
   line-height: 1.5;
 }
 
-.btn-register-new {
-  padding: 10px 20px;
-  background: var(--primary);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-register-new:hover {
-  background: var(--primary-dark);
-}
-
-.btn-reset {
-  width: 100%;
-  padding: 14px;
-  background: var(--white);
-  color: var(--primary);
-  border: 2px solid var(--primary);
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn-reset:hover {
-  background: var(--primary);
-  color: var(--white);
-}
-
 /* ========================================
-   PANEL DE AYUDA
+   UTILIDADES RESPONSIVE
    ======================================== */
-.help-panel {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-  box-shadow: var(--shadow-md);
+.hide-on-mobile {
+  display: none;
 }
 
-@media (min-width: 768px) {
-  .help-panel {
-    padding: 32px;
-  }
-}
-
-.help-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--gray-800);
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .help-title {
-    font-size: 22px;
-  }
-}
-
-.help-items {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-@media (min-width: 480px) {
-  .help-items {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.help-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  background: var(--gray-50);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--gray-200);
-  transition: var(--transition);
-}
-
-.help-card:hover {
-  background: var(--white);
-  border-color: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.help-number {
-  width: 32px;
-  height: 32px;
-  background: var(--primary);
-  color: var(--white);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.help-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.help-content strong {
+.show-on-mobile {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 4px;
 }
 
-.help-content p {
-  font-size: 13px;
-  color: var(--gray-600);
-  line-height: 1.4;
+@media (min-width: 768px) {
+  .hide-on-mobile {
+    display: block;
+  }
+  
+  .show-on-mobile {
+    display: none;
+  }
+}
+
+/* Contenedor de acción fija en móvil */
+.mobile-action-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--samsung-white);
+  padding: 16px var(--container-padding);
+  box-shadow: 0 -4px 20px rgba(20, 40, 160, 0.1);
+  z-index: 1000;
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobile-action-container {
+    display: block;
+  }
+  
+  /* Añadir padding al final para evitar que el contenido quede detrás del botón fijo */
+  .verificacion-container {
+    padding-bottom: 100px;
+  }
 }
 
 /* ========================================
-   ANIMACIONES
+   ANIMACIONES OPTIMIZADAS
    ======================================== */
 @keyframes fadeIn {
   from {
@@ -809,35 +845,27 @@
   }
 }
 
-.verificacion-card,
-.help-panel,
-.result-card,
-.alert {
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
   animation: fadeIn 0.4s ease-out;
 }
 
-/* ========================================
-   OPTIMIZACIONES TÁCTILES
-   ======================================== */
-@media (hover: none) and (pointer: coarse) {
-  button,
-  .btn-camera-trigger,
-  .btn-submit,
-  .btn-close-camera,
-  .btn-clear-field {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  
-  button:active,
-  .btn-camera-trigger:active,
-  .btn-submit:active {
-    transform: scale(0.97);
-  }
+.slide-in {
+  animation: slideIn 0.3s ease-out;
 }
 
 /* ========================================
-   ACCESIBILIDAD
+   ACCESIBILIDAD MEJORADA
    ======================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -849,12 +877,138 @@
   }
 }
 
-/* Focus visible para teclado */
-*:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 2px;
+/* Focus visible mejorado */
+:focus-visible {
+  outline: 3px solid var(--samsung-blue);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
-button:focus-visible {
-  outline-offset: 4px;
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --samsung-blue: #0000cc;
+    --samsung-blue-dark: #000066;
+    --samsung-error: #cc0000;
+    --samsung-success: #006600;
+  }
+  
+  .verificacion-card,
+  .help-panel,
+  .verificacion-header {
+    border: 2px solid var(--samsung-blue);
+  }
+}
+
+/* ========================================
+   DARK MODE SUPPORT
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --samsung-white: #1a1a2e;
+    --samsung-gray-light: #16213e;
+    --samsung-gray: #0f3460;
+    --samsung-gray-medium: #1e3a5f;
+    --samsung-text: #e2e8f0;
+    --samsung-text-medium: #a0aec0;
+    --samsung-text-light: #718096;
+    --samsung-blue-bg: #0d1b66;
+  }
+  
+  .verificacion-container {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .verificacion-container::before {
+    background: linear-gradient(135deg, 
+      rgba(20, 40, 160, 0.1) 0%, 
+      rgba(30, 64, 255, 0.05) 50%, 
+      rgba(74, 125, 255, 0.02) 100%);
+  }
+  
+  .verificacion-card,
+  .help-panel,
+  .verificacion-header {
+    background: var(--samsung-white);
+    border-color: var(--samsung-gray-medium);
+  }
+  
+  .input-with-clear {
+    background: var(--samsung-gray-light);
+  }
+  
+  .imei-field {
+    background: transparent;
+    color: var(--samsung-text);
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+  .verificacion-container {
+    background: white !important;
+    padding: 0 !important;
+  }
+  
+  .verificacion-card,
+  .result-card {
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    break-inside: avoid;
+  }
+  
+  .btn-camera-trigger,
+  .btn-submit,
+  .btn-reset,
+  .btn-cancel-camera,
+  .btn-register-new,
+  .btn-close-camera,
+  .btn-clear-field {
+    display: none !important;
+  }
+  
+  .camera-active-section,
+  .camera-trigger-section,
+  .verification-form {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    var(--samsung-gray) 25%, 
+    var(--samsung-gray-medium) 50%, 
+    var(--samsung-gray) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Spinner responsive */
+.spinner {
+  width: clamp(16px, 4vw, 20px);
+  height: clamp(16px, 4vw, 20px);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--samsung-white);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
