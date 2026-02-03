@@ -96,20 +96,31 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         false
       );
       
+      // CORRECCIÓN: Solo 2 parámetros, no 3
       scannerRef.current.render(
         (decodedText) => {
           handleScannedCode(decodedText);
         },
         (error) => {
           console.log('Error escaneando:', error);
-        },
-        (error, errorMessage) => {
-          console.log('Scanner error details:', error, errorMessage);
+          
+          // Manejar errores dentro del callback
+          const errorMessage = error?.toString() || '';
+          
           if (errorMessage.includes('NotAllowedError') || errorMessage.includes('Permission')) {
             setError('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en ajustes.');
             setShowCamera(false);
           } else if (errorMessage.includes('NotFoundError')) {
             setError('No se encontró cámara en el dispositivo.');
+            setShowCamera(false);
+          } else if (errorMessage.includes('NotReadableError')) {
+            setError('La cámara está siendo usada por otra aplicación.');
+            setShowCamera(false);
+          } else if (errorMessage.includes('OverconstrainedError')) {
+            setError('La cámara no cumple con los requisitos necesarios.');
+            setShowCamera(false);
+          } else if (errorMessage.includes('SecurityError')) {
+            setError('Error de seguridad. Intenta en HTTPS o en un entorno seguro.');
             setShowCamera(false);
           }
         }
@@ -121,12 +132,17 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     } catch (err: any) {
       console.error('Error inicializando cámara:', err);
       
+      // Manejo de errores en la inicialización
       if (err.name === 'NotAllowedError') {
         setError('Permiso de cámara denegado. Habilita la cámara en ajustes del navegador.');
       } else if (err.name === 'NotFoundError') {
         setError('No se encontró ninguna cámara disponible.');
       } else if (err.name === 'NotReadableError') {
         setError('La cámara está siendo usada por otra aplicación.');
+      } else if (err.name === 'OverconstrainedError') {
+        setError('La cámara no cumple con los requisitos necesarios.');
+      } else if (err.name === 'SecurityError') {
+        setError('Error de seguridad. Asegúrate de usar HTTPS.');
       } else {
         setError('Error al iniciar la cámara. Intenta de nuevo.');
       }
@@ -134,7 +150,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       setShowCamera(false);
       scannerRef.current = null;
     }
-  }, [isMobile]);
+  }, [isMobile, handleScannedCode]); // Añadir handleScannedCode como dependencia
 
   const stopScanner = useCallback(() => {
     if (scannerRef.current) {
@@ -191,7 +207,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         setError('No se encontró un IMEI válido en el código escaneado.');
       }
     }
-  }, [stopScanner]);
+  }, [stopScanner, handleVerificar]);
 
   const handleVerificar = useCallback(async (imeiToCheck?: string) => {
     const imeiToVerify = imeiToCheck || imei.trim();
