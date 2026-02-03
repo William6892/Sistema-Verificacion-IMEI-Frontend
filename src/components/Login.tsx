@@ -1,4 +1,4 @@
-// Login.tsx - VERSIÓN REACT PURO CON ESTILOS SAMSUNG
+// Login.tsx - VERSIÓN CORREGIDA
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -46,7 +46,6 @@ const Login: React.FC = () => {
       await authService.login(username, password);
       
       console.log('✅ Login exitoso');
-      // Animación de éxito antes de redirigir
       setTimeout(() => {
         navigate('/');
       }, 500);
@@ -54,7 +53,6 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error('❌ Error en login:', err);
       
-      // Manejo detallado de errores
       if (err.code === 'ECONNABORTED') {
         setError('⏱️ El servidor está tardando en responder.\n' +
                 'En la primera conexión puede tardar hasta 1 minuto.\n' +
@@ -89,7 +87,7 @@ const Login: React.FC = () => {
     setPassword('admin123');
   };
 
-  // Estilos base
+  // Estilos base - CORREGIDOS
   const styles = {
     container: {
       minHeight: '100vh',
@@ -191,17 +189,19 @@ const Login: React.FC = () => {
       margin: '4px 0 0 0',
       fontWeight: 500
     },
-    welcomeSection: {
-      h2: {
-        fontSize: '28px',
-        color: SAMSUNG_COLORS.text,
-        marginBottom: '8px',
-        fontWeight: 600
-      },
-      p: {
-        color: SAMSUNG_COLORS.textLight,
-        fontSize: '15px'
-      }
+    // CORRECCIÓN: Estilos separados, no anidados
+    welcomeTitle: {
+      fontSize: '28px',
+      color: SAMSUNG_COLORS.text,
+      marginBottom: '8px',
+      fontWeight: 600,
+      textAlign: 'center' as const
+    },
+    welcomeText: {
+      color: SAMSUNG_COLORS.textLight,
+      fontSize: '15px',
+      textAlign: 'center' as const,
+      lineHeight: 1.5
     },
     loginForm: {
       display: 'flex',
@@ -228,30 +228,24 @@ const Login: React.FC = () => {
     inputContainer: {
       position: 'relative' as const
     },
-    formInput: (isPassword?: boolean, hasError?: boolean) => ({
+    // CORRECCIÓN: Simplificar función de estilo
+    formInput: {
       width: '100%',
-      padding: isPassword ? '16px 52px 16px 20px' : '16px 20px',
+      padding: '16px 20px',
       fontSize: '16px',
-      border: `2px solid ${hasError ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.grayDark}`,
+      border: `2px solid ${SAMSUNG_COLORS.grayDark}`,
       borderRadius: '12px',
       background: SAMSUNG_COLORS.white,
       transition: 'all 0.3s ease',
       outline: 'none',
-      color: SAMSUNG_COLORS.text,
-      '::placeholder': {
-        color: SAMSUNG_COLORS.textLight,
-        opacity: 0.6
-      },
-      ':focus': {
-        borderColor: hasError ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.blueLight,
-        boxShadow: `0 0 0 4px ${hasError ? 'rgba(229, 62, 62, 0.1)' : 'rgba(20, 40, 160, 0.1)'}`,
-        transform: 'translateY(-1px)'
-      },
-      ':disabled': {
-        background: SAMSUNG_COLORS.gray,
-        cursor: 'not-allowed'
-      }
-    }),
+      color: SAMSUNG_COLORS.text
+    },
+    passwordInput: {
+      paddingRight: '52px'
+    },
+    errorInput: {
+      borderColor: SAMSUNG_COLORS.error
+    },
     togglePassword: {
       position: 'absolute' as const,
       right: '16px',
@@ -264,11 +258,7 @@ const Login: React.FC = () => {
       color: SAMSUNG_COLORS.textLight,
       padding: '4px',
       borderRadius: '4px',
-      transition: 'all 0.2s',
-      ':hover': {
-        background: SAMSUNG_COLORS.gray,
-        color: SAMSUNG_COLORS.text
-      }
+      transition: 'all 0.2s'
     },
     demoSection: {
       marginTop: '8px',
@@ -288,11 +278,7 @@ const Login: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center',
       gap: '10px',
-      transition: 'all 0.3s',
-      ':hover': {
-        background: 'rgba(20, 40, 160, 0.1)',
-        transform: 'translateY(-1px)'
-      }
+      transition: 'all 0.3s'
     },
     demoIcon: {
       fontSize: '18px'
@@ -312,21 +298,18 @@ const Login: React.FC = () => {
       height: '24px',
       border: `3px solid ${SAMSUNG_COLORS.grayDark}`,
       borderTop: `3px solid ${SAMSUNG_COLORS.blue}`,
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      borderRadius: '50%'
     },
-    loadingText: {
-      flex: 1,
-      p: {
-        margin: '0 0 4px 0',
-        fontWeight: 600,
-        color: SAMSUNG_COLORS.text
-      },
-      small: {
-        fontSize: '12px',
-        color: SAMSUNG_COLORS.textLight,
-        display: 'block'
-      }
+    // CORRECCIÓN: Separar estilos de loading text
+    loadingTextP: {
+      margin: '0 0 4px 0',
+      fontWeight: 600,
+      color: SAMSUNG_COLORS.text
+    },
+    loadingTextSmall: {
+      fontSize: '12px',
+      color: SAMSUNG_COLORS.textLight,
+      display: 'block' as const
     },
     errorState: {
       background: 'rgba(229, 62, 62, 0.05)',
@@ -359,42 +342,36 @@ const Login: React.FC = () => {
       color: SAMSUNG_COLORS.text,
       fontSize: '14px'
     },
-    btnLogin: (isLoading: boolean, isDisabled: boolean) => ({
+    // CORRECCIÓN: Función simplificada
+    btnLogin: {
       width: '100%',
       padding: '18px',
-      background: isDisabled 
-        ? SAMSUNG_COLORS.grayDark 
-        : isLoading 
-          ? SAMSUNG_COLORS.success
-          : SAMSUNG_COLORS.gradient,
-      color: isDisabled ? SAMSUNG_COLORS.textLight : SAMSUNG_COLORS.white,
+      background: SAMSUNG_COLORS.gradient,
+      color: SAMSUNG_COLORS.white,
       border: 'none',
       borderRadius: '12px',
       fontSize: '16px',
       fontWeight: 600,
-      cursor: isDisabled || isLoading ? 'not-allowed' : 'pointer',
+      cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '12px',
       position: 'relative' as const,
-      overflow: 'hidden' as const,
-      ':hover': !isDisabled && !isLoading ? {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 12px 24px rgba(20, 40, 160, 0.3)'
-      } : {},
-      ':active': !isDisabled && !isLoading ? {
-        transform: 'translateY(0)'
-      } : {}
-    }),
+      overflow: 'hidden' as const
+    },
+    btnLoginDisabled: {
+      background: SAMSUNG_COLORS.grayDark,
+      color: SAMSUNG_COLORS.textLight,
+      cursor: 'not-allowed'
+    },
     btnSpinner: {
       width: '20px',
       height: '20px',
       border: '2px solid rgba(255,255,255,0.3)',
       borderTop: '2px solid white',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      borderRadius: '50%'
     },
     btnIcon: {
       fontSize: '20px',
@@ -421,10 +398,7 @@ const Login: React.FC = () => {
       cursor: 'pointer',
       padding: '4px 8px',
       borderRadius: '4px',
-      transition: 'all 0.2s',
-      ':hover': {
-        background: 'rgba(20, 40, 160, 0.05)'
-      }
+      transition: 'all 0.2s'
     },
     separator: {
       color: SAMSUNG_COLORS.textLight,
@@ -448,8 +422,7 @@ const Login: React.FC = () => {
       width: '8px',
       height: '8px',
       background: SAMSUNG_COLORS.success,
-      borderRadius: '50%',
-      animation: 'pulse 2s infinite'
+      borderRadius: '50%'
     },
     globalFooter: {
       marginTop: '40px',
@@ -457,10 +430,8 @@ const Login: React.FC = () => {
       color: 'rgba(255,255,255,0.8)',
       fontSize: '14px'
     },
-    footerContent: {
-      p: {
-        margin: '4px 0'
-      }
+    footerText: {
+      margin: '4px 0'
     },
     footerNote: {
       fontSize: '12px',
@@ -497,7 +468,7 @@ const Login: React.FC = () => {
       <div style={styles.loginCard}>
         <div style={styles.cardTopBorder} />
         
-        {/* Header */}
+        {/* Header - CORREGIDO */}
         <div style={styles.loginHeader}>
           <div style={styles.logoContainer}>
             <div style={styles.logoCircle}>
@@ -509,9 +480,10 @@ const Login: React.FC = () => {
             </div>
           </div>
           
-          <div style={styles.welcomeSection}>
-            <h2 style={styles.welcomeSection.h2}>Bienvenido</h2>
-            <p style={styles.welcomeSection.p}>Ingresa tus credenciales para acceder al sistema</p>
+          {/* CORRECCIÓN: Estilos separados, no anidados */}
+          <div>
+            <h2 style={styles.welcomeTitle}>Bienvenido</h2>
+            <p style={styles.welcomeText}>Ingresa tus credenciales para acceder al sistema</p>
           </div>
         </div>
 
@@ -532,7 +504,15 @@ const Login: React.FC = () => {
                   if (error) setError('');
                 }}
                 placeholder="Ingresa tu usuario"
-                style={styles.formInput(false, !!error)}
+                style={{
+                  ...styles.formInput,
+                  ...(error ? styles.errorInput : {}),
+                  ':focus': {
+                    borderColor: SAMSUNG_COLORS.blueLight,
+                    boxShadow: `0 0 0 4px rgba(20, 40, 160, 0.1)`,
+                    transform: 'translateY(-1px)'
+                  }
+                }}
                 disabled={loading}
                 autoComplete="username"
                 onFocus={() => setFocusInput('username')}
@@ -556,7 +536,16 @@ const Login: React.FC = () => {
                   if (error) setError('');
                 }}
                 placeholder="Ingresa tu contraseña"
-                style={styles.formInput(true, !!error)}
+                style={{
+                  ...styles.formInput,
+                  ...styles.passwordInput,
+                  ...(error ? styles.errorInput : {}),
+                  ':focus': {
+                    borderColor: SAMSUNG_COLORS.blueLight,
+                    boxShadow: `0 0 0 4px rgba(20, 40, 160, 0.1)`,
+                    transform: 'translateY(-1px)'
+                  }
+                }}
                 disabled={loading}
                 autoComplete="current-password"
                 onFocus={() => setFocusInput('password')}
@@ -564,7 +553,13 @@ const Login: React.FC = () => {
               />
               <button
                 type="button"
-                style={styles.togglePassword}
+                style={{
+                  ...styles.togglePassword,
+                  ':hover': {
+                    background: SAMSUNG_COLORS.gray,
+                    color: SAMSUNG_COLORS.text
+                  }
+                }}
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -578,7 +573,13 @@ const Login: React.FC = () => {
             <button
               type="button"
               onClick={handleDemoLogin}
-              style={styles.btnDemo}
+              style={{
+                ...styles.btnDemo,
+                ':hover': {
+                  background: 'rgba(20, 40, 160, 0.1)',
+                  transform: 'translateY(-1px)'
+                }
+              }}
             >
               <span style={styles.demoIcon}>🚀</span>
               Usar credenciales de demo
@@ -588,10 +589,12 @@ const Login: React.FC = () => {
           {/* Estado de carga */}
           {loading && (
             <div style={styles.loadingState}>
-              <div style={styles.samsungSpinner}></div>
-              <div style={styles.loadingText}>
-                <p>Conectando con el servidor...</p>
-                <small>Esto puede tardar unos segundos en la primera conexión</small>
+              <div style={{ ...styles.samsungSpinner, animation: 'spin 1s linear infinite' }}></div>
+              <div>
+                <p style={styles.loadingTextP}>Conectando con el servidor...</p>
+                <small style={styles.loadingTextSmall}>
+                  Esto puede tardar unos segundos en la primera conexión
+                </small>
               </div>
             </div>
           )}
@@ -615,13 +618,20 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !username.trim() || !password.trim()}
-            style={styles.btnLogin(loading, !username.trim() || !password.trim())}
+            style={{
+              ...styles.btnLogin,
+              ...(loading || !username.trim() || !password.trim() ? styles.btnLoginDisabled : {}),
+              ':hover': !loading && username.trim() && password.trim() ? {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 12px 24px rgba(20, 40, 160, 0.3)'
+              } : {}
+            }}
             onMouseEnter={() => setHoverLogin(true)}
             onMouseLeave={() => setHoverLogin(false)}
           >
             {loading ? (
               <>
-                <span style={styles.btnSpinner}></span>
+                <span style={{ ...styles.btnSpinner, animation: 'spin 1s linear infinite' }}></span>
                 Procesando...
               </>
             ) : (
@@ -635,18 +645,28 @@ const Login: React.FC = () => {
           {/* Footer del formulario */}
           <div style={styles.loginFooter}>
             <div style={styles.footerLinks}>
-              <button type="button" style={styles.linkBtn}>
+              <button type="button" style={{
+                ...styles.linkBtn,
+                ':hover': {
+                  background: 'rgba(20, 40, 160, 0.05)'
+                }
+              }}>
                 ¿Olvidaste tu contraseña?
               </button>
               <span style={styles.separator}>•</span>
-              <button type="button" style={styles.linkBtn}>
+              <button type="button" style={{
+                ...styles.linkBtn,
+                ':hover': {
+                  background: 'rgba(20, 40, 160, 0.05)'
+                }
+              }}>
                 Contactar soporte
               </button>
             </div>
             
             <div style={styles.versionInfo}>
               <span style={styles.version}>v2.1.4</span>
-              <span style={styles.statusIndicator}></span>
+              <span style={{ ...styles.statusIndicator, animation: 'pulse 2s infinite' }}></span>
               <span>Sistema activo</span>
             </div>
           </div>
@@ -655,8 +675,8 @@ const Login: React.FC = () => {
 
       {/* Footer global */}
       <footer style={styles.globalFooter}>
-        <div style={styles.footerContent}>
-          <p style={styles.footerContent.p}>Samsung Style UI • IMEI Verification System © 2024</p>
+        <div>
+          <p style={styles.footerText}>Samsung Style UI • IMEI Verification System © 2024</p>
           <p style={styles.footerNote}>
             Optimizado para Chrome, Safari y navegadores modernos
           </p>
