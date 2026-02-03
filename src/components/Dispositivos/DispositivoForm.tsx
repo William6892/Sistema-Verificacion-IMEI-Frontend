@@ -168,16 +168,15 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
       marginBottom: '35px'
     },
     
-    formLabel: {
-      display: 'block',
-      marginBottom: '15px',
-      fontSize: '16px',
-      fontWeight: 700,
-      color: '#1e293b',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px'
-    },
+ formLabel: {
+  marginBottom: '15px',
+  fontSize: '16px',
+  fontWeight: 700,
+  color: '#1e293b',
+  display: 'flex', 
+  alignItems: 'center',
+  gap: '10px'
+},
     
     formLabelIcon: {
       fontSize: '20px',
