@@ -90,7 +90,7 @@ body {
    4. HEADER
    ======================================== */
 .verificacion-header {
-  background: var(--white);
+  background: #A7C7E7;
   border-radius: var(--radius-xl);
   padding: 48px 40px;
   margin-bottom: 32px;
@@ -650,7 +650,7 @@ body {
    10. PANEL DE AYUDA
    ======================================== */
 .help-panel {
-  background: var(--white);
+  background: #A7C7E7;
   border-radius: var(--radius-xl);
   padding: 48px 40px;
   box-shadow: var(--shadow-md);
