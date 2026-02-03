@@ -1,4 +1,4 @@
-// Login.tsx - VERSIÓN CORREGIDA
+// Login.tsx - VERSIÓN SEGURA SIN CREDENCIALES DEMO
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -25,8 +25,10 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [hoverLogin, setHoverLogin] = useState(false);
-  const [focusInput, setFocusInput] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState({
+    username: false,
+    password: false
+  });
   
   const navigate = useNavigate();
 
@@ -38,6 +40,18 @@ const Login: React.FC = () => {
       return;
     }
 
+    // Validación básica de seguridad
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    // Prevenir ataques de fuerza bruta básicos
+    if (username.length > 50 || password.length > 100) {
+      setError('Credenciales inválidas');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -46,6 +60,10 @@ const Login: React.FC = () => {
       await authService.login(username, password);
       
       console.log('✅ Login exitoso');
+      // Limpiar campos después de login exitoso
+      setUsername('');
+      setPassword('');
+      
       setTimeout(() => {
         navigate('/');
       }, 500);
@@ -53,41 +71,72 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error('❌ Error en login:', err);
       
+      // NO mostrar detalles específicos de error en producción
       if (err.code === 'ECONNABORTED') {
-        setError('⏱️ El servidor está tardando en responder.\n' +
-                'En la primera conexión puede tardar hasta 1 minuto.\n' +
-                'Por favor, intenta nuevamente.');
+        setError('El servidor está tardando en responder. Por favor, intenta nuevamente.');
       } else if (err.response) {
+        // Mensajes genéricos de error
         switch (err.response.status) {
           case 401:
-            setError('Credenciales incorrectas. Verifica tu usuario y contraseña.');
+            setError('Usuario o contraseña incorrectos');
+            break;
+          case 403:
+            setError('Acceso no autorizado');
             break;
           case 404:
-            setError('Servicio no disponible temporalmente.');
+            setError('Servicio no disponible');
+            break;
+          case 429:
+            setError('Demasiados intentos. Espera unos minutos');
             break;
           case 500:
-            setError('Error interno del servidor. Contacta al administrador.');
+          case 502:
+          case 503:
+          case 504:
+            setError('Error del servidor. Contacta al administrador');
             break;
           default:
-            setError(`Error ${err.response.status}: No se pudo completar el login`);
+            setError('Error de autenticación. Intenta nuevamente');
         }
       } else if (err.request) {
-        setError('No hay conexión con el servidor.\n' +
-                'Verifica tu conexión a internet o contacta al administrador.');
+        setError('Error de conexión. Verifica tu internet');
       } else {
-        setError('Error inesperado. Por favor, intenta nuevamente.');
+        setError('Error inesperado. Intenta nuevamente');
       }
+      
+      // Limpiar contraseña en caso de error
+      setPassword('');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoLogin = () => {
-    setUsername('admin');
-    setPassword('admin123');
+  // Estilos base
+  const getInputStyle = (type: 'username' | 'password') => {
+    const baseStyle = {
+      width: '100%',
+      padding: type === 'password' ? '16px 52px 16px 20px' : '16px 20px',
+      fontSize: '16px',
+      border: `2px solid ${error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.grayDark}`,
+      borderRadius: '12px',
+      background: SAMSUNG_COLORS.white,
+      transition: 'all 0.3s ease',
+      outline: 'none',
+      color: SAMSUNG_COLORS.text,
+    };
+
+    if (isFocused[type]) {
+      return {
+        ...baseStyle,
+        borderColor: error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.blueLight,
+        boxShadow: `0 0 0 4px ${error ? 'rgba(229, 62, 62, 0.1)' : 'rgba(20, 40, 160, 0.1)'}`,
+        transform: 'translateY(-1px)'
+      };
+    }
+
+    return baseStyle;
   };
 
-  // Estilos base - CORREGIDOS
   const styles = {
     container: {
       minHeight: '100vh',
@@ -189,7 +238,6 @@ const Login: React.FC = () => {
       margin: '4px 0 0 0',
       fontWeight: 500
     },
-    // CORRECCIÓN: Estilos separados, no anidados
     welcomeTitle: {
       fontSize: '28px',
       color: SAMSUNG_COLORS.text,
@@ -202,6 +250,16 @@ const Login: React.FC = () => {
       fontSize: '15px',
       textAlign: 'center' as const,
       lineHeight: 1.5
+    },
+    securityNote: {
+      fontSize: '12px',
+      color: SAMSUNG_COLORS.textLight,
+      textAlign: 'center' as const,
+      marginTop: '16px',
+      padding: '12px',
+      background: 'rgba(20, 40, 160, 0.03)',
+      borderRadius: '8px',
+      border: `1px solid ${SAMSUNG_COLORS.grayDark}`
     },
     loginForm: {
       display: 'flex',
@@ -228,61 +286,20 @@ const Login: React.FC = () => {
     inputContainer: {
       position: 'relative' as const
     },
-    // CORRECCIÓN: Simplificar función de estilo
-    formInput: {
-      width: '100%',
-      padding: '16px 20px',
-      fontSize: '16px',
-      border: `2px solid ${SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '12px',
-      background: SAMSUNG_COLORS.white,
-      transition: 'all 0.3s ease',
-      outline: 'none',
-      color: SAMSUNG_COLORS.text
-    },
-    passwordInput: {
-      paddingRight: '52px'
-    },
-    errorInput: {
-      borderColor: SAMSUNG_COLORS.error
-    },
-    togglePassword: {
+    togglePassword: (isHovered: boolean) => ({
       position: 'absolute' as const,
       right: '16px',
       top: '50%',
       transform: 'translateY(-50%)',
-      background: 'none',
+      background: isHovered ? SAMSUNG_COLORS.gray : 'none',
       border: 'none',
       fontSize: '20px',
       cursor: 'pointer',
-      color: SAMSUNG_COLORS.textLight,
+      color: isHovered ? SAMSUNG_COLORS.text : SAMSUNG_COLORS.textLight,
       padding: '4px',
       borderRadius: '4px',
       transition: 'all 0.2s'
-    },
-    demoSection: {
-      marginTop: '8px',
-      marginBottom: '8px'
-    },
-    btnDemo: {
-      width: '100%',
-      padding: '14px',
-      background: 'rgba(20, 40, 160, 0.05)',
-      border: `1px solid ${SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '12px',
-      fontSize: '14px',
-      fontWeight: 500,
-      color: SAMSUNG_COLORS.blue,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      transition: 'all 0.3s'
-    },
-    demoIcon: {
-      fontSize: '18px'
-    },
+    }),
     loadingState: {
       background: 'rgba(20, 40, 160, 0.05)',
       border: `1px solid ${SAMSUNG_COLORS.grayDark}`,
@@ -298,9 +315,9 @@ const Login: React.FC = () => {
       height: '24px',
       border: `3px solid ${SAMSUNG_COLORS.grayDark}`,
       borderTop: `3px solid ${SAMSUNG_COLORS.blue}`,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
     },
-    // CORRECCIÓN: Separar estilos de loading text
     loadingTextP: {
       margin: '0 0 4px 0',
       fontWeight: 600,
@@ -342,36 +359,33 @@ const Login: React.FC = () => {
       color: SAMSUNG_COLORS.text,
       fontSize: '14px'
     },
-    // CORRECCIÓN: Función simplificada
-    btnLogin: {
+    btnLogin: (isDisabled: boolean, isHovered: boolean) => ({
       width: '100%',
       padding: '18px',
-      background: SAMSUNG_COLORS.gradient,
-      color: SAMSUNG_COLORS.white,
+      background: isDisabled ? SAMSUNG_COLORS.grayDark : SAMSUNG_COLORS.gradient,
+      color: isDisabled ? SAMSUNG_COLORS.textLight : SAMSUNG_COLORS.white,
       border: 'none',
       borderRadius: '12px',
       fontSize: '16px',
       fontWeight: 600,
-      cursor: 'pointer',
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '12px',
       position: 'relative' as const,
-      overflow: 'hidden' as const
-    },
-    btnLoginDisabled: {
-      background: SAMSUNG_COLORS.grayDark,
-      color: SAMSUNG_COLORS.textLight,
-      cursor: 'not-allowed'
-    },
+      overflow: 'hidden' as const,
+      transform: !isDisabled && isHovered ? 'translateY(-2px)' : 'none',
+      boxShadow: !isDisabled && isHovered ? '0 12px 24px rgba(20, 40, 160, 0.3)' : 'none'
+    }),
     btnSpinner: {
       width: '20px',
       height: '20px',
       border: '2px solid rgba(255,255,255,0.3)',
       borderTop: '2px solid white',
-      borderRadius: '50%'
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
     },
     btnIcon: {
       fontSize: '20px',
@@ -390,8 +404,8 @@ const Login: React.FC = () => {
       marginBottom: '16px',
       flexWrap: 'wrap' as const
     },
-    linkBtn: {
-      background: 'none',
+    linkBtn: (isHovered: boolean) => ({
+      background: isHovered ? 'rgba(20, 40, 160, 0.05)' : 'none',
       border: 'none',
       color: SAMSUNG_COLORS.blue,
       fontSize: '14px',
@@ -399,7 +413,7 @@ const Login: React.FC = () => {
       padding: '4px 8px',
       borderRadius: '4px',
       transition: 'all 0.2s'
-    },
+    }),
     separator: {
       color: SAMSUNG_COLORS.textLight,
       fontSize: '12px'
@@ -422,7 +436,8 @@ const Login: React.FC = () => {
       width: '8px',
       height: '8px',
       background: SAMSUNG_COLORS.success,
-      borderRadius: '50%'
+      borderRadius: '50%',
+      animation: 'pulse 2s infinite'
     },
     globalFooter: {
       marginTop: '40px',
@@ -439,9 +454,16 @@ const Login: React.FC = () => {
     }
   };
 
+  // Estados para hover
+  const [isHovered, setIsHovered] = useState({
+    passwordToggle: false,
+    loginBtn: false,
+    forgotBtn: false,
+    supportBtn: false
+  });
+
   return (
     <div style={styles.container}>
-      {/* Estilos globales */}
       <style>
         {`
           @keyframes spin {
@@ -454,6 +476,16 @@ const Login: React.FC = () => {
           @keyframes float {
             0% { transform: translateY(0) rotate(0deg); }
             100% { transform: translateY(-20px) rotate(1deg); }
+          }
+          
+          .samsung-input:disabled {
+            background: #f5f7fa;
+            cursor: not-allowed;
+          }
+          
+          .samsung-input::placeholder {
+            color: #718096;
+            opacity: 0.6;
           }
         `}
       </style>
@@ -468,7 +500,7 @@ const Login: React.FC = () => {
       <div style={styles.loginCard}>
         <div style={styles.cardTopBorder} />
         
-        {/* Header - CORREGIDO */}
+        {/* Header */}
         <div style={styles.loginHeader}>
           <div style={styles.logoContainer}>
             <div style={styles.logoCircle}>
@@ -476,14 +508,18 @@ const Login: React.FC = () => {
             </div>
             <div style={styles.logoText}>
               <h1 style={styles.logoTitle}>IMEI Verification</h1>
-              <p style={styles.logoSubtitle}>Sistema de Gestión</p>
+              <p style={styles.logoSubtitle}>Sistema de Gestión Seguro</p>
             </div>
           </div>
           
-          {/* CORRECCIÓN: Estilos separados, no anidados */}
           <div>
-            <h2 style={styles.welcomeTitle}>Bienvenido</h2>
-            <p style={styles.welcomeText}>Ingresa tus credenciales para acceder al sistema</p>
+            <h2 style={styles.welcomeTitle}>Acceso Seguro</h2>
+            <p style={styles.welcomeText}>Ingresa tus credenciales autorizadas</p>
+            
+            {/* Nota de seguridad */}
+            <div style={styles.securityNote}>
+              🔒 Sistema protegido con autenticación segura
+            </div>
           </div>
         </div>
 
@@ -503,20 +539,14 @@ const Login: React.FC = () => {
                   setUsername(e.target.value);
                   if (error) setError('');
                 }}
-                placeholder="Ingresa tu usuario"
-                style={{
-                  ...styles.formInput,
-                  ...(error ? styles.errorInput : {}),
-                  ':focus': {
-                    borderColor: SAMSUNG_COLORS.blueLight,
-                    boxShadow: `0 0 0 4px rgba(20, 40, 160, 0.1)`,
-                    transform: 'translateY(-1px)'
-                  }
-                }}
+                placeholder="Usuario autorizado"
+                style={getInputStyle('username')}
                 disabled={loading}
                 autoComplete="username"
-                onFocus={() => setFocusInput('username')}
-                onBlur={() => setFocusInput(null)}
+                onFocus={() => setIsFocused(prev => ({ ...prev, username: true }))}
+                onBlur={() => setIsFocused(prev => ({ ...prev, username: false }))}
+                className="samsung-input"
+                maxLength={50}
               />
             </div>
           </div>
@@ -535,65 +565,37 @@ const Login: React.FC = () => {
                   setPassword(e.target.value);
                   if (error) setError('');
                 }}
-                placeholder="Ingresa tu contraseña"
-                style={{
-                  ...styles.formInput,
-                  ...styles.passwordInput,
-                  ...(error ? styles.errorInput : {}),
-                  ':focus': {
-                    borderColor: SAMSUNG_COLORS.blueLight,
-                    boxShadow: `0 0 0 4px rgba(20, 40, 160, 0.1)`,
-                    transform: 'translateY(-1px)'
-                  }
-                }}
+                placeholder="Contraseña segura"
+                style={getInputStyle('password')}
                 disabled={loading}
                 autoComplete="current-password"
-                onFocus={() => setFocusInput('password')}
-                onBlur={() => setFocusInput(null)}
+                onFocus={() => setIsFocused(prev => ({ ...prev, password: true }))}
+                onBlur={() => setIsFocused(prev => ({ ...prev, password: false }))}
+                className="samsung-input"
+                maxLength={100}
               />
               <button
                 type="button"
-                style={{
-                  ...styles.togglePassword,
-                  ':hover': {
-                    background: SAMSUNG_COLORS.gray,
-                    color: SAMSUNG_COLORS.text
-                  }
-                }}
+                style={styles.togglePassword(isHovered.passwordToggle)}
                 onClick={() => setShowPassword(!showPassword)}
+                onMouseEnter={() => setIsHovered(prev => ({ ...prev, passwordToggle: true }))}
+                onMouseLeave={() => setIsHovered(prev => ({ ...prev, passwordToggle: false }))}
                 tabIndex={-1}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
           </div>
 
-          {/* Botón Demo */}
-          <div style={styles.demoSection}>
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              style={{
-                ...styles.btnDemo,
-                ':hover': {
-                  background: 'rgba(20, 40, 160, 0.1)',
-                  transform: 'translateY(-1px)'
-                }
-              }}
-            >
-              <span style={styles.demoIcon}>🚀</span>
-              Usar credenciales de demo
-            </button>
-          </div>
-
           {/* Estado de carga */}
           {loading && (
             <div style={styles.loadingState}>
-              <div style={{ ...styles.samsungSpinner, animation: 'spin 1s linear infinite' }}></div>
+              <div style={styles.samsungSpinner}></div>
               <div>
-                <p style={styles.loadingTextP}>Conectando con el servidor...</p>
+                <p style={styles.loadingTextP}>Verificando credenciales...</p>
                 <small style={styles.loadingTextSmall}>
-                  Esto puede tardar unos segundos en la primera conexión
+                  Por favor, espera
                 </small>
               </div>
             </div>
@@ -618,21 +620,14 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !username.trim() || !password.trim()}
-            style={{
-              ...styles.btnLogin,
-              ...(loading || !username.trim() || !password.trim() ? styles.btnLoginDisabled : {}),
-              ':hover': !loading && username.trim() && password.trim() ? {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 12px 24px rgba(20, 40, 160, 0.3)'
-              } : {}
-            }}
-            onMouseEnter={() => setHoverLogin(true)}
-            onMouseLeave={() => setHoverLogin(false)}
+            style={styles.btnLogin(loading || !username.trim() || !password.trim(), isHovered.loginBtn)}
+            onMouseEnter={() => setIsHovered(prev => ({ ...prev, loginBtn: true }))}
+            onMouseLeave={() => setIsHovered(prev => ({ ...prev, loginBtn: false }))}
           >
             {loading ? (
               <>
-                <span style={{ ...styles.btnSpinner, animation: 'spin 1s linear infinite' }}></span>
-                Procesando...
+                <span style={styles.btnSpinner}></span>
+                Verificando...
               </>
             ) : (
               <>
@@ -645,29 +640,31 @@ const Login: React.FC = () => {
           {/* Footer del formulario */}
           <div style={styles.loginFooter}>
             <div style={styles.footerLinks}>
-              <button type="button" style={{
-                ...styles.linkBtn,
-                ':hover': {
-                  background: 'rgba(20, 40, 160, 0.05)'
-                }
-              }}>
-                ¿Olvidaste tu contraseña?
+              <button 
+                type="button" 
+                style={styles.linkBtn(isHovered.forgotBtn)}
+                onMouseEnter={() => setIsHovered(prev => ({ ...prev, forgotBtn: true }))}
+                onMouseLeave={() => setIsHovered(prev => ({ ...prev, forgotBtn: false }))}
+                onClick={() => {/* Lógica de recuperación de contraseña */}}
+              >
+                Recuperar acceso
               </button>
               <span style={styles.separator}>•</span>
-              <button type="button" style={{
-                ...styles.linkBtn,
-                ':hover': {
-                  background: 'rgba(20, 40, 160, 0.05)'
-                }
-              }}>
-                Contactar soporte
+              <button 
+                type="button" 
+                style={styles.linkBtn(isHovered.supportBtn)}
+                onMouseEnter={() => setIsHovered(prev => ({ ...prev, supportBtn: true }))}
+                onMouseLeave={() => setIsHovered(prev => ({ ...prev, supportBtn: false }))}
+                onClick={() => {/* Lógica de contacto */}}
+              >
+                Soporte técnico
               </button>
             </div>
             
             <div style={styles.versionInfo}>
               <span style={styles.version}>v2.1.4</span>
-              <span style={{ ...styles.statusIndicator, animation: 'pulse 2s infinite' }}></span>
-              <span>Sistema activo</span>
+              <span style={styles.statusIndicator}></span>
+              <span>Sistema seguro</span>
             </div>
           </div>
         </form>
@@ -676,9 +673,9 @@ const Login: React.FC = () => {
       {/* Footer global */}
       <footer style={styles.globalFooter}>
         <div>
-          <p style={styles.footerText}>Samsung Style UI • IMEI Verification System © 2024</p>
+          <p style={styles.footerText}>Samsung Style UI • IMEI Verification System © {new Date().getFullYear()}</p>
           <p style={styles.footerNote}>
-            Optimizado para Chrome, Safari y navegadores modernos
+            Sistema protegido. Acceso restringido a personal autorizado
           </p>
         </div>
       </footer>
