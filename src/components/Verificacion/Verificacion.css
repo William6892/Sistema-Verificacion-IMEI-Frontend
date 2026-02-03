@@ -1012,3 +1012,156 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Camera overlay */
+.camera-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Scan corners */
+.scan-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--samsung-blue-light);
+  pointer-events: none;
+}
+
+.scan-corner-tl {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.scan-corner-tr {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.scan-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.scan-corner-br {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* Mobile indicator */
+.mobile-indicator {
+  font-size: 0.75rem;
+  background: rgba(20, 40, 160, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+/* Botones faltantes */
+.btn-cancel-camera {
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  color: var(--samsung-text);
+  border: 2px solid var(--samsung-gray);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 16px;
+}
+
+.btn-cancel-camera:hover {
+  background: var(--samsung-gray);
+}
+
+.btn-register-new {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--samsung-success) 0%, #2dd4bf 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-register-new:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Estados de loading */
+.btn-loading {
+  opacity: 0.8;
+  cursor: not-allowed !important;
+}
+
+/* Alertas */
+.alert-error {
+  background: linear-gradient(135deg, #fed7d7 0%, #fff5f5 100%);
+  border-left: 4px solid var(--samsung-error);
+  color: #9b2c2c;
+}
+
+.alert-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Result states */
+.result-valid {
+  border-color: var(--samsung-success);
+  background: linear-gradient(135deg, #f0fff4 0%, #ffffff 50%, #f0fff4 100%);
+}
+
+.result-invalid {
+  border-color: var(--samsung-error);
+  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 50%, #fff5f5 100%);
+}
+
+/* Field hint */
+.field-hint {
+  font-size: 0.875rem;
+  color: var(--samsung-text-light);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Spinner específico para botón */
+.btn-submit .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Asegúrate de incluir la animación spin si no existe */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
