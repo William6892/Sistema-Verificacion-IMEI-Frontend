@@ -4,7 +4,6 @@ import axios from 'axios';
 const BASE_URL = process.env.REACT_APP_API_URL 
   || 'http://localhost:5000';  // Fallback para desarrollo local
 
-console.log('🔗 Conectando a API:', BASE_URL);
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
@@ -22,8 +21,7 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    }    
     return config;
   },
   (error) => {
