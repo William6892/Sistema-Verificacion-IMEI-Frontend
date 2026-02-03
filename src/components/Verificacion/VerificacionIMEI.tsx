@@ -1,7 +1,7 @@
 // src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
-import './Verificacion.css';
+import '../Verificacion/Verificacion.css';
 
 interface VerificacionIMEIProps {
   userRole?: string;
