@@ -1,60 +1,76 @@
-/* src/components/Verificacion/Verificacion.css - SAMSUNG STYLE MEJORADO */
+/* src/components/Verificacion/Verificacion.css - VERSIÓN PROFESIONAL PASTEL */
 
 /* ========================================
-   VARIABLES SAMSUNG MEJORADAS
+   VARIABLES - COLORES PROFESIONALES PASTEL
    ======================================== */
 :root {
-  /* Samsung Colors - Azul principal */
-  --samsung-blue: #1428a0;
-  --samsung-blue-light: #1e40ff;
-  --samsung-blue-medium: #2d4ae3;
-  --samsung-blue-dark: #0d1b66;
-  --samsung-blue-bg: #f0f4ff;
-  --samsung-gradient: linear-gradient(135deg, #1428a0 0%, #1e40ff 50%, #4a7dff 100%);
-  --samsung-gradient-light: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f8faff 100%);
-  
-  /* Sistema de colores */
+  /* Colores base - Fondo blanco puro */
   --samsung-white: #ffffff;
+  --samsung-off-white: #fafbfc;
+  --samsung-snow: #f8f9fa;
+  
+  /* Azules Samsung - Versiones pastel */
+  --samsung-blue: #1a4d8f;          /* Azul principal más suave */
+  --samsung-blue-light: #4a7dff;    /* Azul pastel */
+  --samsung-blue-pastel: #e8f1ff;   /* Azul fondo pastel */
+  --samsung-blue-pastel-dark: #d4e2ff; /* Azul pastel oscuro */
+  --samsung-blue-bg: #f5f8ff;       /* Azul de fondo muy suave */
+  
+  /* Gradientes sutiles */
+  --samsung-gradient: linear-gradient(135deg, #1a4d8f 0%, #4a7dff 100%);
+  --samsung-gradient-light: linear-gradient(135deg, #f5f8ff 0%, #ffffff 100%);
+  --samsung-gradient-pastel: linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f8fbff 100%);
+  
+  /* Sistema de grises profesionales */
   --samsung-gray-light: #f9fafb;
-  --samsung-gray: #f0f4f8;
-  --samsung-gray-medium: #e1e8f0;
-  --samsung-gray-dark: #d1d9e6;
-  --samsung-text: #1a202c;
-  --samsung-text-medium: #4a5568;
-  --samsung-text-light: #718096;
+  --samsung-gray: #f1f5f9;
+  --samsung-gray-medium: #e2e8f0;
+  --samsung-gray-dark: #cbd5e1;
   
-  /* Estados */
-  --samsung-success: #38b2ac;
-  --samsung-error: #e53e3e;
-  --samsung-warning: #ed8936;
+  /* Textos - Tonos suaves pero legibles */
+  --samsung-text: #1e293b;
+  --samsung-text-medium: #475569;
+  --samsung-text-light: #64748b;
+  --samsung-text-muted: #94a3b8;
   
-  /* Border Radius */
+  /* Estados - Colores pastel */
+  --samsung-success: #10b981;       /* Verde suave */
+  --samsung-success-pastel: #d1fae5; /* Verde pastel */
+  --samsung-error: #ef4444;         /* Rojo suave */
+  --samsung-error-pastel: #fee2e2;  /* Rojo pastel */
+  --samsung-warning: #f59e0b;       /* Ámbar suave */
+  --samsung-warning-pastel: #fef3c7; /* Ámbar pastel */
+  --samsung-info: #3b82f6;          /* Azul info suave */
+  --samsung-info-pastel: #dbeafe;   /* Azul info pastel */
+  
+  /* Border Radius - Suaves */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-2xl: 24px;
   
-  /* Shadows - Más sutiles */
-  --shadow-sm: 0 1px 3px rgba(20, 40, 160, 0.05);
-  --shadow-md: 0 4px 12px rgba(20, 40, 160, 0.08);
-  --shadow-lg: 0 8px 24px rgba(20, 40, 160, 0.12);
-  --shadow-blue: 0 4px 16px rgba(20, 40, 160, 0.1);
-  --shadow-inner: inset 0 2px 4px rgba(20, 40, 160, 0.05);
+  /* Shadows - Muy sutiles */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-blue: 0 4px 16px rgba(26, 77, 143, 0.06);
+  --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.03);
   
-  /* Transitions */
-  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transitions - Suaves */
+  --transition-fast: all 0.2s ease;
+  --transition: all 0.3s ease;
+  --transition-slow: all 0.4s ease;
   
   /* Layout */
   --header-height: 60px;
-  --container-padding: 16px;
-  --card-padding: 20px;
+  --container-padding: 20px;
+  --card-padding: 24px;
 }
 
 /* ========================================
-   RESET Y BASE MEJORADOS
+   RESET Y BASE
    ======================================== */
 * {
   box-sizing: border-box;
@@ -69,17 +85,18 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  line-height: 1.5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  line-height: 1.6;
   color: var(--samsung-text);
+  background-color: var(--samsung-off-white);
 }
 
 /* ========================================
-   CONTENEDOR PRINCIPAL - RESPONSIVE
+   CONTENEDOR PRINCIPAL - FONDO BLANCO PROFESIONAL
    ======================================== */
 .verificacion-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-gray-light) 100%);
+  background: var(--samsung-white);
   padding: var(--container-padding);
   display: flex;
   flex-direction: column;
@@ -88,21 +105,21 @@ body {
   overflow-x: hidden;
 }
 
+/* Patrón sutil de fondo */
 .verificacion-container::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 200px;
-  background: linear-gradient(135deg, 
-    rgba(20, 40, 160, 0.03) 0%, 
-    rgba(30, 64, 255, 0.02) 50%, 
-    rgba(74, 125, 255, 0.01) 100%);
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(234, 241, 255, 0.3) 0%, transparent 20%),
+    radial-gradient(circle at 90% 80%, rgba(234, 241, 255, 0.2) 0%, transparent 20%);
   z-index: 0;
+  pointer-events: none;
 }
 
-/* Grid responsive para contenido */
 .verificacion-content {
   width: 100%;
   max-width: 1200px;
@@ -111,7 +128,7 @@ body {
   z-index: 1;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 28px;
 }
 
 @media (min-width: 768px) {
@@ -129,19 +146,20 @@ body {
 }
 
 /* ========================================
-   HEADER - RESPONSIVE Y ELEGANTE
+   HEADER - PROFESIONAL Y ELEGANTE
    ======================================== */
 .verificacion-header {
   grid-column: 1 / -1;
   background: var(--samsung-white);
   border-radius: var(--radius-xl);
-  padding: 28px var(--card-padding);
-  margin-bottom: 16px;
+  padding: 32px var(--card-padding);
+  margin-bottom: 20px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--samsung-gray-medium);
   text-align: center;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-off-white) 100%);
 }
 
 .verificacion-header::before {
@@ -150,15 +168,16 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: var(--samsung-gradient);
+  opacity: 0.8;
 }
 
 .verificacion-header h1 {
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 700;
   margin-bottom: 12px;
-  color: var(--samsung-blue-dark);
+  color: var(--samsung-text);
   line-height: 1.2;
   display: flex;
   align-items: center;
@@ -168,16 +187,16 @@ body {
 }
 
 .verificacion-header .subtitle {
-  font-size: clamp(0.875rem, 2vw, 1.125rem);
+  font-size: clamp(1rem, 2vw, 1.125rem);
   color: var(--samsung-text-medium);
   line-height: 1.6;
   max-width: 800px;
   margin: 0 auto;
-  opacity: 0.9;
+  font-weight: 400;
 }
 
 /* ========================================
-   TARJETA PRINCIPAL - RESPONSIVE
+   TARJETA PRINCIPAL - BLANCO CON SOMBRAS SUTILES
    ======================================== */
 .verificacion-card {
   background: var(--samsung-white);
@@ -188,10 +207,12 @@ body {
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-snow) 100%);
 }
 
 .verificacion-card:hover {
   box-shadow: var(--shadow-blue);
+  transform: translateY(-2px);
 }
 
 .verificacion-card::before {
@@ -200,14 +221,14 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: var(--samsung-gradient);
+  opacity: 0.8;
 }
 
-/* Responsive padding */
 @media (min-width: 640px) {
   .verificacion-card {
-    padding: 24px;
+    padding: 28px;
   }
 }
 
@@ -218,10 +239,10 @@ body {
 }
 
 /* ========================================
-   CÁMARA - RESPONSIVE COMPLETO
+   CÁMARA - ESTILOS PROFESIONALES
    ======================================== */
 .camera-active-section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -229,9 +250,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--samsung-gray-medium);
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--samsung-gray-medium);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -239,7 +260,7 @@ body {
 .camera-header h3 {
   font-size: clamp(1.125rem, 3vw, 1.5rem);
   font-weight: 600;
-  color: var(--samsung-blue-dark);
+  color: var(--samsung-text);
   margin: 0;
   display: flex;
   align-items: center;
@@ -262,22 +283,21 @@ body {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
-  font-weight: bold;
+  font-weight: 300;
   flex-shrink: 0;
 }
 
 .btn-close-camera:hover {
-  background: var(--samsung-error);
-  color: var(--samsung-white);
+  background: var(--samsung-error-pastel);
+  color: var(--samsung-error);
   transform: rotate(90deg);
 }
 
-/* Contenedor de cámara responsive */
 .camera-container-wrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 20px;
-  background: #000;
+  margin-bottom: 24px;
+  background: #1a1a1a;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -288,13 +308,12 @@ body {
 .camera-preview-box {
   width: 100%;
   height: 100%;
-  background: #000;
+  background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Marco de escaneo responsive */
 .scan-frame {
   position: relative;
   width: min(85%, 320px);
@@ -309,20 +328,19 @@ body {
   }
 }
 
-/* Línea de escaneo optimizada */
 .scan-line {
   position: absolute;
   left: 10%;
   right: 10%;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, 
     transparent, 
     var(--samsung-blue-light) 30%,
-    var(--samsung-blue) 50%,
+    var(--samsung-white) 50%,
     var(--samsung-blue-light) 70%,
     transparent
   );
-  filter: drop-shadow(0 0 8px var(--samsung-blue-light));
+  filter: drop-shadow(0 0 4px var(--samsung-blue-light));
   animation: scan 2s ease-in-out infinite;
 }
 
@@ -339,681 +357,6 @@ body {
   }
 }
 
-/* Instrucciones responsive */
-.camera-instructions {
-  text-align: center;
-  color: var(--samsung-white);
-  padding: 0 16px;
-  width: 100%;
-}
-
-.instruction-main {
-  font-size: clamp(1rem, 3vw, 1.125rem);
-  font-weight: 600;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.instruction-sub {
-  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-  opacity: 0.9;
-  max-width: 400px;
-  margin: 0 auto;
-  line-height: 1.4;
-}
-
-/* ========================================
-   BOTONES - RESPONSIVE Y ACCESIBLES
-   ======================================== */
-.btn-camera-trigger,
-.btn-submit,
-.btn-reset,
-.btn-cancel-camera,
-.btn-register-new {
-  width: 100%;
-  padding: clamp(16px, 4vw, 20px);
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: clamp(0.875rem, 3vw, 1rem);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 52px;
-}
-
-/* Botón principal - Cámara */
-.btn-camera-trigger {
-  background: var(--samsung-gradient);
-  color: var(--samsung-white);
-  box-shadow: var(--shadow-blue);
-}
-
-.btn-camera-trigger:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-camera-trigger:active {
-  transform: translateY(0);
-}
-
-/* Botón de envío */
-.btn-submit {
-  background: var(--samsung-blue);
-  color: var(--samsung-white);
-  box-shadow: var(--shadow-blue);
-}
-
-.btn-submit:hover:not(:disabled) {
-  background: var(--samsung-blue-medium);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-submit:disabled {
-  background: var(--samsung-gray);
-  color: var(--samsung-text-light);
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Botón reset */
-.btn-reset {
-  background: transparent;
-  color: var(--samsung-blue);
-  border: 2px solid var(--samsung-blue);
-}
-
-.btn-reset:hover {
-  background: var(--samsung-blue);
-  color: var(--samsung-white);
-}
-
-/* Efecto ripple para todos los botones */
-.btn-camera-trigger::after,
-.btn-submit::after,
-.btn-reset::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.5);
-  opacity: 0;
-  border-radius: 100%;
-  transform: scale(1, 1) translate(-50%, -50%);
-  transform-origin: 50% 50%;
-}
-
-.btn-camera-trigger:focus:not(:active)::after,
-.btn-submit:focus:not(:active)::after,
-.btn-reset:focus:not(:active)::after {
-  animation: ripple 1s ease-out;
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(0, 0);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(20, 20);
-    opacity: 0;
-  }
-}
-
-/* ========================================
-   FORMULARIO - RESPONSIVE COMPLETO
-   ======================================== */
-.verification-form {
-  margin-bottom: 24px;
-}
-
-.form-field {
-  margin-bottom: clamp(20px, 5vw, 28px);
-}
-
-.field-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: clamp(0.875rem, 3vw, 1rem);
-  font-weight: 600;
-  color: var(--samsung-blue-dark);
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-/* Input responsive */
-.input-with-clear {
-  position: relative;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--samsung-gray-medium);
-  transition: var(--transition);
-  background: var(--samsung-white);
-}
-
-.input-with-clear:focus-within {
-  border-color: var(--samsung-blue);
-  box-shadow: 0 0 0 4px rgba(20, 40, 160, 0.1);
-}
-
-.imei-field {
-  width: 100%;
-  padding: clamp(16px, 4vw, 20px);
-  padding-right: 60px;
-  border: none;
-  font-size: clamp(0.875rem, 3vw, 1.125rem);
-  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  background: transparent;
-  color: var(--samsung-text);
-  outline: none;
-  line-height: 1.5;
-}
-
-.imei-field::placeholder {
-  color: var(--samsung-text-light);
-  opacity: 0.6;
-  font-size: clamp(0.875rem, 3vw, 1rem);
-}
-
-/* Botón clear responsive */
-.btn-clear-field {
-  position: absolute;
-  right: clamp(12px, 3vw, 16px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: clamp(32px, 8vw, 40px);
-  height: clamp(32px, 8vw, 40px);
-  border: none;
-  background: var(--samsung-gray);
-  color: var(--samsung-text-light);
-  border-radius: 50%;
-  font-size: clamp(18px, 4vw, 24px);
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 300;
-}
-
-.btn-clear-field:hover {
-  background: var(--samsung-blue);
-  color: var(--samsung-white);
-}
-
-/* ========================================
-   RESULTADO - RESPONSIVE Y ELEGANTE
-   ======================================== */
-.result-card {
-  border-radius: var(--radius-lg);
-  padding: clamp(20px, 5vw, 28px);
-  margin-top: 24px;
-  border: 2px solid;
-  animation: fadeInUp 0.4s ease-out;
-  background: var(--samsung-white);
-}
-
-.result-status {
-  display: flex;
-  align-items: center;
-  gap: clamp(16px, 4vw, 24px);
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid;
-  flex-wrap: wrap;
-}
-
-.status-badge {
-  font-size: clamp(40px, 10vw, 56px);
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.status-text {
-  flex: 1;
-  min-width: min(200px, 100%);
-}
-
-.status-title {
-  font-size: clamp(1.125rem, 4vw, 1.375rem);
-  font-weight: 700;
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-
-.status-imei {
-  font-size: clamp(0.875rem, 3vw, 1rem);
-  font-family: 'SF Mono', 'Monaco', monospace;
-  color: var(--samsung-text);
-  word-break: break-all;
-  letter-spacing: 0.5px;
-}
-
-/* Info rows responsive */
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: clamp(12px, 3vw, 16px) 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.info-label {
-  font-size: clamp(0.875rem, 3vw, 0.9375rem);
-  font-weight: 600;
-  color: var(--samsung-text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 140px;
-}
-
-.info-value {
-  font-size: clamp(0.875rem, 3vw, 0.9375rem);
-  color: var(--samsung-text);
-  text-align: right;
-  font-weight: 500;
-  flex: 1;
-  min-width: 140px;
-}
-
-/* ========================================
-   PANEL DE AYUDA - RESPONSIVE GRID
-   ======================================== */
-.help-panel {
-  background: var(--samsung-white);
-  border-radius: var(--radius-xl);
-  padding: clamp(20px, 5vw, 28px);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--samsung-gray-medium);
-  position: relative;
-  overflow: hidden;
-}
-
-.help-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--samsung-gradient);
-}
-
-.help-title {
-  font-size: clamp(1.125rem, 4vw, 1.25rem);
-  font-weight: 700;
-  color: var(--samsung-blue-dark);
-  margin-bottom: 24px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Grid responsive para ayuda */
-.help-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-  gap: clamp(16px, 4vw, 20px);
-}
-
-.help-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: clamp(16px, 4vw, 20px);
-  background: var(--samsung-gray-light);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--samsung-gray-medium);
-  transition: var(--transition);
-  height: 100%;
-}
-
-.help-card:hover {
-  background: var(--samsung-white);
-  border-color: var(--samsung-blue);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.help-number {
-  width: clamp(32px, 8vw, 36px);
-  height: clamp(32px, 8vw, 36px);
-  min-width: clamp(32px, 8vw, 36px);
-  background: var(--samsung-gradient);
-  color: var(--samsung-white);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: clamp(0.875rem, 3vw, 1rem);
-  flex-shrink: 0;
-}
-
-.help-content {
-  flex: 1;
-}
-
-.help-content strong {
-  display: block;
-  font-size: clamp(0.875rem, 3vw, 0.9375rem);
-  font-weight: 600;
-  color: var(--samsung-blue-dark);
-  margin-bottom: 6px;
-  line-height: 1.4;
-}
-
-.help-content p {
-  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-  color: var(--samsung-text-medium);
-  line-height: 1.5;
-}
-
-/* ========================================
-   DIVISOR RESPONSIVE
-   ======================================== */
-.divider-with-text {
-  display: flex;
-  align-items: center;
-  margin: clamp(24px, 6vw, 32px) 0;
-  gap: clamp(16px, 4vw, 20px);
-}
-
-.divider-with-text::before,
-.divider-with-text::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    var(--samsung-blue-light),
-    transparent
-  );
-}
-
-.divider-with-text span {
-  color: var(--samsung-blue);
-  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
-
-/* ========================================
-   ALERTAS RESPONSIVE
-   ======================================== */
-.alert {
-  padding: clamp(16px, 4vw, 20px);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: flex-start;
-  gap: clamp(12px, 3vw, 16px);
-  margin-bottom: 24px;
-  animation: slideIn 0.3s ease-out;
-  flex-wrap: wrap;
-}
-
-.alert-text {
-  flex: 1;
-  min-width: min(200px, 100%);
-  font-size: clamp(0.875rem, 3vw, 0.9375rem);
-  line-height: 1.5;
-}
-
-/* ========================================
-   UTILIDADES RESPONSIVE
-   ======================================== */
-.hide-on-mobile {
-  display: none;
-}
-
-.show-on-mobile {
-  display: block;
-}
-
-@media (min-width: 768px) {
-  .hide-on-mobile {
-    display: block;
-  }
-  
-  .show-on-mobile {
-    display: none;
-  }
-}
-
-/* Contenedor de acción fija en móvil */
-.mobile-action-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--samsung-white);
-  padding: 16px var(--container-padding);
-  box-shadow: 0 -4px 20px rgba(20, 40, 160, 0.1);
-  z-index: 1000;
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .mobile-action-container {
-    display: block;
-  }
-  
-  /* Añadir padding al final para evitar que el contenido quede detrás del botón fijo */
-  .verificacion-container {
-    padding-bottom: 100px;
-  }
-}
-
-/* ========================================
-   ANIMACIONES OPTIMIZADAS
-   ======================================== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* ========================================
-   ACCESIBILIDAD MEJORADA
-   ======================================== */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Focus visible mejorado */
-:focus-visible {
-  outline: 3px solid var(--samsung-blue);
-  outline-offset: 3px;
-  border-radius: var(--radius-sm);
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  :root {
-    --samsung-blue: #0000cc;
-    --samsung-blue-dark: #000066;
-    --samsung-error: #cc0000;
-    --samsung-success: #006600;
-  }
-  
-  .verificacion-card,
-  .help-panel,
-  .verificacion-header {
-    border: 2px solid var(--samsung-blue);
-  }
-}
-
-/* ========================================
-   DARK MODE SUPPORT
-   ======================================== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --samsung-white: #1a1a2e;
-    --samsung-gray-light: #16213e;
-    --samsung-gray: #0f3460;
-    --samsung-gray-medium: #1e3a5f;
-    --samsung-text: #e2e8f0;
-    --samsung-text-medium: #a0aec0;
-    --samsung-text-light: #718096;
-    --samsung-blue-bg: #0d1b66;
-  }
-  
-  .verificacion-container {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  }
-  
-  .verificacion-container::before {
-    background: linear-gradient(135deg, 
-      rgba(20, 40, 160, 0.1) 0%, 
-      rgba(30, 64, 255, 0.05) 50%, 
-      rgba(74, 125, 255, 0.02) 100%);
-  }
-  
-  .verificacion-card,
-  .help-panel,
-  .verificacion-header {
-    background: var(--samsung-white);
-    border-color: var(--samsung-gray-medium);
-  }
-  
-  .input-with-clear {
-    background: var(--samsung-gray-light);
-  }
-  
-  .imei-field {
-    background: transparent;
-    color: var(--samsung-text);
-  }
-}
-
-/* ========================================
-   PRINT STYLES
-   ======================================== */
-@media print {
-  .verificacion-container {
-    background: white !important;
-    padding: 0 !important;
-  }
-  
-  .verificacion-card,
-  .result-card {
-    box-shadow: none !important;
-    border: 2px solid #000 !important;
-    break-inside: avoid;
-  }
-  
-  .btn-camera-trigger,
-  .btn-submit,
-  .btn-reset,
-  .btn-cancel-camera,
-  .btn-register-new,
-  .btn-close-camera,
-  .btn-clear-field {
-    display: none !important;
-  }
-  
-  .camera-active-section,
-  .camera-trigger-section,
-  .verification-form {
-    display: none !important;
-  }
-}
-
-/* ========================================
-   LOADING STATES
-   ======================================== */
-.loading-shimmer {
-  background: linear-gradient(90deg, 
-    var(--samsung-gray) 25%, 
-    var(--samsung-gray-medium) 50%, 
-    var(--samsung-gray) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-md);
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Spinner responsive */
-.spinner {
-  width: clamp(16px, 4vw, 20px);
-  height: clamp(16px, 4vw, 20px);
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--samsung-white);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Camera overlay */
 .camera-overlay {
   position: absolute;
   top: 0;
@@ -1024,13 +367,13 @@ body {
   z-index: 10;
 }
 
-/* Scan corners */
 .scan-corner {
   position: absolute;
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--samsung-blue-light);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--samsung-blue-light);
   pointer-events: none;
+  opacity: 0.8;
 }
 
 .scan-corner-tl {
@@ -1061,107 +404,657 @@ body {
   border-top: none;
 }
 
-/* Mobile indicator */
-.mobile-indicator {
-  font-size: 0.75rem;
-  background: rgba(20, 40, 160, 0.1);
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 8px;
-}
-
-/* Botones faltantes */
-.btn-cancel-camera {
+.camera-instructions {
+  text-align: center;
+  color: var(--samsung-white);
+  padding: 0 16px;
   width: 100%;
-  padding: 16px;
-  background: transparent;
-  color: var(--samsung-text);
-  border: 2px solid var(--samsung-gray);
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  margin-top: 16px;
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
 }
 
-.btn-cancel-camera:hover {
-  background: var(--samsung-gray);
-}
-
-.btn-register-new {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--samsung-success) 0%, #2dd4bf 100%);
-  color: white;
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  margin-top: 16px;
+.instruction-main {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-weight: 500;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex-wrap: wrap;
+  opacity: 0.9;
+}
+
+.instruction-sub {
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  opacity: 0.7;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.4;
+}
+
+/* ========================================
+   BOTONES - PROFESIONALES Y SUTILES
+   ======================================== */
+.btn-camera-trigger,
+.btn-submit,
+.btn-reset,
+.btn-cancel-camera,
+.btn-register-new {
+  width: 100%;
+  padding: clamp(16px, 4vw, 18px);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+  letter-spacing: 0.3px;
+}
+
+.btn-camera-trigger {
+  background: var(--samsung-gradient);
+  color: var(--samsung-white);
+  box-shadow: var(--shadow-blue);
+}
+
+.btn-camera-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-camera-trigger:active {
+  transform: translateY(0);
+}
+
+.btn-submit {
+  background: var(--samsung-blue);
+  color: var(--samsung-white);
+  box-shadow: var(--shadow-blue);
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--samsung-blue-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-submit:disabled {
+  background: var(--samsung-gray);
+  color: var(--samsung-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-reset {
+  background: transparent;
+  color: var(--samsung-blue);
+  border: 1.5px solid var(--samsung-blue-pastel-dark);
+  background: var(--samsung-blue-pastel);
+}
+
+.btn-reset:hover {
+  background: var(--samsung-blue);
+  color: var(--samsung-white);
+  border-color: var(--samsung-blue);
+}
+
+.btn-cancel-camera {
+  background: transparent;
+  color: var(--samsung-text);
+  border: 1.5px solid var(--samsung-gray-medium);
+}
+
+.btn-cancel-camera:hover {
+  background: var(--samsung-gray);
+  border-color: var(--samsung-gray-dark);
+}
+
+.btn-register-new {
+  background: var(--samsung-success-pastel);
+  color: var(--samsung-success);
+  border: 1.5px solid var(--samsung-success-pastel);
 }
 
 .btn-register-new:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
+  background: var(--samsung-success);
+  color: var(--samsung-white);
+  border-color: var(--samsung-success);
 }
 
-/* Estados de loading */
-.btn-loading {
+/* ========================================
+   FORMULARIO - ESTILOS PROFESIONALES
+   ======================================== */
+.verification-form {
+  margin-bottom: 28px;
+}
+
+.form-field {
+  margin-bottom: clamp(20px, 5vw, 24px);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 500;
+  color: var(--samsung-text);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.input-with-clear {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1.5px solid var(--samsung-gray-medium);
+  transition: var(--transition);
+  background: var(--samsung-white);
+}
+
+.input-with-clear:focus-within {
+  border-color: var(--samsung-blue);
+  box-shadow: 0 0 0 3px var(--samsung-blue-pastel);
+}
+
+.imei-field {
+  width: 100%;
+  padding: clamp(14px, 4vw, 18px);
+  padding-right: 56px;
+  border: none;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: var(--samsung-text);
+  outline: none;
+  line-height: 1.5;
+}
+
+.imei-field::placeholder {
+  color: var(--samsung-text-muted);
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 400;
+}
+
+.btn-clear-field {
+  position: absolute;
+  right: clamp(12px, 3vw, 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(28px, 8vw, 36px);
+  height: clamp(28px, 8vw, 36px);
+  border: none;
+  background: var(--samsung-gray);
+  color: var(--samsung-text-light);
+  border-radius: 50%;
+  font-size: clamp(16px, 4vw, 20px);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 300;
+}
+
+.btn-clear-field:hover {
+  background: var(--samsung-blue-pastel-dark);
+  color: var(--samsung-blue);
+}
+
+.field-hint {
+  font-size: 0.8125rem;
+  color: var(--samsung-text-muted);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+}
+
+/* ========================================
+   RESULTADO - ESTILOS ELEGANTES
+   ======================================== */
+.result-card {
+  border-radius: var(--radius-lg);
+  padding: clamp(20px, 5vw, 28px);
+  margin-top: 28px;
+  border: 1.5px solid;
+  animation: fadeInUp 0.4s ease-out;
+  background: var(--samsung-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.result-valid {
+  border-color: var(--samsung-success-pastel);
+  background: linear-gradient(135deg, var(--samsung-success-pastel) 0%, var(--samsung-white) 50%, var(--samsung-success-pastel) 100%);
+}
+
+.result-invalid {
+  border-color: var(--samsung-error-pastel);
+  background: linear-gradient(135deg, var(--samsung-error-pastel) 0%, var(--samsung-white) 50%, var(--samsung-error-pastel) 100%);
+}
+
+.result-status {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 4vw, 20px);
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--samsung-gray);
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: clamp(32px, 10vw, 48px);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.status-text {
+  flex: 1;
+  min-width: min(200px, 100%);
+}
+
+.status-title {
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.status-imei {
+  font-size: clamp(0.8125rem, 3vw, 0.9375rem);
+  font-family: 'SF Mono', 'Monaco', monospace;
+  color: var(--samsung-text-medium);
+  word-break: break-all;
+  letter-spacing: 0.5px;
+  background: var(--samsung-off-white);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(12px, 3vw, 16px) 0;
+  border-bottom: 1px solid var(--samsung-gray-light);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.info-label {
+  font-size: clamp(0.8125rem, 3vw, 0.875rem);
+  font-weight: 500;
+  color: var(--samsung-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.info-value {
+  font-size: clamp(0.8125rem, 3vw, 0.875rem);
+  color: var(--samsung-text-medium);
+  text-align: right;
+  font-weight: 400;
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ========================================
+   PANEL DE AYUDA - ESTILOS PROFESIONALES
+   ======================================== */
+.help-panel {
+  background: var(--samsung-white);
+  border-radius: var(--radius-xl);
+  padding: clamp(20px, 5vw, 28px);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--samsung-gray-medium);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-off-white) 100%);
+}
+
+.help-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--samsung-gradient);
   opacity: 0.8;
-  cursor: not-allowed !important;
 }
 
-/* Alertas */
+.help-title {
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  font-weight: 600;
+  color: var(--samsung-text);
+  margin-bottom: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.help-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(16px, 4vw, 20px);
+}
+
+.help-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: clamp(16px, 4vw, 20px);
+  background: var(--samsung-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--samsung-gray-medium);
+  transition: var(--transition);
+  height: 100%;
+  background: linear-gradient(135deg, var(--samsung-white) 0%, var(--samsung-gray-light) 100%);
+}
+
+.help-card:hover {
+  background: var(--samsung-white);
+  border-color: var(--samsung-blue-pastel-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.help-number {
+  width: clamp(32px, 8vw, 36px);
+  height: clamp(32px, 8vw, 36px);
+  min-width: clamp(32px, 8vw, 36px);
+  background: var(--samsung-gradient);
+  color: var(--samsung-white);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
+}
+
+.help-content {
+  flex: 1;
+}
+
+.help-content strong {
+  display: block;
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  font-weight: 500;
+  color: var(--samsung-text);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.help-content p {
+  font-size: clamp(0.75rem, 2.5vw, 0.8125rem);
+  color: var(--samsung-text-light);
+  line-height: 1.5;
+}
+
+/* ========================================
+   DIVISOR ELEGANTE
+   ======================================== */
+.divider-with-text {
+  display: flex;
+  align-items: center;
+  margin: clamp(24px, 6vw, 32px) 0;
+  gap: clamp(16px, 4vw, 20px);
+}
+
+.divider-with-text::before,
+.divider-with-text::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--samsung-gray-medium),
+    transparent
+  );
+}
+
+.divider-with-text span {
+  color: var(--samsung-text-light);
+  font-size: clamp(0.75rem, 2.5vw, 0.8125rem);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* ========================================
+   ALERTAS PROFESIONALES
+   ======================================== */
+.alert {
+  padding: clamp(16px, 4vw, 20px);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(12px, 3vw, 16px);
+  margin-bottom: 24px;
+  animation: slideIn 0.3s ease-out;
+  flex-wrap: wrap;
+  border: 1.5px solid;
+  background: var(--samsung-white);
+}
+
 .alert-error {
-  background: linear-gradient(135deg, #fed7d7 0%, #fff5f5 100%);
-  border-left: 4px solid var(--samsung-error);
-  color: #9b2c2c;
+  border-color: var(--samsung-error-pastel);
+  background: var(--samsung-error-pastel);
+}
+
+.alert-success {
+  border-color: var(--samsung-success-pastel);
+  background: var(--samsung-success-pastel);
+}
+
+.alert-warning {
+  border-color: var(--samsung-warning-pastel);
+  background: var(--samsung-warning-pastel);
 }
 
 .alert-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-/* Result states */
-.result-valid {
-  border-color: var(--samsung-success);
-  background: linear-gradient(135deg, #f0fff4 0%, #ffffff 50%, #f0fff4 100%);
+.alert-text {
+  flex: 1;
+  min-width: min(200px, 100%);
+  font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  line-height: 1.5;
+  color: var(--samsung-text);
 }
 
-.result-invalid {
-  border-color: var(--samsung-error);
-  background: linear-gradient(135deg, #fff5f5 0%, #ffffff 50%, #fff5f5 100%);
+/* ========================================
+   UTILIDADES
+   ======================================== */
+.mobile-indicator {
+  font-size: 0.75rem;
+  background: var(--samsung-blue-pastel);
+  color: var(--samsung-blue);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: 500;
 }
 
-/* Field hint */
-.field-hint {
-  font-size: 0.875rem;
-  color: var(--samsung-text-light);
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.btn-loading {
+  opacity: 0.8;
+  cursor: not-allowed !important;
 }
 
-/* Spinner específico para botón */
-.btn-submit .spinner {
-  width: 16px;
-  height: 16px;
+.spinner {
+  width: clamp(16px, 4vw, 18px);
+  height: clamp(16px, 4vw, 18px);
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border-top-color: var(--samsung-white);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
-/* Asegúrate de incluir la animación spin si no existe */
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.btn-submit .spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--samsung-white);
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 767px) {
+  .mobile-action-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--samsung-white);
+    padding: 16px var(--container-padding);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 1000;
+    display: block;
+  }
+  
+  .verificacion-container {
+    padding-bottom: 100px;
+  }
+}
+
+/* ========================================
+   DARK MODE (OPCIONAL)
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --samsung-white: #1a1a2e;
+    --samsung-off-white: #16213e;
+    --samsung-snow: #0f3460;
+    --samsung-text: #e2e8f0;
+    --samsung-text-medium: #a0aec0;
+    --samsung-text-light: #718096;
+    --samsung-text-muted: #4a5568;
+    --samsung-gray-light: #2d3748;
+    --samsung-gray: #1e293b;
+    --samsung-gray-medium: #374151;
+    --samsung-gray-dark: #4b5563;
+    --samsung-blue-pastel: #1e3a5f;
+    --samsung-blue-bg: #0d1b66;
+  }
+  
+  .verificacion-container {
+    background: var(--samsung-white);
+  }
+  
+  .verificacion-container::before {
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(30, 64, 175, 0.1) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(30, 64, 175, 0.05) 0%, transparent 20%);
+  }
+}
+
+/* ========================================
+   IMPRESIÓN
+   ======================================== */
+@media print {
+  .verificacion-container {
+    background: white !important;
+    padding: 0 !important;
+  }
+  
+  .verificacion-container::before {
+    display: none;
+  }
+  
+  .verificacion-card,
+  .result-card,
+  .help-panel,
+  .verificacion-header {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+  
+  .btn-camera-trigger,
+  .btn-submit,
+  .btn-reset,
+  .btn-cancel-camera,
+  .btn-register-new,
+  .btn-close-camera,
+  .btn-clear-field {
+    display: none !important;
+  }
+  
+  .camera-active-section,
+  .camera-trigger-section,
+  .verification-form {
+    display: none !important;
+  }
 }
