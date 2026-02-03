@@ -43,206 +43,31 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     
     return () => {
       window.removeEventListener('resize', checkMobile);
-      stopScanner();
     };
   }, []);
 
-  // Inicializar scanner cuando se muestra la cámara
-  useEffect(() => {
-    if (showCamera && !scannerRef.current) {
-      startScanner();
-    } else if (!showCamera && scannerRef.current) {
-      stopScanner();
+  // Función para calcular checksum Luhn (algoritmo real para IMEI)
+  const calculateLuhnChecksum = (imei: string): number => {
+    let sum = 0;
+    const digits = imei.split('').map(Number);
+    
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let digit = digits[i];
+      
+      if ((digits.length - i) % 2 === 0) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      
+      sum += digit;
     }
     
-    return () => {
-      if (scannerRef.current) {
-        stopScanner();
-      }
-    };
-  }, [showCamera]);
-
-  const startScanner = useCallback(async () => {
-    if (scannerRef.current || !document.getElementById('camera-container')) return;
-    
-    try {
-      // Solicitar permisos de cámara primero
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: {
-          facingMode: isMobile ? 'environment' : 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
-      
-      // Detener el stream inicial para que Html5QrcodeScanner lo maneje
-      stream.getTracks().forEach(track => track.stop());
-      
-      const config = {
-        fps: 10,
-        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
-          return { width: size, height: size * 0.6 };
-        },
-        aspectRatio: 1.7777778,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: true,
-      };
-
-      scannerRef.current = new Html5QrcodeScanner(
-        "camera-container",
-        config,
-        false
-      );
-      
-      // CORRECCIÓN: Solo 2 parámetros, no 3
-      scannerRef.current.render(
-        (decodedText) => {
-          handleScannedCode(decodedText);
-        },
-        (error) => {
-          console.log('Error escaneando:', error);
-          
-          // Manejar errores dentro del callback
-          const errorMessage = error?.toString() || '';
-          
-          if (errorMessage.includes('NotAllowedError') || errorMessage.includes('Permission')) {
-            setError('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en ajustes.');
-            setShowCamera(false);
-          } else if (errorMessage.includes('NotFoundError')) {
-            setError('No se encontró cámara en el dispositivo.');
-            setShowCamera(false);
-          } else if (errorMessage.includes('NotReadableError')) {
-            setError('La cámara está siendo usada por otra aplicación.');
-            setShowCamera(false);
-          } else if (errorMessage.includes('OverconstrainedError')) {
-            setError('La cámara no cumple con los requisitos necesarios.');
-            setShowCamera(false);
-          } else if (errorMessage.includes('SecurityError')) {
-            setError('Error de seguridad. Intenta en HTTPS o en un entorno seguro.');
-            setShowCamera(false);
-          }
-        }
-      );
-      
-      setScanning(true);
-      setError('');
-      
-    } catch (err: any) {
-      console.error('Error inicializando cámara:', err);
-      
-      // Manejo de errores en la inicialización
-      if (err.name === 'NotAllowedError') {
-        setError('Permiso de cámara denegado. Habilita la cámara en ajustes del navegador.');
-      } else if (err.name === 'NotFoundError') {
-        setError('No se encontró ninguna cámara disponible.');
-      } else if (err.name === 'NotReadableError') {
-        setError('La cámara está siendo usada por otra aplicación.');
-      } else if (err.name === 'OverconstrainedError') {
-        setError('La cámara no cumple con los requisitos necesarios.');
-      } else if (err.name === 'SecurityError') {
-        setError('Error de seguridad. Asegúrate de usar HTTPS.');
-      } else {
-        setError('Error al iniciar la cámara. Intenta de nuevo.');
-      }
-      
-      setShowCamera(false);
-      scannerRef.current = null;
-    }
-  }, [isMobile, handleScannedCode]); // Añadir handleScannedCode como dependencia
-
-  const stopScanner = useCallback(() => {
-    if (scannerRef.current) {
-      try {
-        scannerRef.current.clear().catch(err => console.log('Error al limpiar scanner:', err));
-        scannerRef.current = null;
-      } catch (err) {
-        console.error('Error deteniendo scanner:', err);
-      }
-    }
-    setScanning(false);
-  }, []);
-
-  const handleScannedCode = useCallback((code: string) => {
-    // Extraer IMEI del código escaneado
-    const imeiMatch = code.match(/\b\d{15,16}\b/);
-    
-    if (imeiMatch) {
-      const scannedImei = imeiMatch[0];
-      setImei(scannedImei);
-      
-      // Vibración en móviles si está disponible
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
-      }
-      
-      stopScanner();
-      setShowCamera(false);
-      
-      // Auto-verificar después de escanear
-      setTimeout(() => {
-        handleVerificar(scannedImei);
-      }, 300);
-    } else {
-      // Buscar cualquier número largo que pueda ser IMEI
-      const numbers = code.match(/\d+/g);
-      if (numbers) {
-        const longNumber = numbers.find(num => num.length >= 10);
-        if (longNumber) {
-          const extractedImei = longNumber.substring(0, 16);
-          setImei(extractedImei);
-          setError('Número detectado. Verifica que sea un IMEI válido antes de verificar.');
-          stopScanner();
-          setShowCamera(false);
-          // Focus en el input para que el usuario pueda editar
-          if (inputRef.current) {
-            inputRef.current.focus();
-            inputRef.current.setSelectionRange(extractedImei.length, extractedImei.length);
-          }
-        } else {
-          setError('No se encontró un IMEI válido en el código escaneado.');
-        }
-      } else {
-        setError('No se encontró un IMEI válido en el código escaneado.');
-      }
-    }
-  }, [stopScanner, handleVerificar]);
-
-  const handleVerificar = useCallback(async (imeiToCheck?: string) => {
-    const imeiToVerify = imeiToCheck || imei.trim();
-    
-    if (!imeiToVerify) {
-      setError('Por favor, ingresa un IMEI');
-      if (inputRef.current) inputRef.current.focus();
-      return;
-    }
-
-    // Validación básica de IMEI
-    if (imeiToVerify.length < 10 || imeiToVerify.length > 20 || !/^\d+$/.test(imeiToVerify)) {
-      setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
-      if (inputRef.current) inputRef.current.focus();
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setResultado(null);
-
-    try {
-      // SIMULAR LLAMADA A API - REEMPLAZA CON TU API REAL
-      const mockResult = await mockVerificarIMEI(imeiToVerify);
-      setResultado(mockResult);
-    } catch (err: any) {
-      setError(err.message || 'Error al verificar IMEI');
-    } finally {
-      setLoading(false);
-    }
-  }, [imei]);
+    return sum % 10;
+  };
 
   // Función mock para simular API
   const mockVerificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         try {
           // Simular validación más realista
@@ -265,30 +90,186 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
             });
           }
         } catch (err) {
-          reject(new Error('Error procesando IMEI'));
+          resolve({
+            valido: false,
+            mensaje: 'Error procesando IMEI'
+          });
         }
       }, 1500);
     });
   };
 
-  // Función para calcular checksum Luhn (algoritmo real para IMEI)
-  const calculateLuhnChecksum = (imei: string): number => {
-    let sum = 0;
-    const digits = imei.split('').map(Number);
+  // Detener scanner
+  const stopScanner = useCallback(() => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.clear().catch(err => console.log('Error al limpiar scanner:', err));
+        scannerRef.current = null;
+      } catch (err) {
+        console.error('Error deteniendo scanner:', err);
+      }
+    }
+    setScanning(false);
+  }, []);
+
+  // Función principal de verificación
+  const handleVerificar = useCallback(async (imeiToCheck?: string) => {
+    const imeiToVerify = (imeiToCheck || imei).trim();
     
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let digit = digits[i];
+    if (!imeiToVerify) {
+      setError('Por favor, ingresa un IMEI');
+      if (inputRef.current) inputRef.current.focus();
+      return;
+    }
+
+    // Validación básica de IMEI
+    if (imeiToVerify.length < 10 || imeiToVerify.length > 20 || !/^\d+$/.test(imeiToVerify)) {
+      setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
+      if (inputRef.current) inputRef.current.focus();
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setResultado(null);
+
+    try {
+      const mockResult = await mockVerificarIMEI(imeiToVerify);
+      setResultado(mockResult);
+    } catch (err: any) {
+      setError(err.message || 'Error al verificar IMEI');
+    } finally {
+      setLoading(false);
+    }
+  }, [imei]);
+
+  // Iniciar scanner
+  const startScanner = useCallback(async () => {
+    if (scannerRef.current || !document.getElementById('camera-container')) return;
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: isMobile ? 'environment' : 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
       
-      if ((digits.length - i) % 2 === 0) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
+      stream.getTracks().forEach(track => track.stop());
+      
+      const config = {
+        fps: 10,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
+          return { width: size, height: size * 0.6 };
+        },
+        aspectRatio: 1.7777778,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        showTorchButtonIfSupported: true,
+        showZoomSliderIfSupported: true,
+      };
+
+      scannerRef.current = new Html5QrcodeScanner(
+        "camera-container",
+        config,
+        false
+      );
+      
+      // Función local para manejar el código escaneado
+      const onScanSuccess = (decodedText: string) => {
+        // Extraer IMEI del código escaneado
+        const imeiMatch = decodedText.match(/\b\d{15,16}\b/);
+        
+        if (imeiMatch) {
+          const scannedImei = imeiMatch[0];
+          setImei(scannedImei);
+          
+          if (navigator.vibrate) {
+            navigator.vibrate(100);
+          }
+          
+          stopScanner();
+          setShowCamera(false);
+          
+          setTimeout(() => {
+            handleVerificar(scannedImei);
+          }, 300);
+        } else {
+          const numbers = decodedText.match(/\d+/g);
+          if (numbers) {
+            const longNumber = numbers.find(num => num.length >= 10);
+            if (longNumber) {
+              const extractedImei = longNumber.substring(0, 16);
+              setImei(extractedImei);
+              setError('Número detectado. Verifica que sea un IMEI válido antes de verificar.');
+              stopScanner();
+              setShowCamera(false);
+              if (inputRef.current) {
+                inputRef.current.focus();
+                inputRef.current.setSelectionRange(extractedImei.length, extractedImei.length);
+              }
+            } else {
+              setError('No se encontró un IMEI válido en el código escaneado.');
+            }
+          } else {
+            setError('No se encontró un IMEI válido en el código escaneado.');
+          }
+        }
+      };
+      
+      const onScanError = (error: any) => {
+        const errorMessage = error?.toString() || '';
+        
+        if (errorMessage.includes('NotAllowedError') || errorMessage.includes('Permission')) {
+          setError('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en ajustes.');
+          setShowCamera(false);
+        } else if (errorMessage.includes('NotFoundError')) {
+          setError('No se encontró cámara en el dispositivo.');
+          setShowCamera(false);
+        } else if (errorMessage.includes('NotReadableError')) {
+          setError('La cámara está siendo usada por otra aplicación.');
+          setShowCamera(false);
+        }
+      };
+      
+      scannerRef.current.render(onScanSuccess, onScanError);
+      
+      setScanning(true);
+      setError('');
+      
+    } catch (err: any) {
+      console.error('Error inicializando cámara:', err);
+      
+      if (err.name === 'NotAllowedError') {
+        setError('Permiso de cámara denegado. Habilita la cámara en ajustes del navegador.');
+      } else if (err.name === 'NotFoundError') {
+        setError('No se encontró ninguna cámara disponible.');
+      } else if (err.name === 'NotReadableError') {
+        setError('La cámara está siendo usada por otra aplicación.');
+      } else {
+        setError('Error al iniciar la cámara. Intenta de nuevo.');
       }
       
-      sum += digit;
+      setShowCamera(false);
+      scannerRef.current = null;
+    }
+  }, [isMobile, stopScanner, handleVerificar]);
+
+  // Inicializar scanner cuando se muestra la cámara
+  useEffect(() => {
+    if (showCamera && !scannerRef.current) {
+      startScanner();
+    } else if (!showCamera && scannerRef.current) {
+      stopScanner();
     }
     
-    return sum % 10;
-  };
+    return () => {
+      if (showCamera && scannerRef.current) {
+        stopScanner();
+      }
+    };
+  }, [showCamera, startScanner, stopScanner]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
