@@ -746,16 +746,23 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
   };
 
   // Seleccionar persona
-  const handleSelectPersona = (persona: any) => {
+ const handleSelectPersona = (persona: any) => {
+    const identificacion = persona.identificacion || '';
+    
+    // Mostrar solo los últimos 4 dígitos (más seguro)
+    const identificacionOculta = identificacion.length > 4 
+        ? '••••' + identificacion.slice(-4)
+        : '••••';
+    
     setFormData({
-      ...formData,
-      personaId: persona.id.toString(),
-      personaNombre: persona.nombre,
-      identificacion: persona.identificacion || ''
+        ...formData,
+        personaId: persona.id.toString(),
+        personaNombre: persona.nombre,
+        identificacion: identificacionOculta // ← Solo últimos dígitos
     });
-    setSearchTerm(`${persona.nombre} (${persona.identificacion})`);
+    setSearchTerm(`${persona.nombre} (•••${identificacion.slice(-4)})`);
     setShowPersonasList(false);
-  };
+};
 
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
