@@ -80,7 +80,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      console.log('🔍 IMEI enviando (TEXTO PLANO):', cleanedIMEI);
+      
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -100,9 +100,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       });
 
       clearTimeout(timeoutId);
-
-      console.log('📊 Response status:', response.status);
-      console.log('📊 Response ok:', response.ok);
 
       // Leer siempre el cuerpo de la respuesta para debug
       let responseText = '';
@@ -148,7 +145,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('✅ Respuesta parseada:', data);
+        
       } catch (parseError) {
         console.error('❌ Error parseando respuesta:', parseError);
         return {
@@ -231,7 +228,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
   // Función mejorada para extraer IMEI
   const extractIMEIFromText = (text: string): string | null => {
-    console.log('📝 Texto escaneado:', text);
+    
     
     const patterns = [
       /IMEI[:\s]*(\d{10,20})/i,
@@ -247,7 +244,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       if (match && match[1]) {
         const imei = match[1].replace(/\D/g, '');
         if (imei.length >= 10 && imei.length <= 20) {
-          console.log('✅ IMEI extraído:', imei);
+          
           return imei;
         }
       }
@@ -257,7 +254,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     if (allNumbers) {
       for (const num of allNumbers) {
         if (num.length >= 10 && num.length <= 20) {
-          console.log('✅ IMEI encontrado en números:', num);
+          
           return num;
         }
       }
@@ -290,7 +287,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       );
 
       const onScanSuccess = (decodedText: string) => {
-        console.log('🔍 Código detectado:', decodedText);
+        
         
         const extractedIMEI = extractIMEIFromText(decodedText);
         
