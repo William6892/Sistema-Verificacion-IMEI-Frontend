@@ -1,4 +1,4 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CON HTML5-QRCODE
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CON BACKEND REAL
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 
@@ -14,9 +14,18 @@ interface ResultadoVerificacion {
   valido: boolean;
   dispositivoId?: number;
   personaNombre?: string;
+  personaId?: number;
   empresaNombre?: string;
+  empresaId?: number;
   fechaRegistro?: string;
   mensaje?: string;
+  // Nuevos campos posibles
+  modelo?: string;
+  marca?: string;
+  color?: string;
+  estado?: string;
+  fechaAsignacion?: string;
+  imei?: string;
 }
 
 const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpresaId }) => {
@@ -50,25 +59,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Función para calcular checksum Luhn
-  const calculateLuhnChecksum = (imei: string): number => {
-    let sum = 0;
-    const digits = imei.split('').map(Number);
-    
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let digit = digits[i];
-      
-      if ((digits.length - i) % 2 === 0) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      
-      sum += digit;
-    }
-    
-    return sum % 10;
-  };
-
   // Función para verificar IMEI (conexión real al backend)
   const verificarIMEIReal = async (imei: string): Promise<ResultadoVerificacion> => {
     try {
@@ -82,71 +72,169 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      const response = await fetch(`${API_URL}/api/verificacion/verificar/${imei}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // Validar formato del IMEI
+      const cleanedIMEI = imei.replace(/\D/g, '');
+      if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
+        return {
+          valido: false,
+          mensaje: 'IMEI inválido. Debe tener entre 10 y 20 dígitos'
+        };
+      }
 
-      if (response.status === 404) {
-        // Endpoint no existe, usar mock temporal
-        return await verificarIMEIMock(imei);
+      // Intentar diferentes endpoints según la estructura de tu API
+      let response;
+      
+      try {
+        // Endpoint 1: Verificación directa
+        response = await fetch(`${API_URL}/api/verificacion/verificar/${cleanedIMEI}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (fetchError) {
+        // Si falla, intentar endpoint alternativo
+        response = await fetch(`${API_URL}/api/dispositivos/verificar/${cleanedIMEI}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
       }
 
       if (!response.ok) {
+        if (response.status === 404) {
+          return {
+            valido: false,
+            mensaje: 'Dispositivo no registrado en el sistema'
+          };
+        }
+        
+        if (response.status === 401) {
+          return {
+            valido: false,
+            mensaje: 'No autorizado. Por favor, inicie sesión nuevamente.'
+          };
+        }
+        
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      return {
-        valido: data.valido || false,
-        dispositivoId: data.dispositivoId,
-        personaNombre: data.personaNombre,
-        empresaNombre: data.empresaNombre,
-        fechaRegistro: data.fechaRegistro,
-        mensaje: data.mensaje || 'Verificación completada'
-      };
-    } catch (err) {
+      
+      // Diferentes estructuras de respuesta posibles
+      if (data.success !== undefined) {
+        // Formato 1: { success: true, data: {...} }
+        const resultData = data.data || data;
+        return {
+          valido: resultData.activo || resultData.registrado || false,
+          dispositivoId: resultData.id || resultData.dispositivoId,
+          personaNombre: resultData.propietario || resultData.personaNombre || resultData.usuario,
+          personaId: resultData.personaId || resultData.usuarioId,
+          empresaNombre: resultData.empresaNombre || resultData.empresa,
+          empresaId: resultData.empresaId,
+          fechaRegistro: resultData.fechaRegistro || resultData.createdAt,
+          modelo: resultData.modelo,
+          marca: resultData.marca,
+          color: resultData.color,
+          estado: resultData.estado,
+          fechaAsignacion: resultData.fechaAsignacion,
+          imei: resultData.imei,
+          mensaje: data.message || 'Dispositivo verificado correctamente'
+        };
+      } else if (data.dispositivo) {
+        // Formato 2: { dispositivo: {...}, persona: {...}, empresa: {...} }
+        return {
+          valido: true,
+          dispositivoId: data.dispositivo.id,
+          personaNombre: data.persona?.nombre || data.dispositivo.personaNombre,
+          personaId: data.persona?.id || data.dispositivo.personaId,
+          empresaNombre: data.empresa?.nombre || data.dispositivo.empresaNombre,
+          empresaId: data.empresa?.id || data.dispositivo.empresaId,
+          fechaRegistro: data.dispositivo.fechaRegistro || data.dispositivo.createdAt,
+          modelo: data.dispositivo.modelo,
+          marca: data.dispositivo.marca,
+          estado: data.dispositivo.estado,
+          mensaje: 'Dispositivo registrado y activo'
+        };
+      } else {
+        // Formato directo
+        return {
+          valido: data.valido || data.activo || false,
+          dispositivoId: data.id || data.dispositivoId,
+          personaNombre: data.personaNombre || data.nombrePropietario || data.usuarioNombre,
+          personaId: data.personaId || data.usuarioId,
+          empresaNombre: data.empresaNombre || data.nombreEmpresa,
+          empresaId: data.empresaId,
+          fechaRegistro: data.fechaRegistro || data.createdAt || data.fechaAlta,
+          modelo: data.modelo,
+          marca: data.marca,
+          color: data.color,
+          estado: data.estado,
+          fechaAsignacion: data.fechaAsignacion || data.asignadoEl,
+          mensaje: data.mensaje || data.message || 'Verificación completada'
+        };
+      }
+      
+    } catch (err: any) {
       console.error('Error verificando IMEI:', err);
-      // Fallback a mock si hay error
-      return await verificarIMEIMock(imei);
-    }
-  };
-
-  // Función mock para simular API (fallback)
-  const verificarIMEIMock = async (imei: string): Promise<ResultadoVerificacion> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        try {
-          // Simular validación con algoritmo Luhn
-          const checksum = calculateLuhnChecksum(imei);
-          const isValid = checksum === 0; // IMEI válido según algoritmo Luhn
+      
+      // Intentar con endpoint de búsqueda alternativa
+      try {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const token = localStorage.getItem('token');
+        const cleanedIMEI = imei.replace(/\D/g, '');
+        
+        const searchResponse = await fetch(`${API_URL}/api/dispositivos?imei=${cleanedIMEI}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
           
-          if (isValid) {
-            resolve({
-              valido: true,
-              dispositivoId: Math.floor(Math.random() * 1000) + 1,
-              personaNombre: 'Juan Pérez',
-              empresaNombre: 'TechCorp Solutions',
-              fechaRegistro: new Date().toISOString(),
-              mensaje: 'Dispositivo registrado y autorizado'
-            });
-          } else {
-            resolve({
-              valido: false,
-              mensaje: 'IMEI no registrado en el sistema o inválido'
-            });
+          if (searchData.length > 0) {
+            const dispositivo = searchData[0];
+            return {
+              valido: dispositivo.activo || dispositivo.estado === 'ACTIVO',
+              dispositivoId: dispositivo.id,
+              personaNombre: dispositivo.personaNombre || 'No asignado',
+              personaId: dispositivo.personaId,
+              empresaNombre: dispositivo.empresaNombre || 'Sin empresa',
+              empresaId: dispositivo.empresaId,
+              fechaRegistro: dispositivo.createdAt,
+              modelo: dispositivo.modelo,
+              marca: dispositivo.marca,
+              estado: dispositivo.estado,
+              mensaje: 'Dispositivo encontrado en el sistema'
+            };
           }
-        } catch (err) {
-          resolve({
-            valido: false,
-            mensaje: 'Error procesando IMEI'
-          });
         }
-      }, 1000);
-    });
+      } catch (searchError) {
+        console.log('Búsqueda alternativa falló:', searchError);
+      }
+      
+      // Solo usar mock si todo falla
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          valido: false,
+          mensaje: 'Error de conexión con el servidor. Modo desarrollo: usando datos de prueba.',
+          personaNombre: 'Juan Pérez (DEMO)',
+          empresaNombre: 'Empresa Demo S.A.',
+          fechaRegistro: new Date().toISOString()
+        };
+      }
+      
+      return {
+        valido: false,
+        mensaje: 'Error de conexión con el servidor. Por favor, intente nuevamente.'
+      };
+    }
   };
 
   // Función principal de verificación
@@ -160,7 +248,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
 
     // Validación básica de IMEI
-    if (imeiToVerify.length < 10 || imeiToVerify.length > 20 || !/^\d+$/.test(imeiToVerify)) {
+    const cleanedIMEI = imeiToVerify.replace(/\D/g, '');
+    if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
       setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
       if (inputRef.current) inputRef.current.focus();
       return;
@@ -171,8 +260,11 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setResultado(null);
 
     try {
-      const resultado = await verificarIMEIReal(imeiToVerify);
+      const resultado = await verificarIMEIReal(cleanedIMEI);
       setResultado(resultado);
+      
+      // También actualizar el IMEI formateado
+      setImei(cleanedIMEI);
     } catch (err: any) {
       setError(err.message || 'Error al verificar IMEI');
     } finally {
@@ -238,11 +330,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
       // Función para manejar IMEI escaneado
       const handleScannedIMEI = (imei: string) => {
-        setImei(imei);
+        const cleanedIMEI = imei.replace(/\D/g, '');
+        setImei(cleanedIMEI);
         stopScanner();
         setShowScanner(false);
         setTimeout(() => {
-          handleVerificar(imei);
+          handleVerificar(cleanedIMEI);
         }, 300);
       };
 
@@ -323,6 +416,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
   const formatDate = useCallback((dateString: string) => {
     try {
+      if (!dateString) return 'No registrada';
       return new Date(dateString).toLocaleDateString('es-ES', {
         day: '2-digit',
         month: 'short',
@@ -574,33 +668,70 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                       <span role="img" aria-label="persona">👤</span>
                       Propietario:
                     </span>
-                    <span className="info-value">{resultado.personaNombre}</span>
+                    <span className="info-value">{resultado.personaNombre || 'No asignado'}</span>
                   </div>
-                  <div className="info-row">
-                    <span className="info-label">
-                      <span role="img" aria-label="empresa">🏢</span>
-                      Empresa:
-                    </span>
-                    <span className="info-value">{resultado.empresaNombre}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">
-                      <span role="img" aria-label="calendario">📅</span>
-                      Registrado:
-                    </span>
-                    <span className="info-value">{formatDate(resultado.fechaRegistro!)}</span>
-                  </div>
+                  
+                  {resultado.empresaNombre && (
+                    <div className="info-row">
+                      <span className="info-label">
+                        <span role="img" aria-label="empresa">🏢</span>
+                        Empresa:
+                      </span>
+                      <span className="info-value">{resultado.empresaNombre}</span>
+                    </div>
+                  )}
+                  
+                  {resultado.modelo && (
+                    <div className="info-row">
+                      <span className="info-label">
+                        <span role="img" aria-label="dispositivo">📱</span>
+                        Modelo:
+                      </span>
+                      <span className="info-value">{resultado.marca ? `${resultado.marca} ${resultado.modelo}` : resultado.modelo}</span>
+                    </div>
+                  )}
+                  
+                  {resultado.estado && (
+                    <div className="info-row">
+                      <span className="info-label">
+                        <span role="img" aria-label="estado">📊</span>
+                        Estado:
+                      </span>
+                      <span className={`status-tag status-${resultado.estado.toLowerCase()}`}>
+                        {resultado.estado}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {resultado.fechaRegistro && (
+                    <div className="info-row">
+                      <span className="info-label">
+                        <span role="img" aria-label="calendario">📅</span>
+                        Registrado:
+                      </span>
+                      <span className="info-value">{formatDate(resultado.fechaRegistro)}</span>
+                    </div>
+                  )}
+                  
+                  {resultado.fechaAsignacion && (
+                    <div className="info-row">
+                      <span className="info-label">
+                        <span role="img" aria-label="asignacion">👤</span>
+                        Asignado:
+                      </span>
+                      <span className="info-value">{formatDate(resultado.fechaAsignacion)}</span>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="result-message">
-                  <p>{resultado.mensaje}</p>
+                  <p>{resultado.mensaje || 'Dispositivo no encontrado en el sistema'}</p>
                   {userRole === 'Admin' && (
                     <button 
                       className="btn-register-new" 
                       type="button"
                       onClick={() => {
-                        // Navegar al formulario de registro
-                        window.location.href = `/dispositivos?registrar=${encodeURIComponent(imei)}`;
+                        window.location.href = `/dispositivos/nuevo?imei=${encodeURIComponent(imei)}`;
                       }}
                     >
                       <span role="img" aria-label="registrar">📝</span>
@@ -610,6 +741,21 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                 </div>
               )}
             </div>
+            
+            {resultado.dispositivoId && (
+              <div className="result-actions">
+                <button 
+                  className="btn-view-details"
+                  type="button"
+                  onClick={() => {
+                    window.location.href = `/dispositivos/${resultado.dispositivoId}`;
+                  }}
+                >
+                  <span role="img" aria-label="detalles">🔍</span>
+                  Ver detalles completos
+                </button>
+              </div>
+            )}
             
             <button 
               onClick={handleClear} 

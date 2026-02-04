@@ -103,8 +103,7 @@ const PersonaForm: React.FC<PersonaFormProps> = ({
         empresaId: parseInt(formData.empresaId),
         ...(formData.telefono.trim() && { telefono: formData.telefono.trim() })
       };
-      
-      console.log('📤 Enviando al backend:', dataToSend);
+            
       
       if (isEditing) {
         await personasService.updatePersona(personaToEdit.id, dataToSend);
