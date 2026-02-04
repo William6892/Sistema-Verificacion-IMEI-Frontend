@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  // ✅ Función para ocultar notificación
+  //  Función para ocultar notificación
   const hideNotification = useCallback(() => {
     setNotification(null);
   }, []);
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  // ✅ Función para obtener actividad reciente
+  //  Función para obtener actividad reciente
   const fetchRecentActivity = useCallback(async () => {
     try {
       const mockActivity: RecentActivity[] = [
@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  // ✅ Función separada para obtener estadísticas
+  //  Función separada para obtener estadísticas
   const fetchStatsData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
     fetchStatsData();
   };
 
-  // ✅ Si no es admin, mostrar mensaje
+  //  Si no es admin, mostrar mensaje
   if (!isAdmin && !loading) {
     return (
       <div style={{ 
@@ -277,7 +277,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // ✅ Mostrar loading mientras carga datos
+  // Mostrar loading mientras carga datos
   if (loading) {
     return (
       <div className="loading-container">
@@ -287,10 +287,10 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // ✅ Obtener usuario actual
+  // Obtener usuario actual
   const user = getUserData();
 
-  // ✅ Función para renderizar notificación
+  //  Función para renderizar notificación
   const renderNotification = () => {
     if (!notification) return null;
 

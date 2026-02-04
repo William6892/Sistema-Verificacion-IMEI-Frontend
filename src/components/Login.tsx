@@ -1,22 +1,25 @@
-// Login.tsx - VERSIÓN SEGURA SIN CREDENCIALES DEMO
-import React, { useState } from 'react';
+// Login.tsx - VERSIÓN SIN RECUPERAR CONTRASEÑA
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 
-// Constantes de colores Samsung
+// Constantes de colores Samsung mejorados
 const SAMSUNG_COLORS = {
   blue: '#1428a0',
   blueLight: '#1e40ff',
   blueDark: '#0d1b66',
   gradient: 'linear-gradient(135deg, #1428a0 0%, #1e40ff 50%, #4a7dff 100%)',
-  gray: '#f5f7fa',
-  grayDark: '#e1e8f0',
-  text: '#1a202c',
-  textLight: '#718096',
-  success: '#38b2ac',
-  error: '#e53e3e',
-  warning: '#ed8936',
-  white: '#ffffff'
+  gradientLight: 'linear-gradient(135deg, rgba(20, 40, 160, 0.9) 0%, rgba(30, 64, 255, 0.9) 100%)',
+  gradientVertical: 'linear-gradient(180deg, #1428a0 0%, #1e40ff 30%, #4a7dff 70%)',
+  gray: '#f8fafc',
+  grayDark: '#e2e8f0',
+  text: '#1e293b',
+  textLight: '#64748b',
+  success: '#10b981',
+  error: '#ef4444',
+  warning: '#f59e0b',
+  white: '#ffffff',
+  black: '#0f172a'
 };
 
 const Login: React.FC = () => {
@@ -29,8 +32,16 @@ const Login: React.FC = () => {
     username: false,
     password: false
   });
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   
   const navigate = useNavigate();
+
+  // Detectar cambios en el tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,26 +122,33 @@ const Login: React.FC = () => {
     }
   };
 
-  // Estilos base
+  // Estilos base responsivos
   const getInputStyle = (type: 'username' | 'password') => {
+    const isMobile = screenWidth < 768;
+    const padding = isMobile 
+      ? (type === 'password' ? '18px 56px 18px 24px' : '18px 24px') 
+      : (type === 'password' ? '20px 60px 20px 28px' : '20px 28px');
+
     const baseStyle = {
       width: '100%',
-      padding: type === 'password' ? '16px 52px 16px 20px' : '16px 20px',
-      fontSize: '16px',
+      padding,
+      fontSize: isMobile ? '16px' : '18px',
       border: `2px solid ${error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '12px',
+      borderRadius: '14px',
       background: SAMSUNG_COLORS.white,
-      transition: 'all 0.3s ease',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       outline: 'none',
       color: SAMSUNG_COLORS.text,
+      fontWeight: 500,
     };
 
     if (isFocused[type]) {
       return {
         ...baseStyle,
         borderColor: error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.blueLight,
-        boxShadow: `0 0 0 4px ${error ? 'rgba(229, 62, 62, 0.1)' : 'rgba(20, 40, 160, 0.1)'}`,
-        transform: 'translateY(-1px)'
+        boxShadow: `0 0 0 4px ${error ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 40, 160, 0.15)'}`,
+        transform: 'translateY(-2px)',
+        background: 'linear-gradient(to bottom, #ffffff, #f8fafc)'
       };
     }
 
@@ -143,7 +161,7 @@ const Login: React.FC = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: '20px',
+      padding: screenWidth < 768 ? '16px' : '24px',
       position: 'relative' as const,
       overflow: 'hidden' as const,
       background: SAMSUNG_COLORS.gray,
@@ -155,190 +173,255 @@ const Login: React.FC = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      zIndex: -1
+      zIndex: -2,
+      overflow: 'hidden' as const
     },
     backgroundGradient: {
       position: 'absolute' as const,
       top: 0,
       left: 0,
-      right: 0,
-      bottom: 0,
-      background: SAMSUNG_COLORS.gradient,
-      opacity: 0.95
+      width: '100%',
+      height: '100%',
+      background: SAMSUNG_COLORS.gradientVertical,
+      opacity: 0.97
     },
     backgroundPattern: {
       position: 'absolute' as const,
       top: 0,
       left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundImage: `radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)`
-    },
-    loginCard: {
       width: '100%',
-      maxWidth: '440px',
-      background: SAMSUNG_COLORS.white,
-      borderRadius: '24px',
-      padding: '40px',
-      boxShadow: `0 20px 60px rgba(20, 40, 160, 0.15),
-                  0 0 0 1px rgba(255, 255, 255, 0.1) inset`,
-      backdropFilter: 'blur(10px)',
-      position: 'relative' as const,
-      overflow: 'hidden' as const,
-      zIndex: 1
+      height: '100%',
+      backgroundImage: `
+        radial-gradient(circle at 10% 90%, rgba(255,255,255,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%)
+      `,
+      animation: 'float 30s ease-in-out infinite alternate'
     },
-    cardTopBorder: {
+    backgroundShapes: {
       position: 'absolute' as const,
       top: 0,
       left: 0,
-      right: 0,
-      height: '4px',
-      background: SAMSUNG_COLORS.gradient,
-      borderRadius: '24px 24px 0 0'
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden' as const
     },
-    loginHeader: {
-      textAlign: 'center' as const,
-      marginBottom: '40px'
+    shape: {
+      position: 'absolute' as const,
+      borderRadius: '50%',
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid rgba(255, 255, 255, 0.05)'
+    },
+    loginWrapper: {
+      display: 'flex',
+      width: '100%',
+      maxWidth: screenWidth < 768 ? '100%' : '1400px',
+      height: screenWidth < 768 ? 'auto' : '85vh',
+      minHeight: screenWidth < 768 ? '90vh' : '600px',
+      borderRadius: screenWidth < 768 ? '20px' : '32px',
+      overflow: 'hidden' as const,
+      boxShadow: `
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset
+      `,
+      background: SAMSUNG_COLORS.white,
+      position: 'relative' as const,
+      zIndex: 1
+    },
+    leftPanel: {
+      flex: screenWidth < 768 ? '0 0 100%' : '1',
+      background: SAMSUNG_COLORS.gradientLight,
+      padding: screenWidth < 768 ? '40px 32px' : '60px 48px',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'space-between',
+      position: 'relative' as const,
+      overflow: 'hidden' as const
+    },
+    rightPanel: {
+      flex: screenWidth < 768 ? '0 0 100%' : '1.2',
+      padding: screenWidth < 768 ? '48px 32px' : '60px 48px',
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center',
+      background: SAMSUNG_COLORS.white
     },
     logoContainer: {
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: '16px',
-      marginBottom: '24px'
+      gap: screenWidth < 768 ? '16px' : '20px',
+      marginBottom: screenWidth < 768 ? '32px' : '48px'
     },
     logoCircle: {
-      width: '56px',
-      height: '56px',
-      background: SAMSUNG_COLORS.gradient,
-      borderRadius: '50%',
+      width: screenWidth < 768 ? '64px' : '80px',
+      height: screenWidth < 768 ? '64px' : '80px',
+      background: 'rgba(255, 255, 255, 0.15)',
+      borderRadius: screenWidth < 768 ? '20px' : '24px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 8px 24px rgba(20, 40, 160, 0.3)'
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
     },
     logoIcon: {
-      fontSize: '28px',
+      fontSize: screenWidth < 768 ? '32px' : '40px',
       color: SAMSUNG_COLORS.white
     },
     logoText: {
-      textAlign: 'left' as const
+      flex: 1
     },
     logoTitle: {
-      fontSize: '24px',
+      fontSize: screenWidth < 768 ? '24px' : '32px',
       fontWeight: 700,
-      color: SAMSUNG_COLORS.blueDark,
+      color: SAMSUNG_COLORS.white,
       margin: 0,
       letterSpacing: '-0.5px'
     },
     logoSubtitle: {
-      fontSize: '14px',
-      color: SAMSUNG_COLORS.textLight,
-      margin: '4px 0 0 0',
-      fontWeight: 500
+      fontSize: screenWidth < 768 ? '14px' : '16px',
+      color: 'rgba(255, 255, 255, 0.85)',
+      margin: '8px 0 0 0',
+      fontWeight: 400
+    },
+    welcomeSection: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      justifyContent: 'center'
     },
     welcomeTitle: {
-      fontSize: '28px',
-      color: SAMSUNG_COLORS.text,
-      marginBottom: '8px',
-      fontWeight: 600,
-      textAlign: 'center' as const
+      fontSize: screenWidth < 768 ? '32px' : '48px',
+      fontWeight: 700,
+      color: SAMSUNG_COLORS.white,
+      marginBottom: screenWidth < 768 ? '16px' : '24px',
+      lineHeight: 1.1
     },
     welcomeText: {
-      color: SAMSUNG_COLORS.textLight,
-      fontSize: '15px',
-      textAlign: 'center' as const,
-      lineHeight: 1.5
+      fontSize: screenWidth < 768 ? '16px' : '18px',
+      color: 'rgba(255, 255, 255, 0.9)',
+      marginBottom: screenWidth < 768 ? '24px' : '32px',
+      lineHeight: 1.6
     },
-    securityNote: {
-      fontSize: '12px',
+    featuresList: {
+      listStyle: 'none',
+      padding: 0,
+      margin: 0
+    },
+    featureItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      marginBottom: screenWidth < 768 ? '16px' : '20px',
+      color: 'rgba(255, 255, 255, 0.85)',
+      fontSize: screenWidth < 768 ? '14px' : '15px'
+    },
+    featureIcon: {
+      fontSize: '20px',
+      opacity: 0.9
+    },
+    loginHeader: {
+      marginBottom: screenWidth < 768 ? '32px' : '48px',
+      textAlign: 'center' as const
+    },
+    loginTitle: {
+      fontSize: screenWidth < 768 ? '28px' : '36px',
+      fontWeight: 700,
+      color: SAMSUNG_COLORS.text,
+      marginBottom: '12px',
+      letterSpacing: '-0.5px'
+    },
+    loginSubtitle: {
+      fontSize: screenWidth < 768 ? '16px' : '18px',
       color: SAMSUNG_COLORS.textLight,
-      textAlign: 'center' as const,
-      marginTop: '16px',
-      padding: '12px',
-      background: 'rgba(20, 40, 160, 0.03)',
-      borderRadius: '8px',
-      border: `1px solid ${SAMSUNG_COLORS.grayDark}`
+      lineHeight: 1.5
     },
     loginForm: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '24px'
+      gap: screenWidth < 768 ? '24px' : '32px'
     },
     formGroup: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '8px'
+      gap: '12px'
     },
     formLabel: {
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
-      fontSize: '15px',
+      gap: '12px',
+      fontSize: screenWidth < 768 ? '15px' : '16px',
       fontWeight: 600,
-      color: SAMSUNG_COLORS.text
+      color: SAMSUNG_COLORS.text,
+      paddingLeft: '8px'
     },
     labelIcon: {
-      fontSize: '18px',
+      fontSize: '20px',
       opacity: 0.8
     },
     inputContainer: {
-      position: 'relative' as const
+      position: 'relative' as const,
+      width: '100%'
     },
     togglePassword: (isHovered: boolean) => ({
       position: 'absolute' as const,
-      right: '16px',
+      right: '20px',
       top: '50%',
       transform: 'translateY(-50%)',
-      background: isHovered ? SAMSUNG_COLORS.gray : 'none',
+      background: 'none',
       border: 'none',
-      fontSize: '20px',
+      fontSize: '22px',
       cursor: 'pointer',
-      color: isHovered ? SAMSUNG_COLORS.text : SAMSUNG_COLORS.textLight,
-      padding: '4px',
-      borderRadius: '4px',
-      transition: 'all 0.2s'
-    }),
-    loadingState: {
-      background: 'rgba(20, 40, 160, 0.05)',
-      border: `1px solid ${SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '12px',
-      padding: '20px',
+      color: isHovered ? SAMSUNG_COLORS.blueLight : SAMSUNG_COLORS.textLight,
+      padding: '6px',
+      borderRadius: '8px',
+      transition: 'all 0.2s ease',
       display: 'flex',
       alignItems: 'center',
-      gap: '16px',
-      marginBottom: '16px'
+      justifyContent: 'center'
+    }),
+    loadingState: {
+      background: 'rgba(20, 40, 160, 0.03)',
+      border: `2px solid ${SAMSUNG_COLORS.grayDark}`,
+      borderRadius: '16px',
+      padding: '24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      marginBottom: '16px',
+      backdropFilter: 'blur(10px)'
     },
     samsungSpinner: {
-      width: '24px',
-      height: '24px',
+      width: '32px',
+      height: '32px',
       border: `3px solid ${SAMSUNG_COLORS.grayDark}`,
       borderTop: `3px solid ${SAMSUNG_COLORS.blue}`,
       borderRadius: '50%',
       animation: 'spin 1s linear infinite'
     },
     loadingTextP: {
-      margin: '0 0 4px 0',
+      margin: '0 0 8px 0',
       fontWeight: 600,
-      color: SAMSUNG_COLORS.text
+      color: SAMSUNG_COLORS.text,
+      fontSize: screenWidth < 768 ? '16px' : '18px'
     },
     loadingTextSmall: {
-      fontSize: '12px',
+      fontSize: screenWidth < 768 ? '13px' : '14px',
       color: SAMSUNG_COLORS.textLight,
       display: 'block' as const
     },
     errorState: {
-      background: 'rgba(229, 62, 62, 0.05)',
-      border: `1px solid rgba(229, 62, 62, 0.2)`,
-      borderRadius: '12px',
-      padding: '20px',
+      background: 'rgba(239, 68, 68, 0.03)',
+      border: `2px solid rgba(239, 68, 68, 0.2)`,
+      borderRadius: '16px',
+      padding: '24px',
       display: 'flex',
-      gap: '16px',
-      marginBottom: '16px'
+      gap: '20px',
+      marginBottom: '16px',
+      backdropFilter: 'blur(10px)'
     },
     errorIcon: {
-      fontSize: '24px',
+      fontSize: '28px',
       color: SAMSUNG_COLORS.error,
       flexShrink: 0
     },
@@ -349,7 +432,7 @@ const Login: React.FC = () => {
       margin: '0 0 8px 0',
       fontWeight: 600,
       color: SAMSUNG_COLORS.error,
-      fontSize: '16px'
+      fontSize: screenWidth < 768 ? '16px' : '18px'
     },
     errorMessages: {
       lineHeight: '1.5'
@@ -357,110 +440,110 @@ const Login: React.FC = () => {
     errorLine: {
       margin: '4px 0',
       color: SAMSUNG_COLORS.text,
-      fontSize: '14px'
+      fontSize: screenWidth < 768 ? '14px' : '15px'
     },
     btnLogin: (isDisabled: boolean, isHovered: boolean) => ({
       width: '100%',
-      padding: '18px',
+      padding: screenWidth < 768 ? '20px' : '24px',
       background: isDisabled ? SAMSUNG_COLORS.grayDark : SAMSUNG_COLORS.gradient,
       color: isDisabled ? SAMSUNG_COLORS.textLight : SAMSUNG_COLORS.white,
       border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: 600,
+      borderRadius: '16px',
+      fontSize: screenWidth < 768 ? '17px' : '18px',
+      fontWeight: 700,
       cursor: isDisabled ? 'not-allowed' : 'pointer',
-      transition: 'all 0.3s ease',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '12px',
-      position: 'relative' as const,
-      overflow: 'hidden' as const,
-      transform: !isDisabled && isHovered ? 'translateY(-2px)' : 'none',
-      boxShadow: !isDisabled && isHovered ? '0 12px 24px rgba(20, 40, 160, 0.3)' : 'none'
-    }),
-    btnSpinner: {
-      width: '20px',
-      height: '20px',
-      border: '2px solid rgba(255,255,255,0.3)',
-      borderTop: '2px solid white',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    },
-    btnIcon: {
-      fontSize: '20px',
-      fontWeight: 300
-    },
-    loginFooter: {
-      marginTop: '24px',
-      paddingTop: '24px',
-      borderTop: `1px solid ${SAMSUNG_COLORS.grayDark}`
-    },
-    footerLinks: {
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '16px',
-      marginBottom: '16px',
-      flexWrap: 'wrap' as const
-    },
-    linkBtn: (isHovered: boolean) => ({
-      background: isHovered ? 'rgba(20, 40, 160, 0.05)' : 'none',
-      border: 'none',
-      color: SAMSUNG_COLORS.blue,
-      fontSize: '14px',
-      cursor: 'pointer',
-      padding: '4px 8px',
-      borderRadius: '4px',
-      transition: 'all 0.2s'
+      position: 'relative' as const,
+      overflow: 'hidden' as const,
+      transform: !isDisabled && isHovered ? 'translateY(-3px) scale(1.01)' : 'none',
+      boxShadow: !isDisabled && isHovered ? 
+        '0 20px 40px rgba(20, 40, 160, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset' : 
+        '0 8px 24px rgba(20, 40, 160, 0.2)',
+      letterSpacing: '0.5px'
     }),
-    separator: {
-      color: SAMSUNG_COLORS.textLight,
-      fontSize: '12px'
+    btnSpinner: {
+      width: '24px',
+      height: '24px',
+      border: '3px solid rgba(255,255,255,0.3)',
+      borderTop: '3px solid white',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
     },
+    btnIcon: {
+      fontSize: '24px',
+      fontWeight: 300,
+      transition: 'transform 0.3s ease'
+    },
+    loginFooter: {
+      marginTop: screenWidth < 768 ? '32px' : '48px',
+      paddingTop: screenWidth < 768 ? '24px' : '32px',
+      borderTop: `2px solid ${SAMSUNG_COLORS.grayDark}`
+    },
+    // SE ELIMINARON los estilos de footerLinks y linkBtn
     versionInfo: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '8px',
-      fontSize: '12px',
-      color: SAMSUNG_COLORS.textLight
+      gap: '16px',
+      fontSize: screenWidth < 768 ? '13px' : '14px',
+      color: SAMSUNG_COLORS.textLight,
+      flexWrap: 'wrap' as const
     },
     version: {
-      padding: '2px 8px',
-      background: 'rgba(20, 40, 160, 0.1)',
-      borderRadius: '4px',
-      fontWeight: 500
+      padding: '6px 16px',
+      background: 'rgba(20, 40, 160, 0.08)',
+      borderRadius: '12px',
+      fontWeight: 600,
+      color: SAMSUNG_COLORS.blueDark
     },
     statusIndicator: {
-      width: '8px',
-      height: '8px',
+      width: '10px',
+      height: '10px',
       background: SAMSUNG_COLORS.success,
       borderRadius: '50%',
-      animation: 'pulse 2s infinite'
+      animation: 'pulse 2s infinite',
+      boxShadow: `0 0 0 4px rgba(16, 185, 129, 0.2)`
     },
-    globalFooter: {
-      marginTop: '40px',
+    copyright: {
+      position: 'absolute' as const,
+      bottom: screenWidth < 768 ? '20px' : '32px',
+      left: 0,
+      right: 0,
       textAlign: 'center' as const,
-      color: 'rgba(255,255,255,0.8)',
-      fontSize: '14px'
-    },
-    footerText: {
-      margin: '4px 0'
-    },
-    footerNote: {
-      fontSize: '12px',
-      opacity: 0.8
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: screenWidth < 768 ? '13px' : '14px',
+      padding: screenWidth < 768 ? '0 16px' : '0'
     }
   };
 
-  // Estados para hover
+  // Estados para hover (solo los necesarios ahora)
   const [isHovered, setIsHovered] = useState({
     passwordToggle: false,
-    loginBtn: false,
-    forgotBtn: false,
-    supportBtn: false
+    loginBtn: false
+    // SE ELIMINARON forgotBtn y supportBtn
   });
+
+  // Generar formas de fondo dinámicas
+  const generateShapes = () => {
+    const shapes = [];
+    for (let i = 0; i < 15; i++) {
+      const size = Math.random() * 200 + 50;
+      shapes.push({
+        ...styles.shape,
+        width: `${size}px`,
+        height: `${size}px`,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        animation: `float ${Math.random() * 20 + 20}s ease-in-out infinite alternate`,
+        animationDelay: `${Math.random() * 5}s`
+      });
+    }
+    return shapes;
+  };
 
   return (
     <div style={styles.container}>
@@ -470,215 +553,265 @@ const Login: React.FC = () => {
             to { transform: rotate(360deg); }
           }
           @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { 
+              opacity: 1; 
+              transform: scale(1);
+            }
+            50% { 
+              opacity: 0.7; 
+              transform: scale(0.95);
+            }
           }
           @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); }
-            100% { transform: translateY(-20px) rotate(1deg); }
+            0% { 
+              transform: translateY(0) rotate(0deg); 
+            }
+            100% { 
+              transform: translateY(-40px) rotate(2deg); 
+            }
           }
           
           .samsung-input:disabled {
-            background: #f5f7fa;
+            background: #f8fafc;
             cursor: not-allowed;
+            opacity: 0.7;
           }
           
           .samsung-input::placeholder {
-            color: #718096;
-            opacity: 0.6;
+            color: #94a3b8;
+            opacity: 0.7;
+          }
+          
+          .btn-hover-effect {
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .btn-hover-effect::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+          }
+          
+          .btn-hover-effect:hover::before {
+            width: 300px;
+            height: 300px;
+          }
+          
+          @media (max-width: 768px) {
+            .mobile-hide {
+              display: none;
+            }
           }
         `}
       </style>
 
-      {/* Fondo animado */}
+      {/* Fondo animado mejorado */}
       <div style={styles.background}>
         <div style={styles.backgroundGradient} />
-        <div style={{ ...styles.backgroundPattern, animation: 'float 20s ease-in-out infinite alternate' }} />
+        <div style={styles.backgroundPattern} />
+        <div style={styles.backgroundShapes}>
+          {generateShapes().map((shapeStyle, index) => (
+            <div key={index} style={shapeStyle} />
+          ))}
+        </div>
       </div>
 
-      {/* Tarjeta de login */}
-      <div style={styles.loginCard}>
-        <div style={styles.cardTopBorder} />
+      {/* Contenedor principal dividido en dos paneles */}
+      <div style={styles.loginWrapper}>
         
-        {/* Header */}
-        <div style={styles.loginHeader}>
-          <div style={styles.logoContainer}>
-            <div style={styles.logoCircle}>
-              <span style={styles.logoIcon}>🔐</span>
+        {/* Panel izquierdo - Presentación */}
+        <div style={styles.leftPanel}>
+          <div>
+            <div style={styles.logoContainer}>
+              <div style={styles.logoCircle}>
+                <span style={styles.logoIcon}>🔐</span>
+              </div>
+              <div style={styles.logoText}>
+                <h1 style={styles.logoTitle}>Samsung IMEI</h1>
+                <p style={styles.logoSubtitle}>Verification System Pro</p>
+              </div>
             </div>
-            <div style={styles.logoText}>
-              <h1 style={styles.logoTitle}>IMEI Verification</h1>
-              <p style={styles.logoSubtitle}>Sistema de Gestión Seguro</p>
+            
+            <div style={styles.welcomeSection}>
+              <h2 style={styles.welcomeTitle}>
+                Sistema de Gestión <br />Seguro
+              </h2>
+              <p style={styles.welcomeText}>
+                Accede al sistema de verificación de IMEI más avanzado del mercado. 
+                Protegido con cifrado de última generación y autenticación multifactor.
+              </p>
+              
+              <ul style={styles.featuresList} className="mobile-hide">
+                <li style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✅</span>
+                  Verificación en tiempo real
+                </li>
+                <li style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✅</span>
+                  Cifrado AES-256
+                </li>
+                <li style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✅</span>
+                  Auditoría completa
+                </li>
+                <li style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✅</span>
+                  Soporte 24/7
+                </li>
+              </ul>
             </div>
           </div>
           
-          <div>
-            <h2 style={styles.welcomeTitle}>Acceso Seguro</h2>
-            <p style={styles.welcomeText}>Ingresa tus credenciales autorizadas</p>
-            
-            {/* Nota de seguridad */}
-            <div style={styles.securityNote}>
-              🔒 Sistema protegido con autenticación segura
-            </div>
+          <div style={styles.copyright}>
+            <p>Samsung Electronics © {new Date().getFullYear()} • Todos los derechos reservados</p>
           </div>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} style={styles.loginForm}>
-          {/* Campo Usuario */}
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>
-              <span style={styles.labelIcon}>👤</span>
-              Usuario
-            </label>
-            <div style={styles.inputContainer}>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  if (error) setError('');
-                }}
-                placeholder="Usuario autorizado"
-                style={getInputStyle('username')}
-                disabled={loading}
-                autoComplete="username"
-                onFocus={() => setIsFocused(prev => ({ ...prev, username: true }))}
-                onBlur={() => setIsFocused(prev => ({ ...prev, username: false }))}
-                className="samsung-input"
-                maxLength={50}
-              />
-            </div>
+        {/* Panel derecho - Login */}
+        <div style={styles.rightPanel}>
+          <div style={styles.loginHeader}>
+            <h2 style={styles.loginTitle}>Acceso Seguro</h2>
+            <p style={styles.loginSubtitle}>
+              Ingresa tus credenciales para acceder al sistema
+            </p>
           </div>
 
-          {/* Campo Contraseña */}
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>
-              <span style={styles.labelIcon}>🔒</span>
-              Contraseña
-            </label>
-            <div style={styles.inputContainer}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (error) setError('');
-                }}
-                placeholder="Contraseña segura"
-                style={getInputStyle('password')}
-                disabled={loading}
-                autoComplete="current-password"
-                onFocus={() => setIsFocused(prev => ({ ...prev, password: true }))}
-                onBlur={() => setIsFocused(prev => ({ ...prev, password: false }))}
-                className="samsung-input"
-                maxLength={100}
-              />
-              <button
-                type="button"
-                style={styles.togglePassword(isHovered.passwordToggle)}
-                onClick={() => setShowPassword(!showPassword)}
-                onMouseEnter={() => setIsHovered(prev => ({ ...prev, passwordToggle: true }))}
-                onMouseLeave={() => setIsHovered(prev => ({ ...prev, passwordToggle: false }))}
-                tabIndex={-1}
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
-            </div>
-          </div>
-
-          {/* Estado de carga */}
-          {loading && (
-            <div style={styles.loadingState}>
-              <div style={styles.samsungSpinner}></div>
-              <div>
-                <p style={styles.loadingTextP}>Verificando credenciales...</p>
-                <small style={styles.loadingTextSmall}>
-                  Por favor, espera
-                </small>
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} style={styles.loginForm}>
+            {/* Campo Usuario */}
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>
+                <span style={styles.labelIcon}>👤</span>
+                Usuario autorizado
+              </label>
+              <div style={styles.inputContainer}>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (error) setError('');
+                  }}
+                  placeholder="Ingresa tu usuario"
+                  style={getInputStyle('username')}
+                  disabled={loading}
+                  autoComplete="username"
+                  onFocus={() => setIsFocused(prev => ({ ...prev, username: true }))}
+                  onBlur={() => setIsFocused(prev => ({ ...prev, username: false }))}
+                  className="samsung-input"
+                  maxLength={50}
+                />
               </div>
             </div>
-          )}
 
-          {/* Mensaje de error */}
-          {error && (
-            <div style={styles.errorState} role="alert">
-              <div style={styles.errorIcon}>⚠️</div>
-              <div style={styles.errorContent}>
-                <p style={styles.errorTitle}>Error de autenticación</p>
-                <div style={styles.errorMessages}>
-                  {error.split('\n').map((line, index) => (
-                    <p key={index} style={styles.errorLine}>{line}</p>
-                  ))}
+            {/* Campo Contraseña */}
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>
+                <span style={styles.labelIcon}>🔒</span>
+                Contraseña segura
+              </label>
+              <div style={styles.inputContainer}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError('');
+                  }}
+                  placeholder="Ingresa tu contraseña"
+                  style={getInputStyle('password')}
+                  disabled={loading}
+                  autoComplete="current-password"
+                  onFocus={() => setIsFocused(prev => ({ ...prev, password: true }))}
+                  onBlur={() => setIsFocused(prev => ({ ...prev, password: false }))}
+                  className="samsung-input"
+                  maxLength={100}
+                />
+                <button
+                  type="button"
+                  style={styles.togglePassword(isHovered.passwordToggle)}
+                  onClick={() => setShowPassword(!showPassword)}
+                  onMouseEnter={() => setIsHovered(prev => ({ ...prev, passwordToggle: true }))}
+                  onMouseLeave={() => setIsHovered(prev => ({ ...prev, passwordToggle: false }))}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            {/* Estado de carga */}
+            {loading && (
+              <div style={styles.loadingState}>
+                <div style={styles.samsungSpinner}></div>
+                <div>
+                  <p style={styles.loadingTextP}>Verificando credenciales...</p>
+                  <small style={styles.loadingTextSmall}>
+                    Autenticación en proceso, por favor espera
+                  </small>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Botón de login */}
-          <button
-            type="submit"
-            disabled={loading || !username.trim() || !password.trim()}
-            style={styles.btnLogin(loading || !username.trim() || !password.trim(), isHovered.loginBtn)}
-            onMouseEnter={() => setIsHovered(prev => ({ ...prev, loginBtn: true }))}
-            onMouseLeave={() => setIsHovered(prev => ({ ...prev, loginBtn: false }))}
-          >
-            {loading ? (
-              <>
-                <span style={styles.btnSpinner}></span>
-                Verificando...
-              </>
-            ) : (
-              <>
-                <span style={styles.btnIcon}>→</span>
-                Iniciar Sesión
-              </>
             )}
-          </button>
 
-          {/* Footer del formulario */}
-          <div style={styles.loginFooter}>
-            <div style={styles.footerLinks}>
-              <button 
-                type="button" 
-                style={styles.linkBtn(isHovered.forgotBtn)}
-                onMouseEnter={() => setIsHovered(prev => ({ ...prev, forgotBtn: true }))}
-                onMouseLeave={() => setIsHovered(prev => ({ ...prev, forgotBtn: false }))}
-                onClick={() => {/* Lógica de recuperación de contraseña */}}
-              >
-                Recuperar acceso
-              </button>
-              <span style={styles.separator}>•</span>
-              <button 
-                type="button" 
-                style={styles.linkBtn(isHovered.supportBtn)}
-                onMouseEnter={() => setIsHovered(prev => ({ ...prev, supportBtn: true }))}
-                onMouseLeave={() => setIsHovered(prev => ({ ...prev, supportBtn: false }))}
-                onClick={() => {/* Lógica de contacto */}}
-              >
-                Soporte técnico
-              </button>
-            </div>
-            
-            <div style={styles.versionInfo}>
-              <span style={styles.version}>v2.1.4</span>
-              <span style={styles.statusIndicator}></span>
-              <span>Sistema seguro</span>
-            </div>
-          </div>
-        </form>
-      </div>
+            {/* Mensaje de error */}
+            {error && (
+              <div style={styles.errorState} role="alert">
+                <div style={styles.errorIcon}>⚠️</div>
+                <div style={styles.errorContent}>
+                  <p style={styles.errorTitle}>Error de autenticación</p>
+                  <div style={styles.errorMessages}>
+                    {error.split('\n').map((line, index) => (
+                      <p key={index} style={styles.errorLine}>{line}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
-      {/* Footer global */}
-      <footer style={styles.globalFooter}>
-        <div>
-          <p style={styles.footerText}>Samsung Style UI • IMEI Verification System © {new Date().getFullYear()}</p>
-          <p style={styles.footerNote}>
-            Sistema protegido. Acceso restringido a personal autorizado
-          </p>
+            {/* Botón de login */}
+            <button
+              type="submit"
+              disabled={loading || !username.trim() || !password.trim()}
+              style={styles.btnLogin(loading || !username.trim() || !password.trim(), isHovered.loginBtn)}
+              onMouseEnter={() => setIsHovered(prev => ({ ...prev, loginBtn: true }))}
+              onMouseLeave={() => setIsHovered(prev => ({ ...prev, loginBtn: false }))}
+              className="btn-hover-effect"
+            >
+              {loading ? (
+                <>
+                  <span style={styles.btnSpinner}></span>
+                  Verificando...
+                </>
+              ) : (
+                <>
+                  <span>Iniciar Sesión</span>
+                  <span style={styles.btnIcon}>→</span>
+                </>
+              )}
+            </button>
+
+            {/* Footer del formulario */}
+            <div style={styles.loginFooter}>
+              {/* SE ELIMINÓ la sección de footerLinks */}
+              
+              <div style={styles.versionInfo}>
+                <span style={styles.version}>v2.1.4 PRO</span>
+                <span style={styles.statusIndicator}></span>
+                <span>Sistema seguro • Conectado</span>
+              </div>
+            </div>
+          </form>
         </div>
-      </footer>
+      </div>
     </div>
   );
 };
