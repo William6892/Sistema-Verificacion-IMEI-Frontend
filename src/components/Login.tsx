@@ -648,25 +648,6 @@ const Login: React.FC = () => {
                 Accede al sistema de verificación de IMEI más avanzado del mercado. 
                 Protegido con cifrado de última generación y autenticación multifactor.
               </p>
-              
-              <ul style={styles.featuresList} className="mobile-hide">
-                <li style={styles.featureItem}>
-                  <span style={styles.featureIcon}>✅</span>
-                  Verificación en tiempo real
-                </li>
-                <li style={styles.featureItem}>
-                  <span style={styles.featureIcon}>✅</span>
-                  Cifrado AES-256
-                </li>
-                <li style={styles.featureItem}>
-                  <span style={styles.featureIcon}>✅</span>
-                  Auditoría completa
-                </li>
-                <li style={styles.featureItem}>
-                  <span style={styles.featureIcon}>✅</span>
-                  Soporte 24/7
-                </li>
-              </ul>
             </div>
           </div>
           
