@@ -1,9 +1,12 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA SIN REGISTRO
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 
 // Importar html5-qrcode
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+
+// Importar crypto-js para encriptación
+import CryptoJS from 'crypto-js';
 
 interface VerificacionIMEIProps {
   userRole?: string;
@@ -55,11 +58,34 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Función principal de verificación - CONEXIÓN CORRECTA
+  // Función para encriptar IMEI igual que el backend (.NET)
+  const encryptIMEI = (plainIMEI: string): string => {
+    try {
+      // CLAVES EXACTAS DEL BACKEND (.NET EncryptionService)
+      const keyBase64 = "KzNvM2UzYTM1MzYzNzM4Mzk0MDQxNDI0MzQ0NDU=";
+      const ivBase64 = "LzB6MXoxejF6MXoxejF6MQ==";
+      
+      const key = CryptoJS.enc.Base64.parse(keyBase64);
+      const iv = CryptoJS.enc.Base64.parse(ivBase64);
+      
+      const encrypted = CryptoJS.AES.encrypt(plainIMEI, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      return encrypted.toString();
+      
+    } catch (error) {
+      console.error('Error encriptando IMEI:', error);
+      return plainIMEI;
+    }
+  };
+
+  // Función principal de verificación - CON ENCRIPTACIÓN
   const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
     const cleanedIMEI = imei.replace(/\D/g, '');
     
-    // Validación básica
     if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
       return {
         valido: false,
@@ -68,7 +94,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
 
     try {
-      // URL del backend
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
@@ -79,7 +104,13 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      // ¡IMPORTANTE! Usar POST según tu backend
+      console.log('🔍 IMEI original:', cleanedIMEI);
+      const imeiEncriptado = encryptIMEI(cleanedIMEI);
+      console.log('🔐 IMEI encriptado:', imeiEncriptado);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch(`${API_URL}/api/verificacion/verificar`, {
         method: 'POST',
         headers: {
@@ -88,17 +119,22 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          IMEI: cleanedIMEI
-        })
+          IMEI: imeiEncriptado
+        }),
+        signal: controller.signal
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      clearTimeout(timeoutId);
+
+      console.log('📊 Response status:', response.status);
 
       if (response.status === 401) {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        
         return {
           valido: false,
-          mensaje: 'No autorizado. Por favor, inicie sesión nuevamente.'
+          mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.'
         };
       }
 
@@ -113,33 +149,37 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       if (!response.ok) {
         return {
           valido: false,
-          mensaje: `Error del servidor: ${response.status} ${response.statusText}`
+          mensaje: `Error del servidor: ${response.status}`
         };
       }
 
       const data = await response.json();
-      console.log('Respuesta del backend:', data);
+      console.log('📦 Respuesta del backend:', data);
 
-      // Tu backend devuelve VerificacionResultDTO
-      // Mapear según la estructura de VerificacionResultDTO
       return {
         valido: data.valido || false,
-        dispositivoId: data.dispositivoId,
-        personaNombre: data.personaNombre,
-        personaId: data.personaId,
-        empresaNombre: data.empresaNombre,
-        empresaId: data.empresaId,
-        fechaRegistro: data.fechaRegistro,
+        dispositivoId: data.dispositivo?.id || data.dispositivoId,
+        personaNombre: data.persona?.nombre || data.personaNombre,
+        personaId: data.persona?.id || data.personaId,
+        empresaNombre: data.empresa?.nombre || data.empresaNombre,
+        empresaId: data.empresa?.id || data.empresaId,
+        fechaRegistro: data.dispositivo?.fechaRegistro || data.fechaRegistro,
         mensaje: data.mensaje || 'Verificación completada'
-        // Agrega otros campos según tu DTO
       };
 
     } catch (err: any) {
-      console.error('Error de conexión:', err);
+      console.error('❌ Error de conexión:', err);
+      
+      if (err.name === 'AbortError') {
+        return {
+          valido: false,
+          mensaje: 'Tiempo de espera agotado. Verifique su conexión.'
+        };
+      }
       
       return {
         valido: false,
-        mensaje: 'Error de conexión con el servidor. Por favor, intente nuevamente.'
+        mensaje: 'Error de conexión con el servidor.'
       };
     }
   };
@@ -154,7 +194,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       return;
     }
 
-    // Validación básica de IMEI
     const cleanedIMEI = imeiToVerify.replace(/\D/g, '');
     if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
       setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
@@ -169,7 +208,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     try {
       const resultado = await verificarIMEI(cleanedIMEI);
       setResultado(resultado);
-      setImei(cleanedIMEI); // Actualizar con IMEI limpio
+      setImei(cleanedIMEI);
     } catch (err: any) {
       setError(err.message || 'Error al verificar IMEI');
     } finally {
@@ -182,7 +221,44 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     handleVerificar();
   };
 
-  // Iniciar escáner con html5-qrcode
+  // Función mejorada para extraer IMEI
+  const extractIMEIFromText = (text: string): string | null => {
+    console.log('📝 Texto escaneado:', text);
+    
+    const patterns = [
+      /IMEI[:\s]*(\d{10,20})/i,
+      /IMEI\d*[:\s]*(\d{10,20})/i,
+      /(?:SN|S\/N|Serial|Número|No\.)[:\s]*(\d{10,20})/i,
+      /\b(\d{15,16})\b/,
+      /(\d[\d\s\-]{10,30}\d)/,
+      /01(\d{14})/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const imei = match[1].replace(/\D/g, '');
+        if (imei.length >= 10 && imei.length <= 20) {
+          console.log('✅ IMEI extraído:', imei);
+          return imei;
+        }
+      }
+    }
+    
+    const allNumbers = text.match(/\d+/g);
+    if (allNumbers) {
+      for (const num of allNumbers) {
+        if (num.length >= 10 && num.length <= 20) {
+          console.log('✅ IMEI encontrado en números:', num);
+          return num;
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  // Iniciar escáner
   const startScanner = useCallback(() => {
     if (!scannerContainerRef.current) return;
     
@@ -206,46 +282,49 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       );
 
       const onScanSuccess = (decodedText: string) => {
-        const numbers = decodedText.match(/\d+/g);
-        if (numbers) {
-          const possibleIMEI = numbers.find(n => n.length >= 10 && n.length <= 20);
-          if (possibleIMEI) {
-            const imeiToSet = possibleIMEI.substring(0, 16);
-            handleScannedIMEI(imeiToSet);
-            return;
-          }
-        }
+        console.log('🔍 Código detectado:', decodedText);
         
-        const cleanedText = decodedText.replace(/\D/g, '');
-        if (cleanedText.length >= 10 && cleanedText.length <= 20) {
-          handleScannedIMEI(cleanedText.substring(0, 16));
+        const extractedIMEI = extractIMEIFromText(decodedText);
+        
+        if (extractedIMEI) {
+          if (scannerRef.current) {
+            scannerRef.current.pause();
+          }
+          
+          setImei(extractedIMEI);
+          stopScanner();
+          setShowScanner(false);
+          
+          setTimeout(() => {
+            handleVerificar(extractedIMEI);
+          }, 500);
         } else {
-          setScannerError('No se encontró un IMEI válido en el código escaneado');
+          setScannerError(`No se encontró IMEI válido. Texto: "${decodedText.substring(0, 50)}..."`);
+          
+          setTimeout(() => {
+            if (scannerRef.current) {
+              scannerRef.current.resume();
+            }
+          }, 2000);
         }
-      };
-
-      const handleScannedIMEI = (imei: string) => {
-        const cleanedIMEI = imei.replace(/\D/g, '');
-        setImei(cleanedIMEI);
-        stopScanner();
-        setShowScanner(false);
-        setTimeout(() => {
-          handleVerificar(cleanedIMEI);
-        }, 300);
       };
 
       const onScanError = (errorMessage: string) => {
+        console.log('⚠️ Error de escaneo:', errorMessage);
+        
         if (!errorMessage.includes('NotFoundException') && 
-            !errorMessage.includes('NoMultiFormatReader')) {
-          setScannerError(errorMessage);
+            !errorMessage.includes('NoMultiFormatReader') &&
+            !errorMessage.includes('QR code parse error')) {
+          
+          setScannerError('Error: ' + errorMessage.substring(0, 100));
         }
       };
 
       scannerRef.current.render(onScanSuccess, onScanError);
 
     } catch (err: any) {
-      console.error('Error inicializando escáner:', err);
-      setScannerError('Error al iniciar el escáner');
+      console.error('❌ Error inicializando escáner:', err);
+      setScannerError('Error al iniciar la cámara.');
       setIsScanning(false);
     }
   }, [handleVerificar]);
@@ -253,7 +332,11 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   // Detener escáner
   const stopScanner = useCallback(() => {
     if (scannerRef.current) {
-      scannerRef.current.clear().catch(console.error);
+      try {
+        scannerRef.current.clear();
+      } catch (error) {
+        console.warn('Error al limpiar escáner:', error);
+      }
       scannerRef.current = null;
     }
     setIsScanning(false);
@@ -339,15 +422,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       setShowScanner(false);
     } else {
       setShowScanner(true);
-    }
-  };
-
-  // Función para registrar nuevo IMEI (solo Admin)
-  const handleRegistrarIMEI = () => {
-    if (userRole === 'Admin') {
-      // Usar endpoint POST /api/verificacion/registrar-dispositivo
-      // O redirigir a formulario de registro
-      window.location.href = `/registrar-dispositivo?imei=${encodeURIComponent(imei)}`;
     }
   };
 
@@ -544,16 +618,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                   ) : (
                     <div className="result-message">
                       <p>{resultado.mensaje || 'Dispositivo no encontrado en el sistema'}</p>
-                      {userRole === 'Admin' && (
-                        <button 
-                          className="btn-register-new" 
-                          type="button"
-                          onClick={handleRegistrarIMEI}
-                        >
-                          <span role="img" aria-label="registrar">📝</span>
-                          Registrar este IMEI
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
