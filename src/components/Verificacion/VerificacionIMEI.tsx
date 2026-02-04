@@ -1,12 +1,12 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA SIN REGISTRO
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 
 // Importar html5-qrcode
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 
-// Importar crypto-js para encriptación
-import CryptoJS from 'crypto-js';
+// QUITAR crypto-js - El backend se encarga de la encriptación
+// import CryptoJS from 'crypto-js';
 
 interface VerificacionIMEIProps {
   userRole?: string;
@@ -58,31 +58,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Función para encriptar IMEI igual que el backend (.NET)
-  const encryptIMEI = (plainIMEI: string): string => {
-    try {
-      // CLAVES EXACTAS DEL BACKEND (.NET EncryptionService)
-      const keyBase64 = "KzNvM2UzYTM1MzYzNzM4Mzk0MDQxNDI0MzQ0NDU=";
-      const ivBase64 = "LzB6MXoxejF6MXoxejF6MQ==";
-      
-      const key = CryptoJS.enc.Base64.parse(keyBase64);
-      const iv = CryptoJS.enc.Base64.parse(ivBase64);
-      
-      const encrypted = CryptoJS.AES.encrypt(plainIMEI, key, {
-        iv: iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
-      });
-      
-      return encrypted.toString();
-      
-    } catch (error) {
-      console.error('Error encriptando IMEI:', error);
-      return plainIMEI;
-    }
-  };
-
-  // Función principal de verificación - CON ENCRIPTACIÓN
+  // Función principal de verificación - SIN ENCRIPTACIÓN (backend se encarga)
   const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
     const cleanedIMEI = imei.replace(/\D/g, '');
     
@@ -104,13 +80,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      console.log('🔍 IMEI original:', cleanedIMEI);
-      const imeiEncriptado = encryptIMEI(cleanedIMEI);
-      console.log('🔐 IMEI encriptado:', imeiEncriptado);
+      console.log('🔍 IMEI enviando (TEXTO PLANO):', cleanedIMEI);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      // IMPORTANTE: Enviar texto plano, NO encriptado
       const response = await fetch(`${API_URL}/api/verificacion/verificar`, {
         method: 'POST',
         headers: {
@@ -119,7 +94,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          IMEI: imeiEncriptado
+          IMEI: cleanedIMEI  // ← TEXTO PLANO, backend lo encriptará
         }),
         signal: controller.signal
       });
@@ -127,6 +102,16 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       clearTimeout(timeoutId);
 
       console.log('📊 Response status:', response.status);
+      console.log('📊 Response ok:', response.ok);
+
+      // Leer siempre el cuerpo de la respuesta para debug
+      let responseText = '';
+      try {
+        responseText = await response.text();
+        console.log('📦 Response body:', responseText);
+      } catch (e) {
+        console.error('❌ Error leyendo respuesta:', e);
+      }
 
       if (response.status === 401) {
         localStorage.removeItem('token');
@@ -139,22 +124,38 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       }
 
       if (response.status === 400) {
-        const errorData = await response.json();
-        return {
-          valido: false,
-          mensaje: errorData.mensaje || 'Error en la solicitud'
-        };
+        try {
+          const errorData = JSON.parse(responseText);
+          return {
+            valido: false,
+            mensaje: errorData.mensaje || errorData.message || 'Error en la solicitud'
+          };
+        } catch {
+          return {
+            valido: false,
+            mensaje: 'Formato de IMEI inválido'
+          };
+        }
       }
 
       if (!response.ok) {
         return {
           valido: false,
-          mensaje: `Error del servidor: ${response.status}`
+          mensaje: `Error del servidor: ${response.status} ${response.statusText || ''}`
         };
       }
 
-      const data = await response.json();
-      console.log('📦 Respuesta del backend:', data);
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('✅ Respuesta parseada:', data);
+      } catch (parseError) {
+        console.error('❌ Error parseando respuesta:', parseError);
+        return {
+          valido: false,
+          mensaje: 'Error procesando respuesta del servidor'
+        };
+      }
 
       return {
         valido: data.valido || false,
@@ -174,6 +175,13 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         return {
           valido: false,
           mensaje: 'Tiempo de espera agotado. Verifique su conexión.'
+        };
+      }
+      
+      if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+        return {
+          valido: false,
+          mensaje: 'No se pudo conectar con el servidor. Verifique su conexión.'
         };
       }
       
