@@ -1,5 +1,5 @@
 /* ========================================
-   VERIFICACIÓN DE IMEI - CSS MINIMALISTA
+   VERIFICACIÓN DE IMEI - CSS MEJORADO PARA MÓVILES
    Fondo Blanco + Botones Azul Claro
    ======================================== */
 
@@ -38,17 +38,26 @@
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
 
   /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 6px; /* Aumentado para móviles */
+  --radius-md: 10px; /* Aumentado para móviles */
+  --radius-lg: 16px; /* Aumentado para móviles */
+  --radius-xl: 20px; /* Aumentado para móviles */
 
   /* Transiciones */
   --transition: all 0.2s ease;
+
+  /* Tamaños de fuente responsivos */
+  --font-xs: 0.75rem;  /* 12px */
+  --font-sm: 0.875rem; /* 14px */
+  --font-base: 1rem;   /* 16px */
+  --font-lg: 1.125rem; /* 18px */
+  --font-xl: 1.25rem;  /* 20px */
+  --font-2xl: 1.5rem;  /* 24px */
+  --font-3xl: 1.875rem;/* 30px */
 }
 
 /* ========================================
-   RESET Y BASE
+   RESET Y BASE - MEJORADO
    ======================================== */
 * {
   margin: 0;
@@ -60,6 +69,7 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%; /* Previene zoom en iOS */
 }
 
 body {
@@ -70,79 +80,100 @@ body {
   color: var(--text);
   background-color: var(--white);
   overflow-x: hidden;
+  font-size: var(--font-base);
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1); /* Mejor feedback táctil */
+}
+
+/* Mejora para texto en móviles */
+@media (max-width: 480px) {
+  body {
+    font-size: var(--font-sm);
+    line-height: 1.5;
+  }
 }
 
 /* ========================================
-   CONTENEDOR PRINCIPAL
+   CONTENEDOR PRINCIPAL - MEJORADO
    ======================================== */
 .verificacion-container {
   min-height: 100vh;
   background-color: var(--white);
-  padding: 40px 20px;
+  padding: clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px); /* Padding responsivo */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* ========================================
-   HEADER
+   HEADER - MEJORADO PARA MÓVILES
    ======================================== */
 .verificacion-header {
   width: 100%;
-  max-width: 900px;
-  margin-bottom: 40px;
+  max-width: min(900px, 95vw);
+  margin-bottom: clamp(24px, 6vw, 40px);
   text-align: center;
+  padding: 0 clamp(8px, 2vw, 16px);
 }
 
 .verificacion-header h1 {
-  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-size: clamp(var(--font-xl), 6vw, var(--font-3xl)); /* Más grande en móviles */
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 12px;
+  margin-bottom: clamp(8px, 2vw, 12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
   flex-wrap: wrap;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.verificacion-header h1 span[role="img"] {
+  font-size: clamp(1.5rem, 5vw, 2rem); /* Emojis más grandes */
 }
 
 .verificacion-header .subtitle {
-  font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+  font-size: clamp(var(--font-sm), 3.5vw, var(--font-lg));
   color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 700px;
+  line-height: 1.5;
+  max-width: min(700px, 95vw);
   margin: 0 auto;
   font-weight: 400;
+  padding: 0 clamp(4px, 1vw, 8px);
 }
 
 /* ========================================
-   TARJETA PRINCIPAL
+   TARJETA PRINCIPAL - MEJORADA
    ======================================== */
 .verificacion-card {
   width: 100%;
-  max-width: 900px;
+  max-width: min(900px, 95vw);
   background-color: var(--white);
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
-  padding: 40px;
-  margin-bottom: 40px;
+  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 40px);
+  margin-bottom: clamp(24px, 6vw, 40px);
 }
 
-@media (max-width: 640px) {
+/* Mejoras específicas para móviles muy pequeños */
+@media (max-width: 360px) {
   .verificacion-card {
-    padding: 24px;
+    padding: 20px 16px;
     border-radius: var(--radius-md);
   }
 }
 
 /* ========================================
-   SECCIÓN DE CÁMARA
+   SECCIÓN DE CÁMARA - MEJORADA
    ======================================== */
 .camera-active-section {
-  margin-bottom: 24px;
+  margin-bottom: clamp(16px, 4vw, 24px);
   animation: slideIn 0.3s ease-out;
 }
 
@@ -150,66 +181,79 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: clamp(12px, 3vw, 20px);
+  padding-bottom: clamp(12px, 3vw, 16px);
   border-bottom: 1px solid var(--gray-200);
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
+  flex-wrap: wrap;
 }
 
 .camera-header h3 {
-  font-size: clamp(1.1rem, 3vw, 1.25rem);
+  font-size: clamp(var(--font-base), 4vw, var(--font-xl));
   font-weight: 600;
   color: var(--text);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: clamp(6px, 1.5vw, 10px);
+  flex-wrap: wrap;
+  line-height: 1.3;
+}
+
+.camera-header h3 span[role="img"] {
+  font-size: clamp(1.1rem, 3.5vw, 1.3rem);
 }
 
 .mobile-indicator {
-  font-size: 0.75rem;
+  font-size: clamp(var(--font-xs), 2.5vw, var(--font-sm));
   background-color: var(--primary-lighter);
   color: var(--primary-dark);
-  padding: 6px 12px;
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
   border-radius: var(--radius-sm);
   font-weight: 600;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-close-camera {
-  width: 40px;
-  height: 40px;
+  width: clamp(36px, 8vw, 40px);
+  height: clamp(36px, 8vw, 40px);
+  min-width: 36px;
+  min-height: 36px;
   border: none;
   background-color: var(--gray-100);
   color: var(--text-secondary);
   border-radius: 50%;
-  font-size: 24px;
+  font-size: clamp(20px, 5vw, 24px);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: var(--transition);
   flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-close-camera:hover {
+.btn-close-camera:hover,
+.btn-close-camera:active {
   background-color: var(--error);
   color: var(--white);
 }
 
 /* ========================================
-   CÁMARA - CONTENEDOR
+   CÁMARA - CONTENEDOR MEJORADO
    ======================================== */
 .camera-container-wrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 4vw, 20px);
   background: #000;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
   aspect-ratio: 16 / 9;
-  max-height: 70vh;
+  max-height: min(70vh, 500px);
 }
 
 .camera-preview-box {
@@ -219,10 +263,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  object-fit: cover;
 }
 
 /* ========================================
-   OVERLAY Y MARCO DE ESCANEO
+   OVERLAY Y MARCO DE ESCANEO - MEJORADO
    ======================================== */
 .camera-overlay {
   position: absolute;
@@ -236,20 +281,21 @@ body {
   justify-content: center;
   pointer-events: none;
   z-index: 10;
+  padding: clamp(12px, 3vw, 20px);
 }
 
 .scan-frame {
   position: relative;
-  width: min(85%, 320px);
-  height: min(60%, 200px);
+  width: min(90%, 320px);
+  height: min(65%, 200px);
   margin: 0 auto;
 }
 
 .scan-corner {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 3px solid var(--primary);
+  width: clamp(16px, 4vw, 20px);
+  height: clamp(16px, 4vw, 20px);
+  border: clamp(2px, 0.5vw, 3px) solid var(--primary);
 }
 
 .scan-corner-tl {
@@ -284,7 +330,7 @@ body {
   position: absolute;
   left: 10%;
   right: 10%;
-  height: 2px;
+  height: clamp(1px, 0.3vw, 2px);
   background: linear-gradient(
     90deg,
     transparent,
@@ -297,67 +343,60 @@ body {
   animation: scan 2s ease-in-out infinite;
 }
 
-@keyframes scan {
-  0%,
-  100% {
-    top: 0;
-    opacity: 0;
-  }
-  10%,
-  90% {
-    opacity: 1;
-  }
-  50% {
-    top: 50%;
-  }
-}
-
 .camera-instructions {
   text-align: center;
   color: var(--white);
-  padding: 0 16px;
+  padding: 0 clamp(12px, 3vw, 16px);
   width: 100%;
-  margin-top: 20px;
+  margin-top: clamp(12px, 3vw, 20px);
 }
 
 .instruction-main {
-  font-size: clamp(1rem, 3vw, 1.1rem);
+  font-size: clamp(var(--font-sm), 3.5vw, var(--font-lg));
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: clamp(4px, 1vw, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: clamp(6px, 1.5vw, 8px);
   flex-wrap: wrap;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .instruction-sub {
-  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
-  opacity: 0.85;
-  max-width: 400px;
+  font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
+  opacity: 0.9;
+  max-width: min(400px, 90vw);
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.4;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
 }
 
 /* ========================================
-   FORMULARIO
+   FORMULARIO - MEJORADO PARA MÓVILES
    ======================================== */
 .verification-form {
-  margin-bottom: 24px;
+  margin-bottom: clamp(20px, 5vw, 24px);
 }
 
 .form-field {
-  margin-bottom: 28px;
+  margin-bottom: clamp(20px, 5vw, 28px);
 }
 
 .field-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: clamp(0.95rem, 3vw, 1.05rem);
+  gap: clamp(6px, 1.5vw, 8px);
+  font-size: clamp(var(--font-sm), 3.2vw, var(--font-base));
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 12px;
+  margin-bottom: clamp(8px, 2vw, 12px);
+  line-height: 1.4;
+}
+
+.field-label span[role="img"] {
+  font-size: clamp(1rem, 2.8vw, 1.1rem);
 }
 
 .input-with-clear {
@@ -367,6 +406,8 @@ body {
   overflow: hidden;
   transition: var(--transition);
   background-color: var(--white);
+  display: flex;
+  align-items: center;
 }
 
 .input-with-clear:focus-within {
@@ -376,18 +417,23 @@ body {
 
 .imei-field {
   width: 100%;
-  padding: 12px 48px 12px 16px;
+  padding: clamp(12px, 3vw, 14px) clamp(12px, 3vw, 16px);
+  padding-right: clamp(44px, 10vw, 48px); /* Espacio para el botón clear */
   border: none;
-  font-size: 1rem;
+  font-size: clamp(var(--font-sm), 3.5vw, var(--font-base));
   font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   background: transparent;
   color: var(--text);
   outline: none;
+  min-height: 48px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .imei-field::placeholder {
   color: var(--text-light);
+  font-size: clamp(var(--font-sm), 3vw, var(--font-base));
 }
 
 .imei-field:disabled {
@@ -398,11 +444,11 @@ body {
 
 .btn-clear-field {
   position: absolute;
-  right: 12px;
+  right: clamp(8px, 2vw, 12px);
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: clamp(28px, 6vw, 32px);
+  height: clamp(28px, 6vw, 32px);
   border: none;
   background: transparent;
   color: var(--text-light);
@@ -410,52 +456,72 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: clamp(18px, 4vw, 20px);
   transition: var(--transition);
   border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-clear-field:hover {
+.btn-clear-field:hover,
+.btn-clear-field:active {
   background-color: var(--gray-100);
   color: var(--text-secondary);
 }
 
 .field-hint {
-  font-size: 0.875rem;
+  font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
   color: var(--text-light);
-  margin-top: 8px;
+  margin-top: clamp(6px, 1.5vw, 8px);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: clamp(4px, 1vw, 6px);
+  line-height: 1.4;
+}
+
+.field-hint span[role="img"] {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 /* ========================================
-   BOTONES
+   BOTONES - MEJORADOS PARA TACTO
    ======================================== */
 .btn-camera-trigger,
 .btn-submit,
 .btn-reset,
 .btn-cancel-camera,
-.btn-register-new {
+.btn-register-new,
+.btn-capture {
   width: 100%;
-  padding: 14px 24px;
+  padding: clamp(14px, 3.5vw, 16px) clamp(16px, 4vw, 24px);
   border: none;
   border-radius: var(--radius-lg);
-  font-size: clamp(0.95rem, 3vw, 1rem);
+  font-size: clamp(var(--font-sm), 3.2vw, var(--font-base));
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: clamp(8px, 2vw, 10px);
   text-align: center;
   position: relative;
   overflow: hidden;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  min-height: 48px;
-  margin-bottom: 12px;
+  min-height: clamp(48px, 10vw, 52px);
+  margin-bottom: clamp(10px, 2.5vw, 12px);
+  user-select: none;
+}
+
+/* Tamaño mínimo táctil recomendado por Apple/Google: 44x44px */
+.btn-camera-trigger:active,
+.btn-submit:active,
+.btn-reset:active,
+.btn-cancel-camera:active,
+.btn-register-new:active,
+.btn-capture:active {
+  transform: translateY(1px);
+  transition: transform 0.1s ease;
 }
 
 /* Botón Cámara */
@@ -465,14 +531,14 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.btn-camera-trigger:hover {
+.btn-camera-trigger:hover,
+.btn-camera-trigger:active {
   background-color: var(--primary-dark);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
-.btn-camera-trigger:active {
-  transform: translateY(0);
+.camera-icon {
+  font-size: clamp(1.1rem, 3.5vw, 1.2rem);
 }
 
 /* Botón Verificar */
@@ -483,14 +549,10 @@ body {
   margin-bottom: 0;
 }
 
-.btn-submit:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
+.btn-submit:hover:not(:disabled),
 .btn-submit:active:not(:disabled) {
-  transform: translateY(0);
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-submit:disabled {
@@ -498,11 +560,18 @@ body {
   color: var(--text-light);
   cursor: not-allowed;
   box-shadow: none;
+  transform: none !important;
+}
+
+.btn-loading {
+  position: relative;
+  color: transparent !important;
 }
 
 .btn-loading .spinner {
-  width: 16px;
-  height: 16px;
+  position: absolute;
+  width: clamp(20px, 5vw, 24px);
+  height: clamp(20px, 5vw, 24px);
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-top-color: var(--white);
   border-radius: 50%;
@@ -517,7 +586,8 @@ body {
   margin-bottom: 0;
 }
 
-.btn-reset:hover {
+.btn-reset:hover,
+.btn-reset:active {
   background-color: var(--primary-lighter);
   border-color: var(--primary);
 }
@@ -530,7 +600,8 @@ body {
   margin-bottom: 0;
 }
 
-.btn-cancel-camera:hover {
+.btn-cancel-camera:hover,
+.btn-cancel-camera:active {
   background-color: var(--gray-300);
 }
 
@@ -539,19 +610,43 @@ body {
   background-color: var(--success);
   color: var(--white);
   box-shadow: var(--shadow-sm);
+  width: auto;
+  min-width: 160px;
+  margin: 12px auto 0;
 }
 
-.btn-register-new:hover {
+.btn-register-new:hover,
+.btn-register-new:active {
   background-color: #218838;
-  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+/* Botón Capturar */
+.btn-capture {
+  background-color: var(--success);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-capture:hover:not(:disabled),
+.btn-capture:active:not(:disabled) {
+  background-color: #218838;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-capture:disabled {
+  background-color: var(--gray-400);
+  color: var(--text-light);
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ========================================
    SECCIÓN DE CÁMARA TRIGGER
    ======================================== */
 .camera-trigger-section {
-  margin-bottom: 24px;
+  margin-bottom: clamp(20px, 5vw, 24px);
+  width: 100%;
 }
 
 /* ========================================
@@ -560,8 +655,8 @@ body {
 .divider-with-text {
   display: flex;
   align-items: center;
-  margin: 24px 0;
-  gap: 16px;
+  margin: clamp(20px, 5vw, 24px) 0;
+  gap: clamp(12px, 3vw, 16px);
 }
 
 .divider-with-text::before,
@@ -574,23 +669,38 @@ body {
 
 .divider-with-text span {
   color: var(--text-light);
-  font-size: 0.85rem;
+  font-size: clamp(var(--font-xs), 2.5vw, var(--font-sm));
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
+  padding: 0 clamp(4px, 1vw, 8px);
 }
 
 /* ========================================
-   ALERTAS
+   ACCIONES DE CÁMARA
+   ======================================== */
+.camera-actions {
+  display: flex;
+  gap: clamp(12px, 3vw, 16px);
+  margin-top: clamp(16px, 4vw, 20px);
+}
+
+.camera-actions button {
+  flex: 1;
+  margin: 0;
+}
+
+/* ========================================
+   ALERTAS - MEJORADAS
    ======================================== */
 .alert {
-  padding: 16px;
+  padding: clamp(14px, 3.5vw, 16px);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: clamp(10px, 2.5vw, 12px);
+  margin-bottom: clamp(16px, 4vw, 24px);
   border-left: 4px solid;
   animation: slideIn 0.3s ease-out;
 }
@@ -602,28 +712,31 @@ body {
 }
 
 .alert-icon {
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 3.5vw, 1.25rem);
   flex-shrink: 0;
   line-height: 1;
+  margin-top: 1px;
 }
 
 .alert-text {
   flex: 1;
-  font-size: 0.9rem;
+  font-size: clamp(var(--font-sm), 3vw, 0.9rem);
   line-height: 1.5;
   font-weight: 500;
+  word-break: break-word;
 }
 
 /* ========================================
-   RESULTADO
+   RESULTADO - MEJORADO PARA MÓVILES
    ======================================== */
 .result-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-200);
-  padding: 32px;
-  margin-top: 32px;
+  padding: clamp(24px, 5vw, 32px);
+  margin-top: clamp(24px, 6vw, 32px);
   background-color: var(--white);
   animation: slideIn 0.4s ease-out;
+  width: 100%;
 }
 
 .result-valid {
@@ -639,48 +752,53 @@ body {
 .result-status {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  gap: clamp(12px, 3vw, 20px);
+  margin-bottom: clamp(16px, 4vw, 24px);
+  padding-bottom: clamp(16px, 4vw, 20px);
   border-bottom: 1px solid var(--gray-200);
+  flex-wrap: wrap;
 }
 
 .status-badge {
-  font-size: 48px;
+  font-size: clamp(2.5rem, 10vw, 3rem);
   line-height: 1;
   flex-shrink: 0;
 }
 
 .status-text {
   flex: 1;
+  min-width: 200px;
 }
 
 .status-title {
-  font-size: clamp(1.1rem, 4vw, 1.25rem);
+  font-size: clamp(var(--font-base), 4.5vw, var(--font-xl));
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: clamp(4px, 1vw, 6px);
+  line-height: 1.3;
 }
 
 .status-imei {
-  font-size: 0.9rem;
+  font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
   font-family: 'Courier New', monospace;
   color: var(--text-secondary);
-  word-break: break-all;
-  letter-spacing: 0.5px;
+  word-break: break-word;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
 }
 
 .result-info {
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 4vw, 20px);
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
+  align-items: flex-start;
+  padding: clamp(10px, 2.5vw, 12px) 0;
   border-bottom: 1px solid var(--gray-100);
-  gap: 16px;
+  gap: clamp(12px, 3vw, 16px);
+  flex-wrap: wrap;
 }
 
 .info-row:last-child {
@@ -688,34 +806,43 @@ body {
 }
 
 .info-label {
-  font-size: 0.9rem;
+  font-size: clamp(var(--font-sm), 3vw, var(--font-base));
   font-weight: 600;
   color: var(--text);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: clamp(6px, 1.5vw, 8px);
+  flex: 1;
+  min-width: 120px;
+}
+
+.info-label span[role="img"] {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
 .info-value {
-  font-size: 0.9rem;
+  font-size: clamp(var(--font-sm), 3vw, var(--font-base));
   color: var(--text-secondary);
   text-align: right;
   font-weight: 500;
+  flex: 1;
+  min-width: 150px;
+  line-height: 1.4;
 }
 
 .result-message {
   background-color: var(--bg-light);
   border-left: 4px solid var(--primary);
-  padding: 16px;
+  padding: clamp(14px, 3.5vw, 16px);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: clamp(var(--font-sm), 3vw, 0.95rem);
   line-height: 1.6;
-  margin-bottom: 16px;
+  margin-bottom: clamp(12px, 3vw, 16px);
 }
 
 .result-message p {
-  margin: 0 0 12px 0;
+  margin: 0 0 clamp(8px, 2vw, 12px) 0;
 }
 
 .result-message p:last-child {
@@ -723,46 +850,52 @@ body {
 }
 
 /* ========================================
-   PANEL DE AYUDA
+   PANEL DE AYUDA - MEJORADO
    ======================================== */
 .help-panel {
   width: 100%;
-  max-width: 900px;
+  max-width: min(900px, 95vw);
   background-color: var(--white);
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
-  padding: 40px;
+  padding: clamp(24px, 6vw, 40px) clamp(20px, 4vw, 40px);
 }
 
 .help-title {
-  font-size: clamp(1.1rem, 4vw, 1.25rem);
+  font-size: clamp(var(--font-base), 4.5vw, var(--font-xl));
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 32px;
+  margin-bottom: clamp(24px, 6vw, 32px);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
   flex-wrap: wrap;
+  line-height: 1.3;
+}
+
+.help-title span[role="img"] {
+  font-size: clamp(1.2rem, 4vw, 1.3rem);
 }
 
 .help-items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 24px;
+  gap: clamp(16px, 4vw, 24px);
 }
 
 .help-card {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 24px;
+  gap: clamp(12px, 3vw, 16px);
+  padding: clamp(20px, 4vw, 24px);
   background-color: var(--bg-light);
   border-radius: var(--radius-lg);
   border: 1px solid var(--gray-200);
   transition: var(--transition);
+  height: 100%;
 }
 
 .help-card:hover {
@@ -772,9 +905,9 @@ body {
 }
 
 .help-number {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: clamp(36px, 8vw, 40px);
+  height: clamp(36px, 8vw, 40px);
+  min-width: clamp(36px, 8vw, 40px);
   background-color: var(--primary);
   color: var(--white);
   border-radius: 50%;
@@ -782,20 +915,25 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: clamp(var(--font-base), 3.5vw, var(--font-lg));
   flex-shrink: 0;
+}
+
+.help-content {
+  flex: 1;
 }
 
 .help-card strong {
   display: block;
-  font-size: 0.95rem;
+  font-size: clamp(var(--font-sm), 3.2vw, var(--font-base));
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: clamp(4px, 1vw, 6px);
+  line-height: 1.4;
 }
 
 .help-card p {
-  font-size: 0.875rem;
+  font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
@@ -821,13 +959,19 @@ body {
   }
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--white);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+@keyframes scan {
+  0%,
+  100% {
+    top: 0;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    top: 50%;
+  }
 }
 
 /* ========================================
@@ -846,21 +990,72 @@ body {
   outline-offset: 2px;
 }
 
+/* Oculta outline para elementos táctiles en móviles */
+@media (hover: none) and (pointer: coarse) {
+  .btn-camera-trigger:focus,
+  .btn-submit:focus,
+  .btn-reset:focus,
+  .btn-cancel-camera:focus,
+  .btn-register-new:focus,
+  .btn-capture:focus {
+    outline: none;
+  }
+}
+
+/* Mejora para dispositivos con stylus/pen */
+@media (pointer: fine) {
+  .btn-camera-trigger:hover,
+  .btn-submit:hover,
+  .btn-reset:hover,
+  .btn-cancel-camera:hover,
+  .btn-register-new:hover,
+  .btn-capture:hover {
+    transform: translateY(-2px);
+  }
+}
+
 /* ========================================
-   RESPONSIVE
+   RESPONSIVE ESPECÍFICO
    ======================================== */
+
+/* Teléfonos pequeños (menos de 360px) */
+@media (max-width: 359px) {
+  .verificacion-header h1 {
+    font-size: var(--font-lg);
+  }
+  
+  .verificacion-header .subtitle {
+    font-size: var(--font-xs);
+  }
+  
+  .imei-field {
+    font-size: var(--font-sm);
+  }
+  
+  .help-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .help-number {
+    margin-bottom: 8px;
+  }
+}
+
+/* Teléfonos (hasta 480px) */
 @media (max-width: 480px) {
   .verificacion-container {
-    padding: 24px 16px;
+    padding: 16px 12px;
   }
 
   .verificacion-header {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .verificacion-card,
   .help-panel {
-    padding: 24px;
+    padding: 20px 16px;
     border-radius: var(--radius-md);
   }
 
@@ -871,30 +1066,99 @@ body {
   .camera-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .info-row {
     flex-direction: column;
     align-items: flex-start;
+    gap: 4px;
   }
 
   .info-value {
     text-align: left;
+    width: 100%;
   }
 
   .result-status {
     flex-direction: column;
     text-align: center;
+    gap: 12px;
   }
 
   .status-text {
     width: 100%;
+    min-width: auto;
+  }
+  
+  .btn-register-new {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .camera-actions {
+    flex-direction: column;
   }
 }
 
-@media (max-width: 768px) {
+/* Tablets pequeñas (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .verificacion-container {
+    padding: 24px 20px;
+  }
+  
+  .help-items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablets (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .verificacion-container {
+    padding: 32px 24px;
+  }
+}
+
+/* Mejoras para orientación horizontal en móviles */
+@media (max-height: 500px) and (orientation: landscape) {
+  .verificacion-container {
+    padding: 16px 12px;
+  }
+  
+  .verificacion-card {
+    padding: 20px;
+  }
+  
+  .camera-container-wrapper {
+    max-height: 50vh;
+  }
+  
+  .help-panel {
+    display: none; /* Ocultar ayuda en landscape para ahorrar espacio */
+  }
+}
+
+/* Soporte para pantallas muy grandes */
+@media (min-width: 1400px) {
   .verificacion-card,
   .help-panel {
-    max-width: 100%;
+    max-width: 1000px;
+  }
+}
+
+/* Mejoras para iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .btn-camera-trigger,
+  .btn-submit,
+  .btn-reset,
+  .btn-cancel-camera,
+  .btn-register-new,
+  .btn-capture {
+    min-height: 44px; /* Tamaño mínimo recomendado por Apple */
+  }
+  
+  input, button {
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
