@@ -1,12 +1,12 @@
-// src/components/Layout/SidebarLayout.tsx - VERSIÓN CON PROPS
+// src/components/Layout/SidebarLayout.tsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect, ReactNode } from 'react';
 import './SidebarLayout.css';
 
 interface SidebarLayoutProps {
   children: ReactNode;
   user: any;
-  currentPage: string; // Añadir esta prop
-  onPageChange: (page: string) => void; // Añadir esta prop
+  currentPage: string;
+  onPageChange: (page: string) => void;
 }
 
 interface MenuItem {
@@ -19,8 +19,8 @@ interface MenuItem {
 const SidebarLayout: React.FC<SidebarLayoutProps> = ({ 
   children, 
   user,
-  currentPage, // Recibir la prop
-  onPageChange // Recibir la prop
+  currentPage,
+  onPageChange
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -34,10 +34,6 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
 
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-
-    if (window.innerWidth > 768) {
-      setIsSidebarOpen(false);
-    }
 
     return () => {
       window.removeEventListener('resize', checkIsMobile);
@@ -100,7 +96,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
   };
 
   const handlePageChange = (page: string) => {
-    onPageChange(page); // Llamar a la función padre
+    onPageChange(page);
     if (isMobile) {
       setIsSidebarOpen(false);
     }
@@ -192,11 +188,8 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
             }}>
               {getRoleDisplayName(user?.rol || 'Usuario')}
             </div>
-            <p className="user-email">{user?.email || ''}</p>
           </div>
         </div>
-
-        <div className="sidebar-divider"></div>
 
         <nav className="sidebar-menu">
           {menuItems.length > 0 ? (
@@ -211,17 +204,26 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
               </button>
             ))
           ) : (
-            <div className="no-permissions">
+            <div className="menu-item">
               <span className="menu-icon">🔒</span>
               <span className="menu-label">Sin permisos disponibles</span>
             </div>
           )}
         </nav>
 
+        {/* CORREGIR: Botón de logout con clases correctas */}
         <div className="sidebar-footer">
           <button 
             className="menu-item logout-btn"
             onClick={handleLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              width: '100%',
+              maxWidth: '250px'
+            }}
           >
             <span className="menu-icon">🚪</span>
             <span className="menu-label">Cerrar Sesión</span>

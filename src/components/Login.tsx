@@ -1,4 +1,4 @@
-// Login.tsx - VERSIÓN SIN RECUPERAR CONTRASEÑA
+// Login.tsx - VERSIÓN RESPONSIVA CORREGIDA
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -122,24 +122,36 @@ const Login: React.FC = () => {
     }
   };
 
-  // Estilos base responsivos
+  // Estilos responsivos mejorados
   const getInputStyle = (type: 'username' | 'password') => {
     const isMobile = screenWidth < 768;
-    const padding = isMobile 
-      ? (type === 'password' ? '18px 56px 18px 24px' : '18px 24px') 
-      : (type === 'password' ? '20px 60px 20px 28px' : '20px 28px');
+    const isTablet = screenWidth >= 768 && screenWidth < 1024;
+    
+    let padding, fontSize;
+    
+    if (isMobile) {
+      padding = type === 'password' ? '14px 48px 14px 20px' : '14px 20px';
+      fontSize = '15px';
+    } else if (isTablet) {
+      padding = type === 'password' ? '16px 52px 16px 24px' : '16px 24px';
+      fontSize = '16px';
+    } else {
+      padding = type === 'password' ? '18px 56px 18px 28px' : '18px 28px';
+      fontSize = '17px';
+    }
 
     const baseStyle = {
       width: '100%',
       padding,
-      fontSize: isMobile ? '16px' : '18px',
+      fontSize,
       border: `2px solid ${error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '14px',
+      borderRadius: '12px',
       background: SAMSUNG_COLORS.white,
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       outline: 'none',
       color: SAMSUNG_COLORS.text,
       fontWeight: 500,
+      boxSizing: 'border-box' as const,
     };
 
     if (isFocused[type]) {
@@ -148,12 +160,16 @@ const Login: React.FC = () => {
         borderColor: error ? SAMSUNG_COLORS.error : SAMSUNG_COLORS.blueLight,
         boxShadow: `0 0 0 4px ${error ? 'rgba(239, 68, 68, 0.15)' : 'rgba(20, 40, 160, 0.15)'}`,
         transform: 'translateY(-2px)',
-        background: 'linear-gradient(to bottom, #ffffff, #f8fafc)'
       };
     }
 
     return baseStyle;
   };
+
+  // Determinar tamaño de pantalla
+  const isMobile = screenWidth < 768;
+  const isTablet = screenWidth >= 768 && screenWidth < 1024;
+  const isDesktop = screenWidth >= 1024;
 
   const styles = {
     container: {
@@ -161,11 +177,12 @@ const Login: React.FC = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: screenWidth < 768 ? '16px' : '24px',
+      padding: isMobile ? '12px' : isTablet ? '20px' : '24px',
       position: 'relative' as const,
-      overflow: 'hidden' as const,
+      overflow: 'auto' as const,
       background: SAMSUNG_COLORS.gray,
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      boxSizing: 'border-box' as const,
     },
     background: {
       position: 'fixed' as const,
@@ -198,27 +215,14 @@ const Login: React.FC = () => {
       `,
       animation: 'float 30s ease-in-out infinite alternate'
     },
-    backgroundShapes: {
-      position: 'absolute' as const,
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      overflow: 'hidden' as const
-    },
-    shape: {
-      position: 'absolute' as const,
-      borderRadius: '50%',
-      background: 'rgba(255, 255, 255, 0.03)',
-      border: '1px solid rgba(255, 255, 255, 0.05)'
-    },
     loginWrapper: {
       display: 'flex',
+      flexDirection: isMobile ? 'column' : ('row' as const),
       width: '100%',
-      maxWidth: screenWidth < 768 ? '100%' : '1400px',
-      height: screenWidth < 768 ? 'auto' : '85vh',
-      minHeight: screenWidth < 768 ? '90vh' : '600px',
-      borderRadius: screenWidth < 768 ? '20px' : '32px',
+      maxWidth: isMobile ? '100%' : isTablet ? '90%' : '1200px',
+      height: isMobile ? 'auto' : isTablet ? '80vh' : '85vh',
+      minHeight: isMobile ? '100vh' : '500px',
+      borderRadius: isMobile ? '16px' : '24px',
       overflow: 'hidden' as const,
       boxShadow: `
         0 25px 50px -12px rgba(0, 0, 0, 0.25),
@@ -226,324 +230,314 @@ const Login: React.FC = () => {
       `,
       background: SAMSUNG_COLORS.white,
       position: 'relative' as const,
-      zIndex: 1
+      zIndex: 1,
+      boxSizing: 'border-box' as const,
     },
     leftPanel: {
-      flex: screenWidth < 768 ? '0 0 100%' : '1',
+      flex: isMobile ? '0 0 auto' : '1',
       background: SAMSUNG_COLORS.gradientLight,
-      padding: screenWidth < 768 ? '40px 32px' : '60px 48px',
+      padding: isMobile ? '32px 24px' : isTablet ? '40px 32px' : '48px 40px',
       display: 'flex',
       flexDirection: 'column' as const,
       justifyContent: 'space-between',
       position: 'relative' as const,
-      overflow: 'hidden' as const
+      overflow: 'hidden' as const,
+      minHeight: isMobile ? '40vh' : 'auto',
     },
     rightPanel: {
-      flex: screenWidth < 768 ? '0 0 100%' : '1.2',
-      padding: screenWidth < 768 ? '48px 32px' : '60px 48px',
+      flex: isMobile ? '0 0 auto' : '1.2',
+      padding: isMobile ? '32px 24px' : isTablet ? '40px 32px' : '48px 40px',
       display: 'flex',
       flexDirection: 'column' as const,
       justifyContent: 'center',
-      background: SAMSUNG_COLORS.white
+      background: SAMSUNG_COLORS.white,
+      overflowY: 'auto' as const,
+      maxHeight: isMobile ? '60vh' : 'none',
     },
     logoContainer: {
       display: 'flex',
       alignItems: 'center',
-      gap: screenWidth < 768 ? '16px' : '20px',
-      marginBottom: screenWidth < 768 ? '32px' : '48px'
+      gap: isMobile ? '12px' : '16px',
+      marginBottom: isMobile ? '24px' : '32px',
+      flexWrap: 'wrap' as const,
     },
     logoCircle: {
-      width: screenWidth < 768 ? '64px' : '80px',
-      height: screenWidth < 768 ? '64px' : '80px',
+      width: isMobile ? '48px' : isTablet ? '56px' : '64px',
+      height: isMobile ? '48px' : isTablet ? '56px' : '64px',
       background: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: screenWidth < 768 ? '20px' : '24px',
+      borderRadius: isMobile ? '14px' : '16px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+      flexShrink: 0,
     },
     logoIcon: {
-      fontSize: screenWidth < 768 ? '32px' : '40px',
+      fontSize: isMobile ? '24px' : isTablet ? '28px' : '32px',
       color: SAMSUNG_COLORS.white
     },
     logoText: {
-      flex: 1
+      flex: 1,
+      minWidth: isMobile ? '200px' : 'auto',
     },
     logoTitle: {
-      fontSize: screenWidth < 768 ? '24px' : '32px',
+      fontSize: isMobile ? '20px' : isTablet ? '24px' : '28px',
       fontWeight: 700,
       color: SAMSUNG_COLORS.white,
       margin: 0,
-      letterSpacing: '-0.5px'
+      letterSpacing: '-0.5px',
+      lineHeight: 1.2,
     },
     logoSubtitle: {
-      fontSize: screenWidth < 768 ? '14px' : '16px',
+      fontSize: isMobile ? '12px' : isTablet ? '14px' : '15px',
       color: 'rgba(255, 255, 255, 0.85)',
-      margin: '8px 0 0 0',
-      fontWeight: 400
+      margin: '4px 0 0 0',
+      fontWeight: 400,
+      lineHeight: 1.4,
     },
     welcomeSection: {
       flex: 1,
       display: 'flex',
       flexDirection: 'column' as const,
-      justifyContent: 'center'
+      justifyContent: 'center',
+      marginTop: isMobile ? '16px' : '0',
     },
     welcomeTitle: {
-      fontSize: screenWidth < 768 ? '32px' : '48px',
+      fontSize: isMobile ? '24px' : isTablet ? '32px' : '40px',
       fontWeight: 700,
       color: SAMSUNG_COLORS.white,
-      marginBottom: screenWidth < 768 ? '16px' : '24px',
-      lineHeight: 1.1
+      marginBottom: isMobile ? '12px' : '20px',
+      lineHeight: 1.1,
+      wordBreak: 'break-word' as const,
     },
     welcomeText: {
-      fontSize: screenWidth < 768 ? '16px' : '18px',
+      fontSize: isMobile ? '14px' : isTablet ? '15px' : '16px',
       color: 'rgba(255, 255, 255, 0.9)',
-      marginBottom: screenWidth < 768 ? '24px' : '32px',
-      lineHeight: 1.6
-    },
-    featuresList: {
-      listStyle: 'none',
-      padding: 0,
-      margin: 0
-    },
-    featureItem: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      marginBottom: screenWidth < 768 ? '16px' : '20px',
-      color: 'rgba(255, 255, 255, 0.85)',
-      fontSize: screenWidth < 768 ? '14px' : '15px'
-    },
-    featureIcon: {
-      fontSize: '20px',
-      opacity: 0.9
+      marginBottom: isMobile ? '20px' : '28px',
+      lineHeight: 1.6,
     },
     loginHeader: {
-      marginBottom: screenWidth < 768 ? '32px' : '48px',
-      textAlign: 'center' as const
+      marginBottom: isMobile ? '24px' : '36px',
+      textAlign: 'center' as const,
     },
     loginTitle: {
-      fontSize: screenWidth < 768 ? '28px' : '36px',
+      fontSize: isMobile ? '24px' : isTablet ? '28px' : '32px',
       fontWeight: 700,
       color: SAMSUNG_COLORS.text,
-      marginBottom: '12px',
-      letterSpacing: '-0.5px'
+      marginBottom: '8px',
+      letterSpacing: '-0.5px',
+      lineHeight: 1.2,
     },
     loginSubtitle: {
-      fontSize: screenWidth < 768 ? '16px' : '18px',
+      fontSize: isMobile ? '14px' : isTablet ? '15px' : '16px',
       color: SAMSUNG_COLORS.textLight,
-      lineHeight: 1.5
+      lineHeight: 1.5,
+      maxWidth: '500px',
+      margin: '0 auto',
     },
     loginForm: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: screenWidth < 768 ? '24px' : '32px'
+      gap: isMobile ? '20px' : '28px',
+      width: '100%',
+      maxWidth: '500px',
+      margin: '0 auto',
     },
     formGroup: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '12px'
+      gap: '8px',
+      width: '100%',
     },
     formLabel: {
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
-      fontSize: screenWidth < 768 ? '15px' : '16px',
+      gap: '8px',
+      fontSize: isMobile ? '14px' : '15px',
       fontWeight: 600,
       color: SAMSUNG_COLORS.text,
-      paddingLeft: '8px'
+      paddingLeft: '4px',
     },
     labelIcon: {
-      fontSize: '20px',
-      opacity: 0.8
+      fontSize: isMobile ? '18px' : '20px',
+      opacity: 0.8,
     },
     inputContainer: {
       position: 'relative' as const,
-      width: '100%'
+      width: '100%',
     },
     togglePassword: (isHovered: boolean) => ({
       position: 'absolute' as const,
-      right: '20px',
+      right: isMobile ? '16px' : '20px',
       top: '50%',
       transform: 'translateY(-50%)',
       background: 'none',
       border: 'none',
-      fontSize: '22px',
+      fontSize: isMobile ? '20px' : '22px',
       cursor: 'pointer',
       color: isHovered ? SAMSUNG_COLORS.blueLight : SAMSUNG_COLORS.textLight,
-      padding: '6px',
-      borderRadius: '8px',
+      padding: '4px',
+      borderRadius: '6px',
       transition: 'all 0.2s ease',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      zIndex: 2,
     }),
     loadingState: {
       background: 'rgba(20, 40, 160, 0.03)',
       border: `2px solid ${SAMSUNG_COLORS.grayDark}`,
-      borderRadius: '16px',
-      padding: '24px',
+      borderRadius: '12px',
+      padding: isMobile ? '16px' : '20px',
       display: 'flex',
       alignItems: 'center',
-      gap: '20px',
-      marginBottom: '16px',
-      backdropFilter: 'blur(10px)'
+      gap: isMobile ? '16px' : '20px',
+      marginBottom: '12px',
+      backdropFilter: 'blur(10px)',
+      width: '100%',
     },
     samsungSpinner: {
-      width: '32px',
-      height: '32px',
+      width: isMobile ? '24px' : '28px',
+      height: isMobile ? '24px' : '28px',
       border: `3px solid ${SAMSUNG_COLORS.grayDark}`,
       borderTop: `3px solid ${SAMSUNG_COLORS.blue}`,
       borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      animation: 'spin 1s linear infinite',
+      flexShrink: 0,
     },
     loadingTextP: {
-      margin: '0 0 8px 0',
+      margin: '0 0 4px 0',
       fontWeight: 600,
       color: SAMSUNG_COLORS.text,
-      fontSize: screenWidth < 768 ? '16px' : '18px'
+      fontSize: isMobile ? '15px' : '16px',
     },
     loadingTextSmall: {
-      fontSize: screenWidth < 768 ? '13px' : '14px',
+      fontSize: isMobile ? '12px' : '13px',
       color: SAMSUNG_COLORS.textLight,
-      display: 'block' as const
+      display: 'block' as const,
     },
     errorState: {
       background: 'rgba(239, 68, 68, 0.03)',
       border: `2px solid rgba(239, 68, 68, 0.2)`,
-      borderRadius: '16px',
-      padding: '24px',
+      borderRadius: '12px',
+      padding: isMobile ? '16px' : '20px',
       display: 'flex',
-      gap: '20px',
-      marginBottom: '16px',
-      backdropFilter: 'blur(10px)'
+      gap: isMobile ? '16px' : '20px',
+      marginBottom: '12px',
+      backdropFilter: 'blur(10px)',
+      width: '100%',
     },
     errorIcon: {
-      fontSize: '28px',
+      fontSize: isMobile ? '24px' : '28px',
       color: SAMSUNG_COLORS.error,
-      flexShrink: 0
+      flexShrink: 0,
     },
     errorContent: {
-      flex: 1
+      flex: 1,
     },
     errorTitle: {
-      margin: '0 0 8px 0',
+      margin: '0 0 6px 0',
       fontWeight: 600,
       color: SAMSUNG_COLORS.error,
-      fontSize: screenWidth < 768 ? '16px' : '18px'
+      fontSize: isMobile ? '15px' : '16px',
     },
     errorMessages: {
-      lineHeight: '1.5'
+      lineHeight: '1.5',
     },
     errorLine: {
-      margin: '4px 0',
+      margin: '2px 0',
       color: SAMSUNG_COLORS.text,
-      fontSize: screenWidth < 768 ? '14px' : '15px'
+      fontSize: isMobile ? '13px' : '14px',
     },
     btnLogin: (isDisabled: boolean, isHovered: boolean) => ({
       width: '100%',
-      padding: screenWidth < 768 ? '20px' : '24px',
+      padding: isMobile ? '16px' : '20px',
       background: isDisabled ? SAMSUNG_COLORS.grayDark : SAMSUNG_COLORS.gradient,
       color: isDisabled ? SAMSUNG_COLORS.textLight : SAMSUNG_COLORS.white,
       border: 'none',
-      borderRadius: '16px',
-      fontSize: screenWidth < 768 ? '17px' : '18px',
+      borderRadius: '12px',
+      fontSize: isMobile ? '16px' : '17px',
       fontWeight: 700,
       cursor: isDisabled ? 'not-allowed' : 'pointer',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '16px',
+      gap: '12px',
       position: 'relative' as const,
       overflow: 'hidden' as const,
-      transform: !isDisabled && isHovered ? 'translateY(-3px) scale(1.01)' : 'none',
+      transform: !isDisabled && isHovered ? 'translateY(-2px)' : 'none',
       boxShadow: !isDisabled && isHovered ? 
-        '0 20px 40px rgba(20, 40, 160, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset' : 
-        '0 8px 24px rgba(20, 40, 160, 0.2)',
-      letterSpacing: '0.5px'
+        '0 10px 25px rgba(20, 40, 160, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset' : 
+        '0 6px 20px rgba(20, 40, 160, 0.2)',
+      letterSpacing: '0.3px',
+      marginTop: '8px',
     }),
     btnSpinner: {
-      width: '24px',
-      height: '24px',
-      border: '3px solid rgba(255,255,255,0.3)',
-      borderTop: '3px solid white',
+      width: isMobile ? '20px' : '22px',
+      height: isMobile ? '20px' : '22px',
+      border: '2px solid rgba(255,255,255,0.3)',
+      borderTop: '2px solid white',
       borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      animation: 'spin 1s linear infinite',
     },
     btnIcon: {
-      fontSize: '24px',
+      fontSize: isMobile ? '20px' : '22px',
       fontWeight: 300,
-      transition: 'transform 0.3s ease'
+      transition: 'transform 0.3s ease',
     },
     loginFooter: {
-      marginTop: screenWidth < 768 ? '32px' : '48px',
-      paddingTop: screenWidth < 768 ? '24px' : '32px',
-      borderTop: `2px solid ${SAMSUNG_COLORS.grayDark}`
+      marginTop: isMobile ? '24px' : '36px',
+      paddingTop: isMobile ? '20px' : '28px',
+      borderTop: `2px solid ${SAMSUNG_COLORS.grayDark}`,
+      width: '100%',
     },
-    // SE ELIMINARON los estilos de footerLinks y linkBtn
     versionInfo: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '16px',
-      fontSize: screenWidth < 768 ? '13px' : '14px',
+      gap: isMobile ? '12px' : '16px',
+      fontSize: isMobile ? '12px' : '13px',
       color: SAMSUNG_COLORS.textLight,
-      flexWrap: 'wrap' as const
+      flexWrap: 'wrap' as const,
     },
     version: {
-      padding: '6px 16px',
+      padding: isMobile ? '4px 12px' : '6px 16px',
       background: 'rgba(20, 40, 160, 0.08)',
-      borderRadius: '12px',
+      borderRadius: '8px',
       fontWeight: 600,
-      color: SAMSUNG_COLORS.blueDark
+      color: SAMSUNG_COLORS.blueDark,
+      whiteSpace: 'nowrap' as const,
     },
     statusIndicator: {
-      width: '10px',
-      height: '10px',
+      width: '8px',
+      height: '8px',
       background: SAMSUNG_COLORS.success,
       borderRadius: '50%',
       animation: 'pulse 2s infinite',
-      boxShadow: `0 0 0 4px rgba(16, 185, 129, 0.2)`
+      boxShadow: `0 0 0 2px rgba(16, 185, 129, 0.2)`,
+      flexShrink: 0,
     },
     copyright: {
-      position: 'absolute' as const,
-      bottom: screenWidth < 768 ? '20px' : '32px',
+      position: isMobile ? 'relative' as const : 'absolute' as const,
+      bottom: isMobile ? '0' : isTablet ? '20px' : '24px',
       left: 0,
       right: 0,
       textAlign: 'center' as const,
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: screenWidth < 768 ? '13px' : '14px',
-      padding: screenWidth < 768 ? '0 16px' : '0'
-    }
+      fontSize: isMobile ? '11px' : '12px',
+      padding: isMobile ? '16px 0 0 0' : isTablet ? '0 16px' : '0',
+      marginTop: isMobile ? '20px' : '0',
+    },
   };
 
-  // Estados para hover (solo los necesarios ahora)
+  // Estados para hover
   const [isHovered, setIsHovered] = useState({
     passwordToggle: false,
     loginBtn: false
-    // SE ELIMINARON forgotBtn y supportBtn
   });
-
-  // Generar formas de fondo dinámicas
-  const generateShapes = () => {
-    const shapes = [];
-    for (let i = 0; i < 15; i++) {
-      const size = Math.random() * 200 + 50;
-      shapes.push({
-        ...styles.shape,
-        width: `${size}px`,
-        height: `${size}px`,
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animation: `float ${Math.random() * 20 + 20}s ease-in-out infinite alternate`,
-        animationDelay: `${Math.random() * 5}s`
-      });
-    }
-    return shapes;
-  };
 
   return (
     <div style={styles.container}>
@@ -567,8 +561,12 @@ const Login: React.FC = () => {
               transform: translateY(0) rotate(0deg); 
             }
             100% { 
-              transform: translateY(-40px) rotate(2deg); 
+              transform: translateY(-20px) rotate(1deg); 
             }
+          }
+          
+          * {
+            box-sizing: border-box;
           }
           
           .samsung-input:disabled {
@@ -601,30 +599,53 @@ const Login: React.FC = () => {
           }
           
           .btn-hover-effect:hover::before {
-            width: 300px;
-            height: 300px;
+            width: 200px;
+            height: 200px;
           }
           
-          @media (max-width: 768px) {
-            .mobile-hide {
-              display: none;
+          /* Mejoras de responsividad */
+          @media (max-width: 767px) {
+            .login-wrapper {
+              margin: 10px;
+            }
+            
+            input, button {
+              -webkit-appearance: none;
+              appearance: none;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .login-wrapper {
+              border-radius: 12px;
+            }
+            
+            .left-panel, .right-panel {
+              padding: 20px 16px;
+            }
+          }
+          
+          @media (min-width: 768px) and (max-width: 1023px) {
+            .login-wrapper {
+              max-height: 90vh;
+            }
+          }
+          
+          @media (min-width: 1024px) {
+            .login-wrapper {
+              max-height: 85vh;
             }
           }
         `}
       </style>
 
-      {/* Fondo animado mejorado */}
+      {/* Fondo animado */}
       <div style={styles.background}>
         <div style={styles.backgroundGradient} />
         <div style={styles.backgroundPattern} />
-        <div style={styles.backgroundShapes}>
-          {generateShapes().map((shapeStyle, index) => (
-            <div key={index} style={shapeStyle} />
-          ))}
-        </div>
       </div>
 
-      {/* Contenedor principal dividido en dos paneles */}
+      {/* Contenedor principal */}
       <div style={styles.loginWrapper}>
         
         {/* Panel izquierdo - Presentación */}
@@ -642,7 +663,7 @@ const Login: React.FC = () => {
             
             <div style={styles.welcomeSection}>
               <h2 style={styles.welcomeTitle}>
-                Sistema de Gestión <br />Seguro
+                Sistema de Gestión Seguro
               </h2>
               <p style={styles.welcomeText}>
                 Accede al sistema de verificación de IMEI más avanzado del mercado. 
@@ -782,8 +803,6 @@ const Login: React.FC = () => {
 
             {/* Footer del formulario */}
             <div style={styles.loginFooter}>
-              {/* SE ELIMINÓ la sección de footerLinks */}
-              
               <div style={styles.versionInfo}>
                 <span style={styles.version}>v2.1.4 PRO</span>
                 <span style={styles.statusIndicator}></span>
