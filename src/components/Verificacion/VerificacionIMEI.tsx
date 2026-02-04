@@ -1,4 +1,4 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN PRODUCCIÓN
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 
@@ -55,7 +55,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Función principal de verificación - Conexión al backend
+  // Función principal de verificación - CONEXIÓN CORRECTA
   const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
     const cleanedIMEI = imei.replace(/\D/g, '');
     
@@ -68,11 +68,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
 
     try {
-      // URL del backend en producción
-      const API_URL = window.location.origin.includes('localhost') 
-        ? 'http://localhost:5000'
-        : window.location.origin.replace('3000', '5000'); // Ajusta según tu configuración
-      
+      // URL del backend
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
       if (!token) {
@@ -82,77 +79,63 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      // Intentar diferentes endpoints según tu API
-      const endpoints = [
-        `/api/verificacion/imei/${cleanedIMEI}`,
-        `/api/dispositivos/verificar/${cleanedIMEI}`,
-        `/api/dispositivos/imei/${cleanedIMEI}`,
-        `/api/verificacion/${cleanedIMEI}`,
-        `/api/dispositivos/buscar?imei=${cleanedIMEI}`
-      ];
+      // ¡IMPORTANTE! Usar POST según tu backend
+      const response = await fetch(`${API_URL}/api/verificacion/verificar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          IMEI: cleanedIMEI
+        })
+      });
 
-      let lastError: Error | null = null;
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
 
-      for (const endpoint of endpoints) {
-        try {
-          const response = await fetch(`${API_URL}${endpoint}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            credentials: 'include'
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            
-            // Procesar diferentes formatos de respuesta
-            if (data.success !== false && (data.dispositivo || data.valido !== undefined || data.id)) {
-              const dispositivo = data.dispositivo || data;
-              
-              return {
-                valido: dispositivo.activo !== false && dispositivo.estado !== 'INACTIVO',
-                dispositivoId: dispositivo.id || dispositivo.dispositivoId,
-                personaNombre: dispositivo.personaNombre || dispositivo.nombrePersona || dispositivo.propietario,
-                personaId: dispositivo.personaId || dispositivo.usuarioId,
-                empresaNombre: dispositivo.empresaNombre || dispositivo.nombreEmpresa,
-                empresaId: dispositivo.empresaId,
-                fechaRegistro: dispositivo.fechaRegistro || dispositivo.createdAt,
-                modelo: dispositivo.modelo,
-                marca: dispositivo.marca,
-                estado: dispositivo.estado,
-                mensaje: data.mensaje || data.message || 'Dispositivo verificado'
-              };
-            }
-          }
-        } catch (err) {
-          lastError = err as Error;
-          continue; // Intentar siguiente endpoint
-        }
+      if (response.status === 401) {
+        return {
+          valido: false,
+          mensaje: 'No autorizado. Por favor, inicie sesión nuevamente.'
+        };
       }
 
-      // Si todos los endpoints fallan
-      if (lastError) {
-        console.error('Error verificando IMEI:', lastError);
+      if (response.status === 400) {
+        const errorData = await response.json();
+        return {
+          valido: false,
+          mensaje: errorData.mensaje || 'Error en la solicitud'
+        };
       }
 
+      if (!response.ok) {
+        return {
+          valido: false,
+          mensaje: `Error del servidor: ${response.status} ${response.statusText}`
+        };
+      }
+
+      const data = await response.json();
+      console.log('Respuesta del backend:', data);
+
+      // Tu backend devuelve VerificacionResultDTO
+      // Mapear según la estructura de VerificacionResultDTO
       return {
-        valido: false,
-        mensaje: 'Dispositivo no encontrado en el sistema'
+        valido: data.valido || false,
+        dispositivoId: data.dispositivoId,
+        personaNombre: data.personaNombre,
+        personaId: data.personaId,
+        empresaNombre: data.empresaNombre,
+        empresaId: data.empresaId,
+        fechaRegistro: data.fechaRegistro,
+        mensaje: data.mensaje || 'Verificación completada'
+        // Agrega otros campos según tu DTO
       };
 
     } catch (err: any) {
       console.error('Error de conexión:', err);
-      
-      // Solo en desarrollo mostrar detalles
-      if (process.env.NODE_ENV === 'development') {
-        return {
-          valido: false,
-          mensaje: `Error de conexión: ${err.message}. Verifique que el servidor esté ejecutándose en el puerto 5000.`
-        };
-      }
       
       return {
         valido: false,
@@ -326,7 +309,9 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       return new Date(dateString).toLocaleDateString('es-ES', {
         day: '2-digit',
         month: 'short',
-        year: 'numeric'
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return 'Fecha inválida';
@@ -354,6 +339,15 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       setShowScanner(false);
     } else {
       setShowScanner(true);
+    }
+  };
+
+  // Función para registrar nuevo IMEI (solo Admin)
+  const handleRegistrarIMEI = () => {
+    if (userRole === 'Admin') {
+      // Usar endpoint POST /api/verificacion/registrar-dispositivo
+      // O redirigir a formulario de registro
+      window.location.href = `/registrar-dispositivo?imei=${encodeURIComponent(imei)}`;
     }
   };
 
@@ -537,20 +531,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                         </div>
                       )}
                       
-                      {(resultado.modelo || resultado.marca) && (
-                        <div className="info-row">
-                          <span className="info-label">
-                            <span role="img" aria-label="dispositivo">📱</span>
-                            Dispositivo:
-                          </span>
-                          <span className="info-value">
-                            {resultado.marca && resultado.modelo 
-                              ? `${resultado.marca} ${resultado.modelo}`
-                              : resultado.modelo || resultado.marca || 'No especificado'}
-                          </span>
-                        </div>
-                      )}
-                      
                       {resultado.fechaRegistro && (
                         <div className="info-row">
                           <span className="info-label">
@@ -563,14 +543,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                     </>
                   ) : (
                     <div className="result-message">
-                      <p>{resultado.mensaje || 'Dispositivo no encontrado'}</p>
+                      <p>{resultado.mensaje || 'Dispositivo no encontrado en el sistema'}</p>
                       {userRole === 'Admin' && (
                         <button 
                           className="btn-register-new" 
                           type="button"
-                          onClick={() => {
-                            window.location.href = `/dispositivos/nuevo?imei=${encodeURIComponent(imei)}`;
-                          }}
+                          onClick={handleRegistrarIMEI}
                         >
                           <span role="img" aria-label="registrar">📝</span>
                           Registrar este IMEI
