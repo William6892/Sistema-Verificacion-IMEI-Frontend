@@ -1,4 +1,4 @@
-// src/components/Home/Dashboard.tsx
+// src/components/Home/Dashboard.tsx - VERSIÓN CORREGIDA
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
@@ -39,8 +39,8 @@ const Dashboard: React.FC = () => {
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error' | 'info' | 'loading'} | null>(null);
   const navigate = useNavigate();
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
 
   // ✅ Función para mostrar notificaciones
   const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' | 'loading' = 'info') => {
@@ -116,27 +116,54 @@ const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
     }
   }, []);
 
-  // ✅ Verificar si es Admin
-  const checkAdminAccess = useCallback(() => {
-    const user = getUserData();
-    
-    if (!user) {
-      showNotification('Debes iniciar sesión para acceder al dashboard', 'error');
-      navigate('/login');
+  // ✅ Función separada para obtener estadísticas
+  const fetchStatsData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return false;
+      }
+      
+      const response = await fetch(API_STATS_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 403) {
+        showNotification('No tienes permisos para ver estadísticas', 'error');
+        return false;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        setError('No se pudieron cargar las estadísticas del servidor');
+        return false;
+      }
+
+      const data = await response.json();
+      
+      setStats({
+        totalEmpresas: data.totalEmpresas || 0,
+        totalPersonas: data.totalPersonas || 0,
+        totalDispositivos: data.totalDispositivos || 0,
+        dispositivosActivos: data.dispositivosActivos || 0,
+        totalUsuarios: data.totalUsuarios || 0,
+        usuariosActivos: data.usuariosActivos || 0,
+        usuariosPorRol: data.usuariosPorRol || []
+      });
+
+      setError(null);
+      return true;
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      setError('No se pudieron cargar las estadísticas del servidor');
       return false;
     }
-
-    const userRole = user.rol || (user.roles && user.roles[0]);
-    
-    if (userRole !== 'Admin') {
-      showNotification('Acceso denegado. Solo administradores pueden acceder a esta sección.', 'error');
-      navigate('/unauthorized');
-      return false;
-    }
-
-    setIsAdmin(true);
-    return true;
-  }, [getUserData, showNotification, navigate]);
+  }, [API_STATS_URL, showNotification]);
 
   // ✅ Acciones solo para admin
   const handleQuickAction = useCallback((action: string) => {
@@ -144,17 +171,8 @@ const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
       case 'verificar':
         navigate('/verificacion');
         break;
-      case 'registrar':
-        navigate('/registrar-dispositivo');
-        break;
       case 'reporte':
         generateReport();
-        break;
-      case 'usuarios':
-        navigate('/admin/usuarios');
-        break;
-      case 'configuracion':
-        navigate('/admin/configuracion');
         break;
       default:
         break;
@@ -176,84 +194,54 @@ const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
     }
   }, [showNotification, hideNotification]);
 
-  // ✅ Función separada para obtener estadísticas
-  const fetchStatsData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      
-      const response = await fetch(API_STATS_URL, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 403) {
-        showNotification('No tienes permisos para ver estadísticas', 'error');
-        return;
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server response error:', errorText);
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      setStats({
-        totalEmpresas: data.totalEmpresas || 0,
-        totalPersonas: data.totalPersonas || 0,
-        totalDispositivos: data.totalDispositivos || 0,
-        dispositivosActivos: data.dispositivosActivos || 0,
-        totalUsuarios: data.totalUsuarios || 0,
-        usuariosActivos: data.usuariosActivos || 0,
-        usuariosPorRol: data.usuariosPorRol || []
-      });
-
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching stats:', err);
-      setError('No se pudieron cargar las estadísticas del servidor');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ VERIFICACIÓN DE ACCESO
+  // ✅ EFECTO PRINCIPAL - VERIFICAR ACCESO Y CARGAR DATOS
   useEffect(() => {
-    const verifyAccessAndLoadData = async () => {
-      const hasAccess = checkAdminAccess();
+    const loadDashboard = async () => {
+      setLoading(true);
       
-      if (hasAccess) {
-        try {
-          await Promise.all([
-            fetchStatsData(),
-            fetchRecentActivity()
-          ]);
-        } catch (error) {
-          console.error('Error loading dashboard data:', error);
+      try {
+        // 1. Verificar autenticación
+        const user = getUserData();
+        if (!user) {
+          navigate('/login');
+          return;
         }
+
+        // 2. Verificar si es admin
+        if (user.rol !== 'Admin') {
+          showNotification('Acceso denegado. Solo administradores', 'error');
+          navigate('/'); // Redirigir a inicio en lugar de página especial
+          return;
+        }
+
+        // 3. Es admin, configurar estado
+        setIsAdmin(true);
+
+        // 4. Cargar datos en paralelo
+        await Promise.all([
+          fetchStatsData(),
+          fetchRecentActivity()
+        ]);
+        
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        setError('Error al cargar el dashboard');
+      } finally {
+        setLoading(false);
       }
     };
 
-    verifyAccessAndLoadData();
-  }, []);
+    loadDashboard();
+  }, []); // ← Array vacío: solo se ejecuta al montar
 
   const handleRefresh = () => {
     setLoading(true);
     setError(null);
     fetchStatsData();
-    fetchRecentActivity();
   };
 
-  // ✅ Mostrar pantalla de carga mientras se verifica acceso
-  if (loading && !isAdmin) {
+  // ✅ Si no es admin, mostrar mensaje
+  if (!isAdmin && !loading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -261,21 +249,33 @@ const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
         alignItems: 'center', 
         height: '100vh',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '20px',
+        padding: '20px',
+        textAlign: 'center'
       }}>
-        <div className="loading-spinner"></div>
-        <p style={{ color: '#64748b', fontSize: '16px' }}>Verificando permisos...</p>
+        <div style={{ fontSize: '48px', color: '#ef4444' }}>🔒</div>
+        <h2 style={{ color: '#1e293b', margin: 0 }}>Acceso Restringido</h2>
+        <p style={{ color: '#64748b', maxWidth: '400px' }}>
+          Esta sección solo está disponible para administradores del sistema.
+        </p>
+        <button 
+          onClick={() => navigate('/')}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '14px'
+          }}
+        >
+          Volver al Inicio
+        </button>
       </div>
     );
   }
-
-  // ✅ Si no es admin, no mostrar nada
-  if (!isAdmin) {
-    return null;
-  }
-
-  // ✅ Obtener usuario actual
-  const user = getUserData();
 
   // ✅ Mostrar loading mientras carga datos
   if (loading) {
@@ -286,6 +286,9 @@ const API_STATS_URL = `${API_BASE_URL}/api/Admin/estadisticas`;
       </div>
     );
   }
+
+  // ✅ Obtener usuario actual
+  const user = getUserData();
 
   // ✅ Función para renderizar notificación
   const renderNotification = () => {
