@@ -60,7 +60,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
     activo: true
   });
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+  // ✅ CORREGIDO: Usar REACT_APP_API_URL y tu backend real
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://imei-api-p18o.onrender.com';
   const roles = ['Admin', 'Supervisor', 'Usuario'];
 
   // ✅ Obtener token
@@ -89,7 +90,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
       const token = getToken();
       if (!token) return;
 
-      const response = await fetch(`${API_BASE_URL}/empresas`, {
+      // ✅ CORREGIDO: Usar URL completa con /api/
+      const response = await fetch(`${API_BASE_URL}/api/empresas`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -116,8 +118,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
         return;
       }
 
-      // Usar el endpoint correcto: /api/Users (no /api/usuarios)
-      const response = await fetch(`${API_BASE_URL}/Users`, {
+      // ✅ CORREGIDO: URL completa con /api/
+      const response = await fetch(`${API_BASE_URL}/api/Users`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -167,7 +169,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/Auth/register`, {
+      // ✅ CORREGIDO: URL completa con /api/
+      const response = await fetch(`${API_BASE_URL}/api/Auth/register`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -226,8 +229,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
         return;
       }
 
-      // Usar el endpoint correcto: /api/Users/{id}
-      const response = await fetch(`${API_BASE_URL}/Users/${selectedUser.id}`, {
+      // ✅ CORREGIDO: URL completa con /api/
+      const response = await fetch(`${API_BASE_URL}/api/Users/${selectedUser.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -268,8 +271,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
         return;
       }
 
-      // Usar el endpoint correcto: /api/Users/{id}
-      const response = await fetch(`${API_BASE_URL}/Users/${selectedUser.id}`, {
+      // ✅ CORREGIDO: URL completa con /api/
+      const response = await fetch(`${API_BASE_URL}/api/Users/${selectedUser.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -502,7 +505,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
                     type="text"
                     value={createForm.username}
                     onChange={(e) => setCreateForm({...createForm, username: e.target.value})}
-                    placeholder="Ej: juan.perez"
+                    placeholder="Ej: Orion2"
                   />
                 </div>
                 
@@ -728,4 +731,4 @@ const UserManagement: React.FC<UserManagementProps> = ({ userRole = 'Usuario' })
   );
 };
 
-export default UserManagement;  
+export default UserManagement;
