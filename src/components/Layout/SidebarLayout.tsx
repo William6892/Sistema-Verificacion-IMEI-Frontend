@@ -7,6 +7,7 @@ interface SidebarLayoutProps {
   user: any;
   currentPage: string;
   onPageChange: (page: string) => void;
+  onLogout?: () => void; 
 }
 
 interface MenuItem {
@@ -20,7 +21,8 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
   children, 
   user,
   currentPage,
-  onPageChange
+  onPageChange,
+  onLogout
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -49,31 +51,31 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
         id: 'inicio',
         label: 'Inicio',
         icon: '🏠',
-        roles: ['Admin', 'Supervisor', 'Usuario']
+        roles: ['Admin', 'Usuario']
       },
       {
         id: 'empresas',
         label: 'Empresas',
         icon: '🏢',
-        roles: ['Admin', 'Supervisor']
+        roles: ['Admin']
       },
       {
         id: 'personas',
         label: 'Personas',
         icon: '👥',
-        roles: ['Admin', 'Supervisor']
+        roles: ['Admin',]
       },
       {
         id: 'dispositivos',
         label: 'Dispositivos',
         icon: '📲',
-        roles: ['Admin', 'Supervisor']
+        roles: ['Admin']
       },
       {
         id: 'verificacion',
         label: 'Verificar IMEI',
         icon: '🔍',
-        roles: ['Admin', 'Supervisor', 'Usuario']
+        roles: ['Admin', 'Usuario']
       },
       {
         id: 'usuarios',
@@ -91,8 +93,22 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
   }, [user]);
 
   const handleLogout = () => {
+    // Limpiar localStorage
     localStorage.clear();
-    window.location.href = '/login';
+    
+    // Si se proporcionó una función de logout personalizada, usarla
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+    
+    //  Usar la URL absoluta del frontend
+    const frontendUrl = window.location.origin; 
+    
+    // Redirigir a la página de login del frontend
+    window.location.href = `${frontendUrl}/login`;
+    
+    
   };
 
   const handlePageChange = (page: string) => {
@@ -121,8 +137,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
 
   const getRoleBadgeColor = (role: string) => {
     const colors: { [key: string]: string } = {
-      'Admin': 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-      'Supervisor': 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      'Admin': 'linear-gradient(135deg, #1497be 0%, #dc2626 100%)',
       'Usuario': 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
     };
     return colors[role] || '#6b7280';
@@ -211,7 +226,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
           )}
         </nav>
 
-        {/* CORREGIR: Botón de logout con clases correctas */}
+        {/* Botón de logout */}
         <div className="sidebar-footer">
           <button 
             className="menu-item logout-btn"
