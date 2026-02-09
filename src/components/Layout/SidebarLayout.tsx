@@ -106,9 +106,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
     const frontendUrl = window.location.origin; 
     
     // Redirigir a la página de login del frontend
-    window.location.href = `${frontendUrl}/login`;
-    
-    
+  window.location.href = `${window.location.origin}/#/login`;
   };
 
   const handlePageChange = (page: string) => {
