@@ -1,6 +1,7 @@
 /* ========================================
    VERIFICACIÓN DE IMEI - CSS MEJORADO PARA MÓVILES
    Fondo Blanco + Botones Azul Samsung
+   Versión completa con mejoras de cámara
    ======================================== */
 
 :root {
@@ -155,8 +156,8 @@ body {
   max-width: min(900px, 95vw);
   background-color: var(--white);
   border-radius: var(--radius-lg);
-  border: 2px solid rgba(20, 40, 160, 0.1); /* Borde azul sutil */
-  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.15); /* Sombra azul */
+  border: 2px solid rgba(20, 40, 160, 0.1);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.15);
   padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 40px);
   margin-bottom: clamp(24px, 6vw, 40px);
 }
@@ -169,7 +170,7 @@ body {
 }
 
 /* ========================================
-   SECCIÓN DE CÁMARA - MEJORADA
+   SECCIÓN DE CÁMARA - MEJORADA CON ESTILOS SAMSUMG
    ======================================== */
 .camera-active-section {
   margin-bottom: clamp(16px, 4vw, 24px);
@@ -182,15 +183,18 @@ body {
   align-items: center;
   margin-bottom: clamp(12px, 3vw, 20px);
   padding-bottom: clamp(12px, 3vw, 16px);
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 2px solid rgba(20, 40, 160, 0.1);
   gap: clamp(8px, 2vw, 12px);
   flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(20, 40, 160, 0.03) 0%, rgba(30, 64, 255, 0.03) 100%);
+  padding: clamp(16px, 3vw, 20px);
+  border-radius: var(--radius-md);
 }
 
 .camera-header h3 {
   font-size: clamp(var(--font-base), 4vw, var(--font-xl));
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--samsung-blue);
   margin: 0;
   display: flex;
   align-items: center;
@@ -201,28 +205,33 @@ body {
 
 .camera-header h3 span[role="img"] {
   font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+  background: var(--samsung-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .mobile-indicator {
   font-size: clamp(var(--font-xs), 2.5vw, var(--font-sm));
-  background-color: rgba(20, 40, 160, 0.08); /* Azul Samsung sutil */
-  color: var(--samsung-blue);
+  background: var(--samsung-gradient);
+  color: var(--white);
   padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
   border-radius: var(--radius-sm);
   font-weight: 600;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(20, 40, 160, 0.2);
 }
 
 .btn-close-camera {
-  width: clamp(36px, 8vw, 40px);
-  height: clamp(36px, 8vw, 40px);
-  min-width: 36px;
-  min-height: 36px;
-  border: none;
-  background-color: var(--gray-100);
-  color: var(--text-secondary);
+  width: clamp(40px, 8vw, 44px);
+  height: clamp(40px, 8vw, 44px);
+  min-width: 40px;
+  min-height: 40px;
+  border: 2px solid rgba(20, 40, 160, 0.2);
+  background: var(--white);
+  color: var(--samsung-blue);
   border-radius: 50%;
   font-size: clamp(20px, 5vw, 24px);
   cursor: pointer;
@@ -232,16 +241,20 @@ body {
   transition: var(--transition);
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-close-camera:hover,
 .btn-close-camera:active {
-  background-color: var(--error);
+  background: var(--samsung-blue);
   color: var(--white);
+  border-color: var(--samsung-blue);
+  transform: rotate(90deg);
 }
 
 /* ========================================
-   CÁMARA - CONTENEDOR MEJORADO
+   CONTENEDOR DE CÁMARA - MEJORADO Y CENTRADO
    ======================================== */
 .camera-container-wrapper {
   position: relative;
@@ -250,9 +263,13 @@ body {
   background: #000;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(30, 64, 255, 0.1);
   aspect-ratio: 16 / 9;
   max-height: min(70vh, 500px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
 }
 
 .camera-preview-box {
@@ -266,115 +283,308 @@ body {
 }
 
 /* ========================================
-   OVERLAY Y MARCO DE ESCANEO - MEJORADO
+   HTML5 QR SCANNER - ESTILOS PERSONALIZADOS
    ======================================== */
-.camera-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  z-index: 10;
-  padding: clamp(12px, 3vw, 20px);
-}
-
-.scan-frame {
+#html5qr-scanner-container {
+  width: 100%;
+  height: 100%;
   position: relative;
-  width: min(90%, 320px);
-  height: min(65%, 200px);
-  margin: 0 auto;
 }
 
-.scan-corner {
+/* Estilos personalizados para el dashboard del scanner */
+#html5qr-scanner-container > div:first-child {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: linear-gradient(135deg, rgba(20, 40, 160, 0.95) 0%, rgba(30, 64, 255, 0.95) 100%) !important;
+  padding: clamp(16px, 3vw, 20px) !important;
+  z-index: 1000 !important;
+  border-bottom: 2px solid var(--samsung-blue-lighter) !important;
+  backdrop-filter: blur(10px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: clamp(12px, 2.5vw, 16px) !important;
+}
+
+/* Título del scanner */
+#html5qr-scanner-container h2 {
+  color: white !important;
+  font-size: clamp(var(--font-base), 3.5vw, var(--font-lg)) !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(8px, 2vw, 12px) !important;
+}
+
+/* Selector de cámara mejorado */
+#html5qr-scanner-container select {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: var(--radius-md) !important;
+  padding: clamp(10px, 2vw, 12px) !important;
+  font-size: clamp(var(--font-sm), 2.8vw, 0.9rem) !important;
+  font-weight: 500 !important;
+  backdrop-filter: blur(10px) !important;
+  transition: var(--transition) !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px !important;
+  padding-right: 40px !important;
+}
+
+#html5qr-scanner-container select:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+#html5qr-scanner-container select:focus {
+  outline: none !important;
+  border-color: var(--samsung-blue-lighter) !important;
+  box-shadow: 0 0 0 3px rgba(30, 64, 255, 0.2) !important;
+}
+
+/* Botones del scanner */
+#html5qr-scanner-container button {
+  background: var(--samsung-gradient) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  padding: clamp(10px, 2vw, 12px) clamp(16px, 3vw, 20px) !important;
+  font-size: clamp(var(--font-sm), 2.8vw, 0.9rem) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(6px, 1.5vw, 8px) !important;
+  min-height: 44px !important;
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2) !important;
+}
+
+#html5qr-scanner-container button:hover {
+  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3) !important;
+}
+
+#html5qr-scanner-container button:active {
+  transform: translateY(1px) !important;
+}
+
+/* Botón de flash/linterna */
+#html5qr-scanner-container button:has(svg[fill="#6c757d"]) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+#html5qr-scanner-container button:has(svg[fill="#6c757d"]):hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Área de escaneo centralizada */
+#html5qr-scanner-container canvas,
+#html5qr-scanner-container video {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Marco de escaneo personalizado */
+.scan-frame-overlay {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(70%, 280px) !important;
+  height: min(50%, 200px) !important;
+  border: 2px solid var(--samsung-blue-lighter) !important;
+  border-radius: var(--radius-md) !important;
+  pointer-events: none !important;
+  z-index: 20 !important;
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7),
+              0 0 30px rgba(30, 64, 255, 0.3),
+              inset 0 0 20px rgba(30, 64, 255, 0.2) !important;
+  animation: pulseBorder 2s ease-in-out infinite !important;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: var(--samsung-blue-lighter); }
+  50% { border-color: var(--samsung-blue-light); }
+}
+
+/* Esquinas decorativas */
+.scan-frame-overlay::before,
+.scan-frame-overlay::after {
+  content: '';
   position: absolute;
-  width: clamp(16px, 4vw, 20px);
-  height: clamp(16px, 4vw, 20px);
-  border: clamp(2px, 0.5vw, 3px) solid var(--samsung-blue-lighter);
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--samsung-blue-lighter);
 }
 
-.scan-corner-tl {
-  top: 0;
-  left: 0;
+.scan-frame-overlay::before {
+  top: -3px;
+  left: -3px;
   border-right: none;
   border-bottom: none;
+  border-top-left-radius: 6px;
 }
 
-.scan-corner-tr {
-  top: 0;
-  right: 0;
+.scan-frame-overlay::after {
+  bottom: -3px;
+  right: -3px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 6px;
+}
+
+.scan-frame-overlay .corner-tr,
+.scan-frame-overlay .corner-bl {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--samsung-blue-lighter);
+}
+
+.scan-frame-overlay .corner-tr {
+  top: -3px;
+  right: -3px;
   border-left: none;
   border-bottom: none;
+  border-top-right-radius: 6px;
 }
 
-.scan-corner-bl {
-  bottom: 0;
-  left: 0;
+.scan-frame-overlay .corner-bl {
+  bottom: -3px;
+  left: -3px;
   border-right: none;
   border-top: none;
+  border-bottom-left-radius: 6px;
 }
 
-.scan-corner-br {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-}
-
+/* Línea de escaneo */
 .scan-line {
   position: absolute;
+  top: 0;
   left: 10%;
   right: 10%;
-  height: clamp(1px, 0.3vw, 2px);
-  background: linear-gradient(
-    90deg,
+  height: 3px;
+  background: linear-gradient(90deg,
     transparent,
     var(--samsung-blue-lighter) 30%,
     var(--samsung-blue-light) 50%,
     var(--samsung-blue-lighter) 70%,
     transparent
   );
-  filter: drop-shadow(0 0 8px rgba(30, 64, 255, 0.6));
+  filter: drop-shadow(0 0 10px rgba(30, 64, 255, 0.8));
   animation: scan 2s ease-in-out infinite;
+  z-index: 21;
+  border-radius: 2px;
 }
 
+@keyframes scan {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Instrucciones del scanner */
 .camera-instructions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   text-align: center;
   color: var(--white);
-  padding: 0 clamp(12px, 3vw, 16px);
-  width: 100%;
-  margin-top: clamp(12px, 3vw, 20px);
+  padding: clamp(20px, 4vw, 30px);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  z-index: 10;
 }
 
 .instruction-main {
   font-size: clamp(var(--font-sm), 3.5vw, var(--font-lg));
   font-weight: 600;
-  margin-bottom: clamp(4px, 1vw, 8px);
+  margin-bottom: clamp(8px, 2vw, 12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 1.5vw, 8px);
+  gap: clamp(8px, 2vw, 12px);
   flex-wrap: wrap;
   line-height: 1.3;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .instruction-sub {
   font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
   opacity: 0.9;
-  max-width: min(400px, 90vw);
+  max-width: min(500px, 90vw);
   margin: 0 auto;
-  line-height: 1.4;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  line-height: 1.5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* ========================================
-   FORMULARIO - MEJORADO PARA MÓVILES
+   ACCIONES DE CÁMARA - MEJORADAS
    ======================================== */
+.camera-actions {
+  display: flex;
+  gap: clamp(16px, 4vw, 20px);
+  margin-top: clamp(20px, 5vw, 24px);
+  width: 100%;
+}
+
+.camera-actions button {
+  flex: 1;
+  margin: 0;
+  padding: clamp(14px, 3vw, 16px);
+  border-radius: var(--radius-lg);
+  font-size: clamp(var(--font-sm), 3vw, var(--font-base));
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 10px);
+  border: 2px solid;
+  min-height: 52px;
+}
+
+.btn-cancel-camera {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+}
+
+.btn-cancel-camera:hover,
+.btn-cancel-camera:active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   RESTANTE DEL CSS (formulario, botones, etc.)
+   ======================================== */
+
+/* FORMULARIO - MEJORADO PARA MÓVILES */
 .verification-form {
   margin-bottom: clamp(20px, 5vw, 24px);
 }
@@ -487,9 +697,7 @@ body {
 .btn-camera-trigger,
 .btn-submit,
 .btn-reset,
-.btn-cancel-camera,
-.btn-register-new,
-.btn-capture {
+.btn-register-new {
   width: 100%;
   padding: clamp(14px, 3.5vw, 16px) clamp(16px, 4vw, 24px);
   border: none;
@@ -515,9 +723,7 @@ body {
 .btn-camera-trigger:active,
 .btn-submit:active,
 .btn-reset:active,
-.btn-cancel-camera:active,
-.btn-register-new:active,
-.btn-capture:active {
+.btn-register-new:active {
   transform: translateY(1px);
   transition: transform 0.1s ease;
 }
@@ -590,19 +796,6 @@ body {
   border-color: var(--samsung-blue);
 }
 
-/* Botón Cancelar Cámara */
-.btn-cancel-camera {
-  background-color: var(--gray-200);
-  color: var(--text);
-  border: none;
-  margin-bottom: 0;
-}
-
-.btn-cancel-camera:hover,
-.btn-cancel-camera:active {
-  background-color: var(--gray-300);
-}
-
 /* Botón Registrar - Azul Samsung */
 .btn-register-new {
   background: var(--samsung-gradient);
@@ -617,26 +810,6 @@ body {
 .btn-register-new:active {
   background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
   box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
-}
-
-/* Botón Capturar - Azul Samsung */
-.btn-capture {
-  background: var(--samsung-gradient);
-  color: var(--white);
-  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2);
-}
-
-.btn-capture:hover:not(:disabled),
-.btn-capture:active:not(:disabled) {
-  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
-  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
-}
-
-.btn-capture:disabled {
-  background-color: var(--gray-400);
-  color: var(--text-light);
-  cursor: not-allowed;
-  box-shadow: none;
 }
 
 /* ========================================
@@ -662,7 +835,7 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background-color: rgba(20, 40, 160, 0.2); /* Azul sutil */
+  background-color: rgba(20, 40, 160, 0.2);
 }
 
 .divider-with-text span {
@@ -673,20 +846,6 @@ body {
   letter-spacing: 0.3px;
   white-space: nowrap;
   padding: 0 clamp(4px, 1vw, 8px);
-}
-
-/* ========================================
-   ACCIONES DE CÁMARA
-   ======================================== */
-.camera-actions {
-  display: flex;
-  gap: clamp(12px, 3vw, 16px);
-  margin-top: clamp(16px, 4vw, 20px);
-}
-
-.camera-actions button {
-  flex: 1;
-  margin: 0;
 }
 
 /* ========================================
@@ -729,7 +888,7 @@ body {
    ======================================== */
 .result-card {
   border-radius: var(--radius-lg);
-  border: 2px solid rgba(20, 40, 160, 0.1); /* Borde azul sutil */
+  border: 2px solid rgba(20, 40, 160, 0.1);
   padding: clamp(24px, 5vw, 32px);
   margin-top: clamp(24px, 6vw, 32px);
   background-color: var(--white);
@@ -957,21 +1116,6 @@ body {
   }
 }
 
-@keyframes scan {
-  0%,
-  100% {
-    top: 0;
-    opacity: 0;
-  }
-  10%,
-  90% {
-    opacity: 1;
-  }
-  50% {
-    top: 50%;
-  }
-}
-
 /* ========================================
    ACCESIBILIDAD
    ======================================== */
@@ -993,8 +1137,7 @@ body {
   .btn-submit:focus,
   .btn-reset:focus,
   .btn-cancel-camera:focus,
-  .btn-register-new:focus,
-  .btn-capture:focus {
+  .btn-register-new:focus {
     outline: none;
   }
 }
@@ -1004,8 +1147,7 @@ body {
   .btn-submit:hover,
   .btn-reset:hover,
   .btn-cancel-camera:hover,
-  .btn-register-new:hover,
-  .btn-capture:hover {
+  .btn-register-new:hover {
     transform: translateY(-2px);
   }
 }
@@ -1141,8 +1283,7 @@ body {
   .btn-submit,
   .btn-reset,
   .btn-cancel-camera,
-  .btn-register-new,
-  .btn-capture {
+  .btn-register-new {
     min-height: 44px;
   }
   
@@ -1160,8 +1301,7 @@ body {
 
 .btn-camera-trigger::after,
 .btn-submit::after,
-.btn-register-new::after,
-.btn-capture::after {
+.btn-register-new::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1179,16 +1319,11 @@ body {
 
 .btn-camera-trigger:hover::after,
 .btn-submit:hover::after,
-.btn-register-new:hover::after,
-.btn-capture:hover::after {
+.btn-register-new:hover::after {
   left: 100%;
 }
 
 /* Mejoras visuales adicionales */
-.scan-corner {
-  box-shadow: 0 0 10px rgba(30, 64, 255, 0.5);
-}
-
 .status-badge[data-status="valid"] {
   color: var(--success);
   text-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
