@@ -1,8 +1,9 @@
+// src/services/api.ts - VERSIÓN CORREGIDA
 import axios from 'axios';
 
-// ✅ CORRECTO PARA CREATE REACT APP
+// CORREGIR: Usar el backend correcto
 const BASE_URL = process.env.REACT_APP_API_URL 
-  || 'https://barcodeverify-backend.onrender.com';
+  || 'https://imei-api-p18o.onrender.com'; 
 
 console.log('🔍 Configuración API cargada:', {
   baseURL: BASE_URL,
@@ -11,12 +12,12 @@ console.log('🔍 Configuración API cargada:', {
 });
 
 const api = axios.create({
-  baseURL: BASE_URL, // URL base SIN /api
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 30000, // 30 segundos
+  timeout: 30000,
 });
 
 // Interceptor para token
@@ -27,8 +28,8 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Log de depuración
-    console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    // Log de depuración MEJORADO
+    console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.params || '');
     
     return config;
   },
@@ -38,20 +39,22 @@ api.interceptors.request.use(
 // Interceptor para respuestas
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ ${response.status} ${response.config.url}`);
+    console.log(`✅ ${response.status} ${response.config.url}`, response.data?.length || response.data);
     return response;
   },
   (error) => {
-    console.error('❌ API Error:', {
+    const errorDetails = {
       status: error.response?.status,
       message: error.message,
-      url: error.config?.url
-    });
+      url: error.config?.url,
+      data: error.response?.data
+    };
+    console.error('❌ API Error:', errorDetails);
     
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/#/login';
     }
     
     return Promise.reject(error);

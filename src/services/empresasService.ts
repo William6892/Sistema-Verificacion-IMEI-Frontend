@@ -1,4 +1,4 @@
-// src/services/empresasService.ts - VERSIÓN SIMPLE
+// src/services/empresasService.ts - VERSIÓN CORREGIDA
 import api from './api';
 
 export interface Empresa {
@@ -17,10 +17,31 @@ export interface PersonaEmpresa {
 }
 
 export const empresasService = {
-  // Obtener todas las empresas
+  // Obtener todas las empresas - CON PRUEBA DE RUTAS
   getEmpresas: async (): Promise<Empresa[]> => {
-    const response = await api.get('/empresas');
-    return response.data;
+    console.log('🔍 Obteniendo empresas...');
+    
+    // Probar diferentes rutas comunes
+    const possibleRoutes = [
+      '/empresas',           // Ruta simple
+      '/api/empresas',       // Con /api/
+      '/Admin/empresas',     // Con /Admin/
+      '/api/Admin/empresas'  // Con ambos
+    ];
+    
+    for (const route of possibleRoutes) {
+      try {
+        console.log(`🔄 Probando ruta: ${route}`);
+        const response = await api.get(route);
+        console.log(`✅ Éxito con ruta: ${route}`, response.data);
+        return response.data;
+      } catch (error) {
+        console.log(`❌ Falló ruta: ${route}`);
+        continue;
+      }
+    }
+    
+    throw new Error('No se pudo encontrar la ruta para empresas');
   },
 
   // Obtener empresa por ID
@@ -29,13 +50,13 @@ export const empresasService = {
     return response.data;
   },
 
-  // Crear nueva empresa - acepta string directamente
+  // Crear nueva empresa
   createEmpresa: async (nombre: string): Promise<any> => {
     const response = await api.post('/empresas', { nombre });
     return response.data;
   },
 
-  // Actualizar empresa - acepta string directamente
+  // Actualizar empresa
   updateEmpresa: async (id: number, nombre: string): Promise<any> => {
     const response = await api.put(`/empresas/${id}`, { nombre });
     return response.data;
