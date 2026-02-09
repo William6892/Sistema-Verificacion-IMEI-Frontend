@@ -23,68 +23,68 @@ export interface RegistrarPersonaDTO {
 }
 
 export const personasService = {
-  // Obtener todas las personas
+  // Obtener todas las personas - CORREGIDO
   getPersonas: async (): Promise<Persona[]> => {
-    const response = await api.get('/personas');
+    const response = await api.get('/api/personas');  // <-- Agregar /api/
     return response.data;
   },
 
-  // Obtener persona por ID
+  // Obtener persona por ID - CORREGIDO
   getPersona: async (id: number): Promise<Persona> => {
-    const response = await api.get(`/personas/${id}`);
+    const response = await api.get(`/api/personas/${id}`);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Obtener personas por empresa (¡AGREGA ESTE MÉTODO!)
+  // Obtener personas por empresa - CORREGIDO
   getPersonasPorEmpresa: async (empresaId: number): Promise<Persona[]> => {
-    const response = await api.get(`/empresas/${empresaId}/personas`);
+    const response = await api.get(`/api/empresas/${empresaId}/personas`);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Crear nueva persona
+  // Crear nueva persona - CORREGIDO
   createPersona: async (data: RegistrarPersonaDTO): Promise<Persona> => {
-    const response = await api.post('/personas', data);
+    const response = await api.post('/api/personas', data);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Actualizar persona
+  // Actualizar persona - CORREGIDO
   updatePersona: async (id: number, data: RegistrarPersonaDTO): Promise<Persona> => {
-    const response = await api.put(`/personas/${id}`, data);
+    const response = await api.put(`/api/personas/${id}`, data);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Eliminar persona (soft delete)
+  // Eliminar persona (soft delete) - CORREGIDO
   deletePersona: async (id: number): Promise<void> => {
-    const response = await api.delete(`/personas/${id}`);
+    const response = await api.delete(`/api/personas/${id}`);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Buscar personas por término
+  // Buscar personas por término - CORREGIDO
   buscarPersonas: async (searchTerm: string): Promise<Persona[]> => {
-    const response = await api.get('/personas/buscar', {
+    const response = await api.get('/api/personas/buscar', {  // <-- Agregar /api/
       params: { q: searchTerm }
     });
     return response.data;
   }
 };
 
-// También puedes crear un servicio combinado para verificación si prefieres
+// También el servicio de verificación necesita corrección
 export const verificacionService = {
-  // Obtener personas por empresa (para el formulario de dispositivos)
+  // Obtener personas por empresa - CORREGIDO
   getPersonasPorEmpresa: async (empresaId: number): Promise<Persona[]> => {
-    const response = await api.get(`/verificacion/personas/${empresaId}`);
+    const response = await api.get(`/api/verificacion/personas/${empresaId}`);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Registrar dispositivo
+  // Registrar dispositivo - CORREGIDO
   registrarDispositivo: async (data: any) => {
-    const response = await api.post('/verificacion/registrar-dispositivo', data);
+    const response = await api.post('/api/verificacion/registrar-dispositivo', data);  // <-- Agregar /api/
     return response.data;
   },
 
-  // Verificar IMEI
+  // Verificar IMEI - CORREGIDO
   verificarIMEI: async (imei: string): Promise<any> => {
-    const response = await api.post('/verificacion/verificar', { IMEI: imei });
+    const response = await api.post('/api/verificacion/verificar', { IMEI: imei });  // <-- Agregar /api/
     return response.data;
   }
 };
