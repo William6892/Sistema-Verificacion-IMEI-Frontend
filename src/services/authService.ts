@@ -1,4 +1,4 @@
-// src/services/authService.ts - VERSIÓN LIMPIA
+// src/services/authService.ts - VERSIÓN CORREGIDA
 import api from './api';
 
 // Interfaces
@@ -43,7 +43,8 @@ const migrateOldUser = (oldUser: any): UserInfoDTO | null => {
 export const authService = {
   login: async (username: string, password: string): Promise<LoginResponseDTO> => {
     try {
-      const response = await api.post<LoginResponseDTO>('/Auth/login', { 
+      // ✅ CORREGIDO: Ruta correcta /api/auth/login
+      const response = await api.post<LoginResponseDTO>('/api/auth/login', { 
         username, 
         password 
       });
@@ -167,7 +168,8 @@ export const authService = {
       const token = authService.getToken();
       if (!token) return false;
       
-      const response = await api.post('/Auth/validate');
+      // ✅ CORREGIDO: Ruta correcta
+      const response = await api.post('/api/auth/validate');
       return response.data?.valid === true;
     } catch (error) {
       return false;
