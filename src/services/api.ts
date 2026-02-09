@@ -1,78 +1,57 @@
 import axios from 'axios';
 
-// Obtener URL base desde variable de entorno
+// ✅ CORRECTO PARA CREATE REACT APP
 const BASE_URL = process.env.REACT_APP_API_URL 
-  || 'http://localhost:5000';  // Fallback para desarrollo local
+  || 'https://barcodeverify-backend.onrender.com';
 
+console.log('🔍 Configuración API cargada:', {
+  baseURL: BASE_URL,
+  fromEnv: process.env.REACT_APP_API_URL || 'Usando valor por defecto',
+  frontendURL: window.location.origin
+});
 
-// Crear instancia de axios con configuración base
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: BASE_URL, // URL base SIN /api
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 120000, // 🔥 CAMBIADO: 2 minutos en lugar de 15 segundos
+  timeout: 30000, // 30 segundos
 });
 
-// Interceptor para agregar el token a todas las peticiones
+// Interceptor para token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }    
+    }
+    
+    // Log de depuración
+    console.log(`📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores de respuesta
+// Interceptor para respuestas
 api.interceptors.response.use(
   (response) => {
+    console.log(`✅ ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    console.error('❌ Error en API:', {
-      url: error.config?.url,
+    console.error('❌ API Error:', {
       status: error.response?.status,
       message: error.message,
-      data: error.response?.data
+      url: error.config?.url
     });
     
-    const status = error.response?.status;
-    
-    // 🔥 NUEVO: Manejar timeout
-    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-      alert('⏱️ El servidor está tardando mucho en responder. Puede estar despertando (servicios gratuitos se duermen). Por favor, intenta de nuevo en unos segundos.');
-      return Promise.reject(error);
-    }
-    
-    // Si el error es 401 (no autorizado), redirigir al login
-    if (status === 401) {
+    if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
-    }
-    
-    // Si es error 403 (prohibido)
-    if (status === 403) {
-      alert('Acceso denegado. No tienes permisos suficientes.');
-    }
-    
-    // Si es error 500 (error interno del servidor)
-    if (status === 500) {
-      alert('Error interno del servidor. Por favor, contacta al administrador.');
-    }
-    
-    // Si es error de red
-    if (error.code === 'ERR_NETWORK') {
-      alert('Error de conexión. Verifica que el servidor esté funcionando.');
+      window.location.href = '/login';
     }
     
     return Promise.reject(error);
