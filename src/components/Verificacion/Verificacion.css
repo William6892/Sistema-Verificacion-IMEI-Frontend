@@ -1,16 +1,17 @@
 /* ========================================
    VERIFICACIÓN DE IMEI - CSS MEJORADO PARA MÓVILES
-   Fondo Blanco + Botones Azul Claro
+   Fondo Blanco + Botones Azul Samsung
    ======================================== */
 
 :root {
-  /* Color Principal - Azul claro */
-  --primary: #A7C7E7;
-  --primary-dark: #7B9FD6;
-  --primary-darker: #5A7FAC;
-  --primary-light: #c9dff5;
-  --primary-lighter: #e8f1f9;
-
+  /* Color Principal - Azul Samsung */
+  --samsung-blue: #1428A0;
+  --samsung-blue-light: #1e40ff;
+  --samsung-blue-lighter: #4a7dff;
+  --samsung-blue-dark: #0d1b66;
+  --samsung-blue-ultralight: #c9dff5;
+  --samsung-gradient: linear-gradient(135deg, #1428A0 0%, #1e40ff 50%, #4a7dff 100%);
+  
   /* Grises - Neutros y limpios */
   --white: #ffffff;
   --bg-light: #f8f9fa;
@@ -38,10 +39,10 @@
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
 
   /* Border Radius */
-  --radius-sm: 6px; /* Aumentado para móviles */
-  --radius-md: 10px; /* Aumentado para móviles */
-  --radius-lg: 16px; /* Aumentado para móviles */
-  --radius-xl: 20px; /* Aumentado para móviles */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 
   /* Transiciones */
   --transition: all 0.2s ease;
@@ -69,7 +70,7 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%; /* Previene zoom en iOS */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -81,10 +82,9 @@ body {
   background-color: var(--white);
   overflow-x: hidden;
   font-size: var(--font-base);
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1); /* Mejor feedback táctil */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Mejora para texto en móviles */
 @media (max-width: 480px) {
   body {
     font-size: var(--font-sm);
@@ -98,7 +98,7 @@ body {
 .verificacion-container {
   min-height: 100vh;
   background-color: var(--white);
-  padding: clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px); /* Padding responsivo */
+  padding: clamp(20px, 5vw, 40px) clamp(16px, 4vw, 20px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -120,7 +120,7 @@ body {
 }
 
 .verificacion-header h1 {
-  font-size: clamp(var(--font-xl), 6vw, var(--font-3xl)); /* Más grande en móviles */
+  font-size: clamp(var(--font-xl), 6vw, var(--font-3xl));
   font-weight: 700;
   color: var(--text);
   margin-bottom: clamp(8px, 2vw, 12px);
@@ -134,7 +134,7 @@ body {
 }
 
 .verificacion-header h1 span[role="img"] {
-  font-size: clamp(1.5rem, 5vw, 2rem); /* Emojis más grandes */
+  font-size: clamp(1.5rem, 5vw, 2rem);
 }
 
 .verificacion-header .subtitle {
@@ -155,13 +155,12 @@ body {
   max-width: min(900px, 95vw);
   background-color: var(--white);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-sm);
+  border: 2px solid rgba(20, 40, 160, 0.1); /* Borde azul sutil */
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.15); /* Sombra azul */
   padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 40px);
   margin-bottom: clamp(24px, 6vw, 40px);
 }
 
-/* Mejoras específicas para móviles muy pequeños */
 @media (max-width: 360px) {
   .verificacion-card {
     padding: 20px 16px;
@@ -206,8 +205,8 @@ body {
 
 .mobile-indicator {
   font-size: clamp(var(--font-xs), 2.5vw, var(--font-sm));
-  background-color: var(--primary-lighter);
-  color: var(--primary-dark);
+  background-color: rgba(20, 40, 160, 0.08); /* Azul Samsung sutil */
+  color: var(--samsung-blue);
   padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
   border-radius: var(--radius-sm);
   font-weight: 600;
@@ -295,7 +294,7 @@ body {
   position: absolute;
   width: clamp(16px, 4vw, 20px);
   height: clamp(16px, 4vw, 20px);
-  border: clamp(2px, 0.5vw, 3px) solid var(--primary);
+  border: clamp(2px, 0.5vw, 3px) solid var(--samsung-blue-lighter);
 }
 
 .scan-corner-tl {
@@ -334,12 +333,12 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--primary-light) 30%,
-    var(--primary) 50%,
-    var(--primary-light) 70%,
+    var(--samsung-blue-lighter) 30%,
+    var(--samsung-blue-light) 50%,
+    var(--samsung-blue-lighter) 70%,
     transparent
   );
-  filter: drop-shadow(0 0 8px rgba(167, 199, 231, 0.6));
+  filter: drop-shadow(0 0 8px rgba(30, 64, 255, 0.6));
   animation: scan 2s ease-in-out infinite;
 }
 
@@ -402,7 +401,7 @@ body {
 .input-with-clear {
   position: relative;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-300);
+  border: 2px solid var(--gray-300);
   overflow: hidden;
   transition: var(--transition);
   background-color: var(--white);
@@ -411,14 +410,14 @@ body {
 }
 
 .input-with-clear:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(167, 199, 231, 0.1);
+  border-color: var(--samsung-blue-light);
+  box-shadow: 0 0 0 3px rgba(30, 64, 255, 0.1);
 }
 
 .imei-field {
   width: 100%;
   padding: clamp(12px, 3vw, 14px) clamp(12px, 3vw, 16px);
-  padding-right: clamp(44px, 10vw, 48px); /* Espacio para el botón clear */
+  padding-right: clamp(44px, 10vw, 48px);
   border: none;
   font-size: clamp(var(--font-sm), 3.5vw, var(--font-base));
   font-family: 'Courier New', monospace;
@@ -483,7 +482,7 @@ body {
 }
 
 /* ========================================
-   BOTONES - MEJORADOS PARA TACTO
+   BOTONES - MEJORADOS CON AZUL SAMSUNG
    ======================================== */
 .btn-camera-trigger,
 .btn-submit,
@@ -513,7 +512,6 @@ body {
   user-select: none;
 }
 
-/* Tamaño mínimo táctil recomendado por Apple/Google: 44x44px */
 .btn-camera-trigger:active,
 .btn-submit:active,
 .btn-reset:active,
@@ -524,35 +522,35 @@ body {
   transition: transform 0.1s ease;
 }
 
-/* Botón Cámara */
+/* Botón Cámara - Azul Samsung */
 .btn-camera-trigger {
-  background-color: var(--primary);
+  background: var(--samsung-gradient);
   color: var(--white);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2);
 }
 
 .btn-camera-trigger:hover,
 .btn-camera-trigger:active {
-  background-color: var(--primary-dark);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
+  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
 }
 
 .camera-icon {
   font-size: clamp(1.1rem, 3.5vw, 1.2rem);
 }
 
-/* Botón Verificar */
+/* Botón Verificar - Azul Samsung */
 .btn-submit {
-  background-color: var(--primary);
+  background: var(--samsung-gradient);
   color: var(--white);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2);
   margin-bottom: 0;
 }
 
 .btn-submit:hover:not(:disabled),
 .btn-submit:active:not(:disabled) {
-  background-color: var(--primary-dark);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
+  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
 }
 
 .btn-submit:disabled {
@@ -578,18 +576,18 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
-/* Botón Reset */
+/* Botón Reset - Borde Azul Samsung */
 .btn-reset {
   background-color: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary-light);
+  color: var(--samsung-blue);
+  border: 2px solid var(--samsung-blue-light);
   margin-bottom: 0;
 }
 
 .btn-reset:hover,
 .btn-reset:active {
-  background-color: var(--primary-lighter);
-  border-color: var(--primary);
+  background-color: rgba(20, 40, 160, 0.08);
+  border-color: var(--samsung-blue);
 }
 
 /* Botón Cancelar Cámara */
@@ -605,11 +603,11 @@ body {
   background-color: var(--gray-300);
 }
 
-/* Botón Registrar */
+/* Botón Registrar - Azul Samsung */
 .btn-register-new {
-  background-color: var(--success);
+  background: var(--samsung-gradient);
   color: var(--white);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2);
   width: auto;
   min-width: 160px;
   margin: 12px auto 0;
@@ -617,21 +615,21 @@ body {
 
 .btn-register-new:hover,
 .btn-register-new:active {
-  background-color: #218838;
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
+  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
 }
 
-/* Botón Capturar */
+/* Botón Capturar - Azul Samsung */
 .btn-capture {
-  background-color: var(--success);
+  background: var(--samsung-gradient);
   color: var(--white);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.2);
 }
 
 .btn-capture:hover:not(:disabled),
 .btn-capture:active:not(:disabled) {
-  background-color: #218838;
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #0d1b66 0%, #1428A0 50%, #1e40ff 100%);
+  box-shadow: 0 6px 16px rgba(20, 40, 160, 0.3);
 }
 
 .btn-capture:disabled {
@@ -664,13 +662,13 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background-color: var(--gray-300);
+  background-color: rgba(20, 40, 160, 0.2); /* Azul sutil */
 }
 
 .divider-with-text span {
-  color: var(--text-light);
+  color: var(--samsung-blue);
   font-size: clamp(var(--font-xs), 2.5vw, var(--font-sm));
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -731,7 +729,7 @@ body {
    ======================================== */
 .result-card {
   border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border: 2px solid rgba(20, 40, 160, 0.1); /* Borde azul sutil */
   padding: clamp(24px, 5vw, 32px);
   margin-top: clamp(24px, 6vw, 32px);
   background-color: var(--white);
@@ -740,13 +738,13 @@ body {
 }
 
 .result-valid {
-  border-color: #d4edda;
-  background-color: #f8fff9;
+  border-color: rgba(40, 167, 69, 0.3);
+  background-color: rgba(40, 167, 69, 0.05);
 }
 
 .result-invalid {
-  border-color: #f8d7da;
-  background-color: #fffbfc;
+  border-color: rgba(220, 53, 69, 0.3);
+  background-color: rgba(220, 53, 69, 0.05);
 }
 
 .result-status {
@@ -755,7 +753,7 @@ body {
   gap: clamp(12px, 3vw, 20px);
   margin-bottom: clamp(16px, 4vw, 24px);
   padding-bottom: clamp(16px, 4vw, 20px);
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid rgba(20, 40, 160, 0.1);
   flex-wrap: wrap;
 }
 
@@ -781,7 +779,7 @@ body {
 .status-imei {
   font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
   font-family: 'Courier New', monospace;
-  color: var(--text-secondary);
+  color: var(--samsung-blue);
   word-break: break-word;
   letter-spacing: 0.3px;
   line-height: 1.4;
@@ -796,7 +794,7 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   padding: clamp(10px, 2.5vw, 12px) 0;
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(20, 40, 160, 0.05);
   gap: clamp(12px, 3vw, 16px);
   flex-wrap: wrap;
 }
@@ -822,17 +820,17 @@ body {
 
 .info-value {
   font-size: clamp(var(--font-sm), 3vw, var(--font-base));
-  color: var(--text-secondary);
+  color: var(--samsung-blue);
   text-align: right;
-  font-weight: 500;
+  font-weight: 600;
   flex: 1;
   min-width: 150px;
   line-height: 1.4;
 }
 
 .result-message {
-  background-color: var(--bg-light);
-  border-left: 4px solid var(--primary);
+  background-color: rgba(20, 40, 160, 0.05);
+  border-left: 4px solid var(--samsung-blue);
   padding: clamp(14px, 3.5vw, 16px);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
@@ -857,15 +855,15 @@ body {
   max-width: min(900px, 95vw);
   background-color: var(--white);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  box-shadow: var(--shadow-sm);
+  border: 2px solid rgba(20, 40, 160, 0.1);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.15);
   padding: clamp(24px, 6vw, 40px) clamp(20px, 4vw, 40px);
 }
 
 .help-title {
   font-size: clamp(var(--font-base), 4.5vw, var(--font-xl));
   font-weight: 700;
-  color: var(--text);
+  color: var(--samsung-blue);
   margin-bottom: clamp(24px, 6vw, 32px);
   text-align: center;
   display: flex;
@@ -891,24 +889,24 @@ body {
   align-items: flex-start;
   gap: clamp(12px, 3vw, 16px);
   padding: clamp(20px, 4vw, 24px);
-  background-color: var(--bg-light);
+  background-color: rgba(20, 40, 160, 0.03);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
+  border: 1px solid rgba(20, 40, 160, 0.1);
   transition: var(--transition);
   height: 100%;
 }
 
 .help-card:hover {
-  background-color: var(--white);
-  border-color: var(--primary-light);
-  box-shadow: var(--shadow-sm);
+  background-color: rgba(20, 40, 160, 0.05);
+  border-color: var(--samsung-blue-light);
+  box-shadow: 0 4px 12px rgba(20, 40, 160, 0.1);
 }
 
 .help-number {
   width: clamp(36px, 8vw, 40px);
   height: clamp(36px, 8vw, 40px);
   min-width: clamp(36px, 8vw, 40px);
-  background-color: var(--primary);
+  background: var(--samsung-gradient);
   color: var(--white);
   border-radius: 50%;
   display: flex;
@@ -927,7 +925,7 @@ body {
   display: block;
   font-size: clamp(var(--font-sm), 3.2vw, var(--font-base));
   font-weight: 600;
-  color: var(--text);
+  color: var(--samsung-blue);
   margin-bottom: clamp(4px, 1vw, 6px);
   line-height: 1.4;
 }
@@ -986,11 +984,10 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--samsung-blue-light);
   outline-offset: 2px;
 }
 
-/* Oculta outline para elementos táctiles en móviles */
 @media (hover: none) and (pointer: coarse) {
   .btn-camera-trigger:focus,
   .btn-submit:focus,
@@ -1002,7 +999,6 @@ body {
   }
 }
 
-/* Mejora para dispositivos con stylus/pen */
 @media (pointer: fine) {
   .btn-camera-trigger:hover,
   .btn-submit:hover,
@@ -1018,7 +1014,6 @@ body {
    RESPONSIVE ESPECÍFICO
    ======================================== */
 
-/* Teléfonos pequeños (menos de 360px) */
 @media (max-width: 359px) {
   .verificacion-header h1 {
     font-size: var(--font-lg);
@@ -1043,7 +1038,6 @@ body {
   }
 }
 
-/* Teléfonos (hasta 480px) */
 @media (max-width: 480px) {
   .verificacion-container {
     padding: 16px 12px;
@@ -1101,7 +1095,6 @@ body {
   }
 }
 
-/* Tablets pequeñas (481px - 768px) */
 @media (min-width: 481px) and (max-width: 768px) {
   .verificacion-container {
     padding: 24px 20px;
@@ -1112,14 +1105,12 @@ body {
   }
 }
 
-/* Tablets (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
   .verificacion-container {
     padding: 32px 24px;
   }
 }
 
-/* Mejoras para orientación horizontal en móviles */
 @media (max-height: 500px) and (orientation: landscape) {
   .verificacion-container {
     padding: 16px 12px;
@@ -1134,11 +1125,10 @@ body {
   }
   
   .help-panel {
-    display: none; /* Ocultar ayuda en landscape para ahorrar espacio */
+    display: none;
   }
 }
 
-/* Soporte para pantallas muy grandes */
 @media (min-width: 1400px) {
   .verificacion-card,
   .help-panel {
@@ -1146,7 +1136,6 @@ body {
   }
 }
 
-/* Mejoras para iOS Safari */
 @supports (-webkit-touch-callout: none) {
   .btn-camera-trigger,
   .btn-submit,
@@ -1154,11 +1143,62 @@ body {
   .btn-cancel-camera,
   .btn-register-new,
   .btn-capture {
-    min-height: 44px; /* Tamaño mínimo recomendado por Apple */
+    min-height: 44px;
   }
   
   input, button {
     -webkit-appearance: none;
     appearance: none;
   }
+}
+
+/* Efectos especiales para elementos Samsung */
+.imei-field:focus {
+  border-color: var(--samsung-blue-light);
+  box-shadow: 0 0 0 4px rgba(20, 40, 160, 0.15);
+}
+
+.btn-camera-trigger::after,
+.btn-submit::after,
+.btn-register-new::after,
+.btn-capture::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.7s ease;
+}
+
+.btn-camera-trigger:hover::after,
+.btn-submit:hover::after,
+.btn-register-new:hover::after,
+.btn-capture:hover::after {
+  left: 100%;
+}
+
+/* Mejoras visuales adicionales */
+.scan-corner {
+  box-shadow: 0 0 10px rgba(30, 64, 255, 0.5);
+}
+
+.status-badge[data-status="valid"] {
+  color: var(--success);
+  text-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.status-badge[data-status="invalid"] {
+  color: var(--error);
+  text-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.help-number {
+  box-shadow: 0 4px 8px rgba(20, 40, 160, 0.2);
 }

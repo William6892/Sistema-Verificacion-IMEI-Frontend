@@ -440,7 +440,7 @@ const Login: React.FC = () => {
                 lineHeight: 1.1,
                 wordBreak: 'break-word',
               }}>
-                Sistema de Gestión Seguro
+                Sistema de Escaneo de Imei
               </h2>
               <p style={{
                 fontSize: isMobile ? '14px' : isTablet ? '15px' : '16px',
@@ -448,8 +448,7 @@ const Login: React.FC = () => {
                 marginBottom: isMobile ? '20px' : '28px',
                 lineHeight: 1.6,
               }}>
-                Accede al sistema de verificación de IMEI más avanzado del mercado. 
-                Protegido con cifrado de última generación y autenticación multifactor.
+                Accede al sistema de verificación de IMEI de Samsung para garantizar la autenticidad de tus dispositivos. 
               </p>
             </div>
           </div>
@@ -742,7 +741,7 @@ const Login: React.FC = () => {
                   fontWeight: 600,
                   color: SAMSUNG_COLORS.blueDark,
                   whiteSpace: 'nowrap',
-                }}>v2.1.4 PRO</span>
+                }}>v1.1.1 </span>
                 <span style={{
                   width: '8px',
                   height: '8px',
@@ -751,8 +750,7 @@ const Login: React.FC = () => {
                   animation: 'pulse 2s infinite',
                   boxShadow: `0 0 0 2px rgba(16, 185, 129, 0.2)`,
                   flexShrink: 0,
-                }}></span>
-                <span>Sistema seguro • Conectado</span>
+                }}></span>                
               </div>
             </div>
           </form>
