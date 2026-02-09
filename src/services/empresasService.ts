@@ -1,4 +1,4 @@
-// src/services/empresasService.ts - VERSIÓN CORREGIDA
+// src/services/empresasService.ts - VERSIÓN FINAL
 import api from './api';
 
 export interface Empresa {
@@ -17,60 +17,40 @@ export interface PersonaEmpresa {
 }
 
 export const empresasService = {
-  // Obtener todas las empresas - CON PRUEBA DE RUTAS
+  // Obtener todas las empresas - SOLO LA RUTA QUE FUNCIONA
   getEmpresas: async (): Promise<Empresa[]> => {
-    console.log('🔍 Obteniendo empresas...');
-    
-    // Probar diferentes rutas comunes
-    const possibleRoutes = [
-      '/empresas',           // Ruta simple
-      '/api/empresas',       // Con /api/
-      '/Admin/empresas',     // Con /Admin/
-      '/api/Admin/empresas'  // Con ambos
-    ];
-    
-    for (const route of possibleRoutes) {
-      try {
-        console.log(`🔄 Probando ruta: ${route}`);
-        const response = await api.get(route);
-        console.log(`✅ Éxito con ruta: ${route}`, response.data);
-        return response.data;
-      } catch (error) {
-        console.log(`❌ Falló ruta: ${route}`);
-        continue;
-      }
-    }
-    
-    throw new Error('No se pudo encontrar la ruta para empresas');
+    console.log('🔍 Obteniendo empresas desde /api/empresas...');
+    const response = await api.get('/api/empresas');
+    return response.data;
   },
 
   // Obtener empresa por ID
   getEmpresa: async (id: number): Promise<Empresa> => {
-    const response = await api.get(`/empresas/${id}`);
+    const response = await api.get(`/api/empresas/${id}`);
     return response.data;
   },
 
   // Crear nueva empresa
   createEmpresa: async (nombre: string): Promise<any> => {
-    const response = await api.post('/empresas', { nombre });
+    const response = await api.post('/api/empresas', { nombre });
     return response.data;
   },
 
   // Actualizar empresa
   updateEmpresa: async (id: number, nombre: string): Promise<any> => {
-    const response = await api.put(`/empresas/${id}`, { nombre });
+    const response = await api.put(`/api/empresas/${id}`, { nombre });
     return response.data;
   },
 
   // Eliminar empresa
   deleteEmpresa: async (id: number): Promise<any> => {
-    const response = await api.delete(`/empresas/${id}`);
+    const response = await api.delete(`/api/empresas/${id}`);
     return response.data;
   },
 
   // Obtener personas de una empresa
   getPersonasEmpresa: async (empresaId: number): Promise<PersonaEmpresa[]> => {
-    const response = await api.get(`/empresas/${empresaId}/personas`);
+    const response = await api.get(`/api/empresas/${empresaId}/personas`);
     return response.data;
   }
 };
