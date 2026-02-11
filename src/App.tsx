@@ -1,4 +1,4 @@
-// src/App.tsx - Con wrappers y UserManagement
+// src/App.tsx
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
@@ -8,7 +8,8 @@ import EmpresasList from './components/Empresas/EmpresasList';
 import PersonasList from './components/Personas/PersonasList';
 import DispositivosList from './components/Dispositivos/DispositivosList';
 import VerificacionIMEI from './components/Verificacion/VerificacionIMEI';
-import UserManagement from './components/Admin/UserManagement'; // Importar nuevo componente
+import UserManagement from './components/Admin/UserManagement';
+import ProtectedRoute from './components/ProtectedRoute'; // <-- AGREGAR ESTA LÍNEA
 import './App.css';
 
 // Wrappers que obtienen el userRole del localStorage
@@ -41,15 +42,21 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Ruta pública - SIN PROTECCIÓN */}
         <Route path="/login" element={<Login />} />
         
-        <Route path="/" element={<MainLayout />}>
+        {/* ⚠️ SOLO CAMBIAR ESTO: Envolver MainLayout con ProtectedRoute */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Dashboard />} />
           <Route path="empresas" element={<EmpresasListWrapper />} />
           <Route path="personas" element={<PersonasListWrapper />} />
           <Route path="dispositivos" element={<DispositivosListWrapper />} />
           <Route path="verificacion" element={<VerificacionIMEIWrapper />} />
-          <Route path="usuarios" element={<UserManagementWrapper />} /> {/* Nueva ruta */}
+          <Route path="usuarios" element={<UserManagementWrapper />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" />} />
