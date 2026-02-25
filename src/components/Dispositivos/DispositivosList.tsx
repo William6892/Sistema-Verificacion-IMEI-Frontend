@@ -364,7 +364,8 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
       borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      flexShrink: 0
     },
     
     imeiNumber: {
@@ -403,7 +404,8 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
       borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      flexShrink: 0
     },
     
     personaName: {
@@ -438,7 +440,8 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
       borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      flexShrink: 0
     },
     
     empresaName: {
@@ -466,7 +469,8 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
       borderRadius: '12px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      flexShrink: 0
     },
     
     fechaText: {
@@ -516,26 +520,38 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
       boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
     },
     
-    // Acciones en tabla
+    // ── ACCIONES EN TABLA ── mejorado ──────────────────────────────────────
     actionsContainer: {
       display: 'flex',
-      gap: '8px',
-      flexWrap: 'wrap' as 'wrap'
+      flexDirection: 'column' as 'column',
+      gap: '6px',
+      minWidth: '120px'
+    },
+
+    actionsTopRow: {
+      display: 'flex',
+      gap: '6px'
+    },
+
+    actionsBottomRow: {
+      display: 'flex',
+      gap: '6px'
     },
     
     btnAction: {
-      padding: '10px 16px',
+      padding: '9px 14px',
       borderRadius: '10px',
       fontWeight: 600,
-      fontSize: '13px',
+      fontSize: '12px',
       cursor: 'pointer',
       border: 'none',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '6px',
-      transition: 'all 0.3s',
-      minWidth: '80px'
+      gap: '5px',
+      transition: 'all 0.25s ease',
+      flex: 1,
+      whiteSpace: 'nowrap' as 'nowrap'
     },
     
     btnView: {
@@ -1117,7 +1133,7 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                     <th style={styles.tableHeaderCell}>Empresa</th>
                     <th style={styles.tableHeaderCell}>Fecha Registro</th>
                     <th style={styles.tableHeaderCell}>Estado</th>
-                    <th style={styles.tableHeaderCell}>Acciones</th>
+                    <th style={{...styles.tableHeaderCell, minWidth: '140px'}}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1211,37 +1227,38 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                           {dispositivo.activo ? 'Activo' : 'Inactivo'}
                         </div>
                       </td>
-                      <td style={styles.tableCell} onClick={(e) => e.stopPropagation()}>
-                        <div style={styles.actionsContainer}>
-                          <button
-                            onClick={() => setSelectedDispositivo(dispositivo)}
-                            style={{...styles.btnAction, ...styles.btnView}}
-                            title="Ver detalles"
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)';
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = styles.btnView.background;
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = 'none';
-                            }}
-                          >
-                            <span>👁️</span>
-                            Ver
-                          </button>
-                          
-                          {(userRole === 'Admin') && (
-                            <>
+
+                      {/* ── COLUMNA DE ACCIONES REORGANIZADA ── */}
+                      <td style={{...styles.tableCell, padding: '12px 16px'}} onClick={(e) => e.stopPropagation()}>
+                        {userRole === 'Admin' ? (
+                          /* Admin: Ver + Editar arriba | Activar/Desact + Eliminar abajo */
+                          <div style={styles.actionsContainer}>
+                            <div style={styles.actionsTopRow}>
+                              <button
+                                onClick={() => setSelectedDispositivo(dispositivo)}
+                                style={{...styles.btnAction, ...styles.btnView}}
+                                title="Ver detalles"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.25)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = styles.btnView.background;
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = 'none';
+                                }}
+                              >
+                                👁️ Ver
+                              </button>
                               <button
                                 onClick={() => setEditingDispositivo(dispositivo)}
                                 style={{...styles.btnAction, ...styles.btnEdit}}
                                 title="Editar dispositivo"
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.background = 'linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)';
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.25)';
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.background = styles.btnEdit.background;
@@ -1249,10 +1266,10 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                                   e.currentTarget.style.boxShadow = 'none';
                                 }}
                               >
-                                <span>✏️</span>
-                                Editar
+                                ✏️ Editar
                               </button>
-                              
+                            </div>
+                            <div style={styles.actionsBottomRow}>
                               <button
                                 onClick={() => handleToggleActivo(dispositivo.id, !dispositivo.activo)}
                                 style={{
@@ -1261,26 +1278,24 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                                 }}
                                 title={dispositivo.activo ? 'Desactivar' : 'Activar'}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(245, 158, 11, 0.3)';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.25)';
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.transform = 'translateY(0)';
                                   e.currentTarget.style.boxShadow = 'none';
                                 }}
                               >
-                                <span>{dispositivo.activo ? '⏸️' : '▶️'}</span>
-                                {dispositivo.activo ? 'Desact.' : 'Activar'}
+                                {dispositivo.activo ? '⏸️ Desact.' : '▶️ Activar'}
                               </button>
-                              
                               <button
                                 onClick={() => handleDelete(dispositivo.id)}
                                 style={{...styles.btnAction, ...styles.btnDelete}}
                                 title="Eliminar dispositivo"
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.background = 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)';
-                                  e.currentTarget.style.transform = 'translateY(-2px)';
-                                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
+                                  e.currentTarget.style.transform = 'translateY(-1px)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.25)';
                                 }}
                                 onMouseLeave={(e) => {
                                   e.currentTarget.style.background = styles.btnDelete.background;
@@ -1288,12 +1303,34 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                                   e.currentTarget.style.boxShadow = 'none';
                                 }}
                               >
-                                <span>🗑️</span>
-                                Eliminar
+                                🗑️ Eliminar
                               </button>
-                            </>
-                          )}
-                        </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* No admin: solo botón Ver centrado */
+                          <button
+                            onClick={() => setSelectedDispositivo(dispositivo)}
+                            style={{
+                              ...styles.btnAction,
+                              ...styles.btnView,
+                              width: '100%'
+                            }}
+                            title="Ver detalles"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.25)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = styles.btnView.background;
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            👁️ Ver detalles
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1462,16 +1499,6 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
             .dispositivos-table th,
             .dispositivos-table td {
               padding: 12px 15px;
-            }
-            
-            .actions-container {
-              flex-direction: column;
-              gap: 5px;
-            }
-            
-            .actions-container button {
-              width: 100%;
-              justify-content: center;
             }
             
             .pagination {
