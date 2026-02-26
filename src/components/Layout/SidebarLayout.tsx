@@ -1,6 +1,8 @@
-// src/components/Layout/SidebarLayout.tsx - VERSIÓN CORREGIDA
+// src/components/Layout/SidebarLayout.tsx - VERSIÓN CON LOGO SAMSUNG
 import React, { useState, useEffect, ReactNode } from 'react';
 import './SidebarLayout.css';
+// Importar el logo (ajusta la ruta según donde tengas la imagen)
+import samsungLogo from '../../assets/logo.jpg';
 
 interface SidebarLayoutProps {
   children: ReactNode;
@@ -63,7 +65,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
         id: 'personas',
         label: 'Personas',
         icon: '👥',
-        roles: ['Admin',]
+        roles: ['Admin']
       },
       {
         id: 'dispositivos',
@@ -102,11 +104,8 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
       return;
     }
     
-    //  Usar la URL absoluta del frontend
-    const frontendUrl = window.location.origin; 
-    
     // Redirigir a la página de login del frontend
-  window.location.href = `${window.location.origin}/#/login`;
+    window.location.href = `${window.location.origin}/#/login`;
   };
 
   const handlePageChange = (page: string) => {
@@ -162,12 +161,43 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
         </button>
       )}
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      {/* Sidebar con estilo Samsung */}
+      <aside 
+        className={`sidebar ${isSidebarOpen ? 'open' : ''}`}
+        style={{
+          background: 'linear-gradient(180deg, #1e3a5f 0%, #0f2b4f 100%)',
+        }}
+      >
         <div className="sidebar-header">
-          <div className="logo">
-            <span>📱</span>
-            <h2>IMEI System</h2>
+          <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              background: 'white',
+              borderRadius: '12px',
+              padding: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <img 
+                src={samsungLogo} 
+                alt="Samsung Logo" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain' 
+                }} 
+              />
+            </div>
+            <h2 style={{ 
+              margin: 0, 
+              color: 'white', 
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+              IMEI System
+            </h2>
           </div>
           
           {isMobile && (
@@ -175,28 +205,55 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
               className="sidebar-close-btn"
               onClick={closeSidebar}
               aria-label="Cerrar menú"
+              style={{ color: 'white' }}
             >
               ✕
             </button>
           )}
         </div>
 
-        <div className="user-info">
-          <div className="user-avatar">
+        <div className="user-info" style={{
+          padding: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          margin: '16px',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div className="user-avatar" style={{
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, #1428A0 0%, #3b82f6 100%)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px',
+            fontWeight: '600',
+            color: 'white'
+          }}>
             {user?.nombre?.charAt(0)?.toUpperCase() || 
              user?.username?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="user-details">
-            <h4>{user?.nombre || user?.username || 'Usuario'}</h4>
+            <h4 style={{ 
+              margin: '0 0 4px 0', 
+              color: 'white', 
+              fontSize: '16px',
+              fontWeight: '500'
+            }}>
+              {user?.nombre || user?.username || 'Usuario'}
+            </h4>
             <div className="user-role-badge" style={{
               background: getRoleBadgeColor(user?.rol || 'Usuario'),
               color: 'white',
-              fontSize: '10px',
-              padding: '2px 8px',
-              borderRadius: '12px',
+              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '20px',
               fontWeight: '600',
               letterSpacing: '0.3px',
-              marginTop: '4px',
               display: 'inline-block'
             }}>
               {getRoleDisplayName(user?.rol || 'Usuario')}
@@ -204,20 +261,46 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
           </div>
         </div>
 
-        <nav className="sidebar-menu">
+        <nav className="sidebar-menu" style={{ padding: '8px 16px' }}>
           {menuItems.length > 0 ? (
             menuItems.map((item) => (
               <button
                 key={item.id}
                 className={`menu-item ${currentPage === item.id ? 'active' : ''}`}
                 onClick={() => handlePageChange(item.id)}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  border: 'none',
+                  background: currentPage === item.id ? 'rgba(37, 99, 235, 0.15)' : 'none',
+                  color: 'white',
+                  textAlign: 'left',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  borderLeft: currentPage === item.id ? '4px solid #1428A0' : '4px solid transparent',
+                  borderRadius: '8px',
+                  marginBottom: '4px',
+                  transition: 'all 0.2s'
+                }}
               >
-                <span className="menu-icon">{item.icon}</span>
-                <span className="menu-label">{item.label}</span>
+                <span className="menu-icon" style={{ fontSize: '20px', minWidth: '24px' }}>
+                  {item.icon}
+                </span>
+                <span className="menu-label" style={{ fontWeight: '500' }}>{item.label}</span>
               </button>
             ))
           ) : (
-            <div className="menu-item">
+            <div className="menu-item" style={{
+              padding: '14px 16px',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              opacity: 0.6
+            }}>
               <span className="menu-icon">🔒</span>
               <span className="menu-label">Sin permisos disponibles</span>
             </div>
@@ -225,7 +308,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
         </nav>
 
         {/* Botón de logout */}
-        <div className="sidebar-footer">
+        <div className="sidebar-footer" style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <button 
             className="menu-item logout-btn"
             onClick={handleLogout}
@@ -235,18 +318,104 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
               justifyContent: 'center',
               gap: '12px',
               width: '100%',
-              maxWidth: '250px'
+              padding: '14px',
+              border: 'none',
+              background: 'rgba(239, 68, 68, 0.15)',
+              color: '#fee2e2',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: '500',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#ef4444';
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+              e.currentTarget.style.color = '#fee2e2';
             }}
           >
-            <span className="menu-icon">🚪</span>
+            <span className="menu-icon" style={{ fontSize: '18px' }}>🚪</span>
             <span className="menu-label">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
 
-      <main className="main-content">
+      <main className="main-content" style={{
+        marginLeft: isMobile ? 0 : '300px',
+        padding: '24px',
+        transition: 'margin-left 0.3s ease'
+      }}>
         {children}
       </main>
+
+      {/* Estilos adicionales */}
+      <style>{`
+        .sidebar {
+          width: 300px;
+          height: 100vh;
+          position: fixed;
+          left: 0;
+          top: 0;
+          transition: transform 0.3s ease;
+          z-index: 1000;
+          overflow-y: auto;
+        }
+        
+        .mobile-menu-toggle {
+          position: fixed;
+          top: 16px;
+          left: 16px;
+          width: 44px;
+          height: 44px;
+          background: #1428A0;
+          border: none;
+          border-radius: 8px;
+          color: white;
+          font-size: 24px;
+          cursor: pointer;
+          z-index: 1001;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 6px rgba(20, 40, 160, 0.3);
+        }
+        
+        .sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 999;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+        
+        .sidebar-overlay.active {
+          opacity: 1;
+          visibility: visible;
+        }
+        
+        @media (max-width: 768px) {
+          .sidebar {
+            transform: translateX(-100%);
+          }
+          
+          .sidebar.open {
+            transform: translateX(0);
+          }
+          
+          .main-content {
+            margin-left: 0 !important;
+            padding: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
