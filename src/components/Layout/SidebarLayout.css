@@ -1,13 +1,13 @@
-/* src/components/Layout/SidebarLayout.css - VERSIÓN BLANCA CON TARJETA IMEI */
+/* src/components/Layout/SidebarLayout.css - SIDEBAR BLANCO SOLAMENTE */
 :root {
-  /* Colores azul Samsung (solo para la tarjeta IMEI) */
+  /* Colores azul Samsung (para el resto de la app) */
   --samsung-blue-deep: #1428A0;
   --samsung-blue-light: #007BFF;
   --samsung-blue-medium: #0C4DA2;
   --samsung-blue-dark: #1A237E;
   --samsung-blue-bright: #2196F3;
   
-  /* Gradientes Samsung (solo para la tarjeta IMEI) */
+  /* Gradientes Samsung (para el resto de la app) */
   --gradient-samsung: linear-gradient(135deg, #1428A0 0%, #007BFF 100%);
   --gradient-samsung-dark: linear-gradient(135deg, #1A237E 0%, #0C4DA2 100%);
   
@@ -20,7 +20,7 @@
 .sidebar-layout {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   position: relative;
   overflow-x: hidden;
@@ -34,7 +34,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 999;
   backdrop-filter: blur(4px);
   animation: fadeIn 0.3s ease;
@@ -49,10 +49,10 @@
   to { opacity: 1; }
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR (BLANCO) ===== */
 .sidebar {
   width: 300px;
-  background: white;
+  background: white;  /* ✅ SOLO EL SIDEBAR ES BLANCO */
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -153,7 +153,7 @@
 .user-avatar {
   width: 60px;
   height: 60px;
-  background: var(--gradient-samsung);
+  background: var(--gradient-samsung);  /* ✅ MANTIENE COLOR AZUL */
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -188,7 +188,7 @@
 .user-role-badge {
   display: inline-block;
   padding: 6px 14px;
-  background: var(--gradient-samsung);
+  background: var(--gradient-samsung);  /* ✅ MANTIENE COLOR AZUL */
   color: white;
   font-size: 12px;
   font-weight: 600;
@@ -250,7 +250,7 @@
 }
 
 .menu-item.active {
-  background: var(--gradient-samsung);
+  background: var(--gradient-samsung);  /* ✅ MANTIENE COLOR AZUL PARA ITEM ACTIVO */
   color: white;
   font-weight: 600;
   box-shadow: var(--shadow-md);
@@ -334,13 +334,13 @@
   transform: translateX(4px) scale(1.1);
 }
 
-/* ===== CONTENIDO PRINCIPAL ===== */
+/* ===== CONTENIDO PRINCIPAL (MANTIENE COLOR) ===== */
 .main-content {
   flex: 1;
   margin-left: 300px;
   padding: 32px;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   transition: all 0.3s ease;
   width: calc(100% - 300px);
   box-sizing: border-box;
@@ -354,7 +354,7 @@
   }
 }
 
-/* ===== BOTÓN HAMBURGUESA PARA MÓVIL ===== */
+/* ===== BOTÓN HAMBURGUESA PARA MÓVIL (MANTIENE COLOR) ===== */
 .mobile-menu-toggle {
   display: none;
   position: fixed;
