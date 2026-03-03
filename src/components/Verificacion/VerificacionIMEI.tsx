@@ -1,12 +1,9 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN CORREGIDA
+// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN MEJORADA CON CÁMARA GRANDE Y TRASERA
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 
 // Importar html5-qrcode
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
-
-// QUITAR crypto-js - El backend se encarga de la encriptación
-// import CryptoJS from 'crypto-js';
 
 interface VerificacionIMEIProps {
   userRole?: string;
@@ -36,6 +33,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   const [isMobile, setIsMobile] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [cameraInitializing, setCameraInitializing] = useState(false);
   
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +56,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Función principal de verificación - SIN ENCRIPTACIÓN (backend se encarga)
+  // Función principal de verificación
   const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
     const cleanedIMEI = imei.replace(/\D/g, '');
     
@@ -80,12 +78,9 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         };
       }
 
-      
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      // IMPORTANTE: Enviar texto plano, NO encriptado
       const response = await fetch(`${API_URL}/api/verificacion/verificar`, {
         method: 'POST',
         headers: {
@@ -94,14 +89,13 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          IMEI: cleanedIMEI  // ← TEXTO PLANO, backend lo encriptará
+          IMEI: cleanedIMEI
         }),
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
-      // Leer siempre el cuerpo de la respuesta para debug
       let responseText = '';
       try {
         responseText = await response.text();
@@ -145,7 +139,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       let data;
       try {
         data = JSON.parse(responseText);
-        
       } catch (parseError) {
         console.error('❌ Error parseando respuesta:', parseError);
         return {
@@ -228,8 +221,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
   // Función mejorada para extraer IMEI
   const extractIMEIFromText = (text: string): string | null => {
-    
-    
     const patterns = [
       /IMEI[:\s]*(\d{10,20})/i,
       /IMEI\d*[:\s]*(\d{10,20})/i,
@@ -244,7 +235,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       if (match && match[1]) {
         const imei = match[1].replace(/\D/g, '');
         if (imei.length >= 10 && imei.length <= 20) {
-          
           return imei;
         }
       }
@@ -254,7 +244,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     if (allNumbers) {
       for (const num of allNumbers) {
         if (num.length >= 10 && num.length <= 20) {
-          
           return num;
         }
       }
@@ -263,21 +252,28 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     return null;
   };
 
-  // Iniciar escáner
+  // Iniciar escáner - VERSIÓN MEJORADA (CÁMARA GRANDE + TRASERA)
   const startScanner = useCallback(() => {
     if (!scannerContainerRef.current) return;
     
     try {
       setScannerError(null);
       setIsScanning(true);
+      setCameraInitializing(true);
       
+      // CONFIGURACIÓN MEJORADA
       const config = {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
+        // 📏 CUADRO DE ESCANEO MÁS GRANDE
+        qrbox: { width: 350, height: 350 },
         rememberLastUsedCamera: true,
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         showTorchButtonIfSupported: true,
         showZoomSliderIfSupported: true,
+        // 📱 PRIORIZAR CÁMARA TRASERA
+        videoConstraints: {
+          facingMode: { exact: "environment" }
+        }
       };
 
       scannerRef.current = new Html5QrcodeScanner(
@@ -287,8 +283,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       );
 
       const onScanSuccess = (decodedText: string) => {
-        
-        
+        setCameraInitializing(false);
         const extractedIMEI = extractIMEIFromText(decodedText);
         
         if (extractedIMEI) {
@@ -304,7 +299,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
             handleVerificar(extractedIMEI);
           }, 500);
         } else {
-          setScannerError(`No se encontró IMEI válido. Texto: "${decodedText.substring(0, 50)}..."`);
+          setScannerError(`No se encontró IMEI válido.`);
           
           setTimeout(() => {
             if (scannerRef.current) {
@@ -315,20 +310,119 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       };
 
       const onScanError = (errorMessage: string) => {
+        setCameraInitializing(false);
         console.log('⚠️ Error de escaneo:', errorMessage);
+        
+        // Si falla la cámara trasera, intentar con cualquier cámara
+        if (errorMessage.includes('facingMode') || errorMessage.includes('environment')) {
+          console.log('🔄 Cámara trasera no disponible, usando cámara por defecto');
+          setTimeout(() => {
+            if (showScanner) {
+              stopScanner();
+              startScannerWithFallback();
+            }
+          }, 500);
+          return;
+        }
         
         if (!errorMessage.includes('NotFoundException') && 
             !errorMessage.includes('NoMultiFormatReader') &&
             !errorMessage.includes('QR code parse error')) {
-          
           setScannerError('Error: ' + errorMessage.substring(0, 100));
         }
       };
 
+      // Timeout para ocultar loading
+      setTimeout(() => setCameraInitializing(false), 3000);
+      
       scannerRef.current.render(onScanSuccess, onScanError);
 
     } catch (err: any) {
       console.error('❌ Error inicializando escáner:', err);
+      setCameraInitializing(false);
+      
+      if (err.message?.includes('facingMode') || err.message?.includes('environment')) {
+        console.log('🔄 Reintentando con cualquier cámara disponible...');
+        setTimeout(() => {
+          if (showScanner) {
+            stopScanner();
+            startScannerWithFallback();
+          }
+        }, 1000);
+      } else {
+        setScannerError('Error al iniciar la cámara.');
+        setIsScanning(false);
+      }
+    }
+  }, [handleVerificar, showScanner]);
+
+  // Función de respaldo sin especificar cámara trasera
+  const startScannerWithFallback = useCallback(() => {
+    if (!scannerContainerRef.current) return;
+    
+    try {
+      setScannerError(null);
+      setIsScanning(true);
+      setCameraInitializing(true);
+      
+      const config = {
+        fps: 10,
+        qrbox: { width: 350, height: 350 },
+        rememberLastUsedCamera: true,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        showTorchButtonIfSupported: true,
+        showZoomSliderIfSupported: true,
+      };
+
+      scannerRef.current = new Html5QrcodeScanner(
+        "html5qr-scanner-container",
+        config,
+        false
+      );
+
+      const onScanSuccess = (decodedText: string) => {
+        setCameraInitializing(false);
+        const extractedIMEI = extractIMEIFromText(decodedText);
+        
+        if (extractedIMEI) {
+          if (scannerRef.current) {
+            scannerRef.current.pause();
+          }
+          
+          setImei(extractedIMEI);
+          stopScanner();
+          setShowScanner(false);
+          
+          setTimeout(() => {
+            handleVerificar(extractedIMEI);
+          }, 500);
+        } else {
+          setScannerError(`No se encontró IMEI válido.`);
+          
+          setTimeout(() => {
+            if (scannerRef.current) {
+              scannerRef.current.resume();
+            }
+          }, 2000);
+        }
+      };
+
+      const onScanError = (errorMessage: string) => {
+        setCameraInitializing(false);
+        console.log('⚠️ Error de escaneo (fallback):', errorMessage);
+        
+        if (!errorMessage.includes('NotFoundException') && 
+            !errorMessage.includes('NoMultiFormatReader')) {
+          setScannerError('Error: ' + errorMessage.substring(0, 100));
+        }
+      };
+
+      setTimeout(() => setCameraInitializing(false), 3000);
+      scannerRef.current.render(onScanSuccess, onScanError);
+
+    } catch (err: any) {
+      console.error('❌ Error en scanner de respaldo:', err);
+      setCameraInitializing(false);
       setScannerError('Error al iniciar la cámara.');
       setIsScanning(false);
     }
@@ -345,6 +439,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       scannerRef.current = null;
     }
     setIsScanning(false);
+    setCameraInitializing(false);
   }, []);
 
   // Efecto para manejar escáner
@@ -449,6 +544,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
               <h3>
                 <span role="img" aria-label="escáner">🔍</span>
                 Escáner de Códigos
+                {isMobile && <span className="mobile-indicator">📱 Cámara trasera</span>}
               </h3>
               <button 
                 onClick={handleToggleScanner}
@@ -460,11 +556,35 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
             </div>
             
             <div className="camera-container-wrapper">
+              {cameraInitializing && (
+                <div className="camera-loading">
+                  <div className="spinner-large"></div>
+                  <p>Iniciando cámara trasera...</p>
+                </div>
+              )}
               <div 
                 id="html5qr-scanner-container" 
                 ref={scannerContainerRef}
                 className="html5qr-scanner"
+                style={{ display: cameraInitializing ? 'none' : 'block' }}
               />
+              
+              {/* Overlay con marco de escaneo personalizado */}
+              <div className="scan-frame-overlay">
+                <div className="corner-tr"></div>
+                <div className="corner-bl"></div>
+              </div>
+              <div className="scan-line"></div>
+              
+              <div className="camera-instructions">
+                <div className="instruction-main">
+                  <span>📷</span>
+                  <span>Apunta al código de barras o IMEI</span>
+                </div>
+                <div className="instruction-sub">
+                  El escaneo será automático
+                </div>
+              </div>
             </div>
 
             {scannerError && (
@@ -495,7 +615,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                 type="button"
               >
                 <span role="img" aria-label="escáner" className="camera-icon">🔍</span>
-                {isMobile ? 'Escanear código' : 'Usar escáner de códigos'}
+                {isMobile ? 'Escanear código con cámara trasera' : 'Usar escáner de códigos'}
               </button>
               
               <div className="divider-with-text">

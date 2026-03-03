@@ -1,7 +1,7 @@
 /* ========================================
    VERIFICACIÓN DE IMEI - CSS MEJORADO PARA MÓVILES
    Fondo Blanco + Botones Azul Samsung
-   Versión completa con mejoras de cámara
+   Versión MEJORADA con cámara GRANDE y trasera por defecto
    ======================================== */
 
 :root {
@@ -254,7 +254,7 @@ body {
 }
 
 /* ========================================
-   CONTENEDOR DE CÁMARA - MEJORADO Y CENTRADO
+   CONTENEDOR DE CÁMARA - TAMAÑO MEJORADO (MÁS GRANDE)
    ======================================== */
 .camera-container-wrapper {
   position: relative;
@@ -264,12 +264,40 @@ body {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(30, 64, 255, 0.1);
-  aspect-ratio: 16 / 9;
-  max-height: min(70vh, 500px);
+  /* TAMAÑO AUMENTADO - Aspect ratio más cuadrado para mejor visibilidad */
+  aspect-ratio: 4 / 3;
+  min-height: min(70vh, 550px);
+  max-height: min(80vh, 650px);
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+}
+
+/* Para pantallas más grandes, aún más grande */
+@media (min-width: 768px) {
+  .camera-container-wrapper {
+    aspect-ratio: 16 / 10;
+    min-height: min(75vh, 600px);
+    max-height: min(85vh, 700px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .camera-container-wrapper {
+    aspect-ratio: 16 / 9;
+    min-height: min(80vh, 650px);
+    max-height: min(90vh, 750px);
+  }
+}
+
+/* Para dispositivos en landscape */
+@media (max-height: 600px) and (orientation: landscape) {
+  .camera-container-wrapper {
+    aspect-ratio: 16 / 9;
+    min-height: min(85vh, 500px);
+    max-height: min(95vh, 550px);
+  }
 }
 
 .camera-preview-box {
@@ -280,6 +308,41 @@ body {
   align-items: center;
   justify-content: center;
   object-fit: cover;
+}
+
+/* ========================================
+   LOADING DE CÁMARA
+   ======================================== */
+.camera-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1428A0, #1e40ff);
+  color: white;
+  z-index: 30;
+  border-radius: var(--radius-lg);
+}
+
+.spinner-large {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.camera-loading p {
+  font-size: var(--font-base);
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
@@ -404,21 +467,24 @@ body {
   object-fit: contain !important;
 }
 
-/* Marco de escaneo personalizado */
+/* ========================================
+   MARCO DE ESCANEO - TAMAÑO MEJORADO (MÁS GRANDE)
+   ======================================== */
 .scan-frame-overlay {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  width: min(70%, 280px) !important;
-  height: min(50%, 200px) !important;
-  border: 2px solid var(--samsung-blue-lighter) !important;
-  border-radius: var(--radius-md) !important;
+  /* TAMAÑO AUMENTADO SIGNIFICATIVAMENTE */
+  width: min(85%, 400px) !important;
+  height: min(70%, 350px) !important;
+  border: 3px solid var(--samsung-blue-lighter) !important;
+  border-radius: var(--radius-lg) !important;
   pointer-events: none !important;
   z-index: 20 !important;
   box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.7),
-              0 0 30px rgba(30, 64, 255, 0.3),
-              inset 0 0 20px rgba(30, 64, 255, 0.2) !important;
+              0 0 40px rgba(30, 64, 255, 0.4),
+              inset 0 0 30px rgba(30, 64, 255, 0.3) !important;
   animation: pulseBorder 2s ease-in-out infinite !important;
 }
 
@@ -427,71 +493,65 @@ body {
   50% { border-color: var(--samsung-blue-light); }
 }
 
-/* Esquinas decorativas */
+/* Esquinas decorativas - MÁS GRANDES */
 .scan-frame-overlay::before,
-.scan-frame-overlay::after {
+.scan-frame-overlay::after,
+.scan-frame-overlay .corner-tr,
+.scan-frame-overlay .corner-bl {
   content: '';
   position: absolute;
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--samsung-blue-lighter);
+  width: 32px;
+  height: 32px;
+  border: 4px solid var(--samsung-blue-lighter);
 }
 
 .scan-frame-overlay::before {
-  top: -3px;
-  left: -3px;
+  top: -4px;
+  left: -4px;
   border-right: none;
   border-bottom: none;
-  border-top-left-radius: 6px;
+  border-top-left-radius: 8px;
 }
 
 .scan-frame-overlay::after {
-  bottom: -3px;
-  right: -3px;
+  bottom: -4px;
+  right: -4px;
   border-left: none;
   border-top: none;
-  border-bottom-right-radius: 6px;
-}
-
-.scan-frame-overlay .corner-tr,
-.scan-frame-overlay .corner-bl {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--samsung-blue-lighter);
+  border-bottom-right-radius: 8px;
 }
 
 .scan-frame-overlay .corner-tr {
-  top: -3px;
-  right: -3px;
+  top: -4px;
+  right: -4px;
   border-left: none;
   border-bottom: none;
-  border-top-right-radius: 6px;
+  border-top-right-radius: 8px;
 }
 
 .scan-frame-overlay .corner-bl {
-  bottom: -3px;
-  left: -3px;
+  bottom: -4px;
+  left: -4px;
   border-right: none;
   border-top: none;
-  border-bottom-left-radius: 6px;
+  border-bottom-left-radius: 8px;
 }
 
-/* Línea de escaneo */
+/* Línea de escaneo - MÁS VISIBLE */
 .scan-line {
   position: absolute;
   top: 0;
-  left: 10%;
-  right: 10%;
-  height: 3px;
+  left: 15%;
+  right: 15%;
+  height: 4px;
   background: linear-gradient(90deg,
     transparent,
-    var(--samsung-blue-lighter) 30%,
+    var(--samsung-blue-lighter) 20%,
     var(--samsung-blue-light) 50%,
-    var(--samsung-blue-lighter) 70%,
+    var(--samsung-blue-lighter) 80%,
     transparent
   );
-  filter: drop-shadow(0 0 10px rgba(30, 64, 255, 0.8));
+  filter: drop-shadow(0 0 15px rgba(30, 64, 255, 0.9));
   animation: scan 2s ease-in-out infinite;
   z-index: 21;
   border-radius: 2px;
@@ -504,7 +564,7 @@ body {
   100% { top: 100%; opacity: 0; }
 }
 
-/* Instrucciones del scanner */
+/* Instrucciones del scanner - MEJORADAS */
 .camera-instructions {
   position: absolute;
   bottom: 0;
@@ -512,31 +572,31 @@ body {
   right: 0;
   text-align: center;
   color: var(--white);
-  padding: clamp(20px, 4vw, 30px);
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: clamp(25px, 5vw, 35px);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
   z-index: 10;
 }
 
 .instruction-main {
-  font-size: clamp(var(--font-sm), 3.5vw, var(--font-lg));
-  font-weight: 600;
-  margin-bottom: clamp(8px, 2vw, 12px);
+  font-size: clamp(var(--font-base), 4vw, var(--font-xl));
+  font-weight: 700;
+  margin-bottom: clamp(10px, 2.5vw, 15px);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: clamp(8px, 2vw, 12px);
   flex-wrap: wrap;
-  line-height: 1.3;
+  line-height: 1.4;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .instruction-sub {
-  font-size: clamp(var(--font-xs), 2.8vw, var(--font-sm));
-  opacity: 0.9;
-  max-width: min(500px, 90vw);
+  font-size: clamp(var(--font-sm), 3.2vw, var(--font-base));
+  opacity: 0.95;
+  max-width: min(600px, 90vw);
   margin: 0 auto;
-  line-height: 1.5;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  line-height: 1.6;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 /* ========================================
@@ -581,10 +641,8 @@ body {
 }
 
 /* ========================================
-   RESTANTE DEL CSS (formulario, botones, etc.)
+   FORMULARIO - MEJORADO PARA MÓVILES
    ======================================== */
-
-/* FORMULARIO - MEJORADO PARA MÓVILES */
 .verification-form {
   margin-bottom: clamp(20px, 5vw, 24px);
 }
