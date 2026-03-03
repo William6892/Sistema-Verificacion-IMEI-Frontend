@@ -1,9 +1,7 @@
-// src/components/Verificacion/VerificacionIMEI.tsx - VERSIÓN MEJORADA CON CÁMARA GRANDE Y TRASERA
+// src/components/Verificacion/VerificacionIMEI.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
-
-// Importar html5-qrcode
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface VerificacionIMEIProps {
   userRole?: string;
@@ -33,49 +31,38 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   const [isMobile, setIsMobile] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [cameraInitializing, setCameraInitializing] = useState(false);
-  
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+  const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Detectar si es dispositivo móvil
+  // Detectar móvil
   useEffect(() => {
     const checkMobile = () => {
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       setIsMobile(mobile || isTouchDevice);
     };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
     return () => {
       window.removeEventListener('resize', checkMobile);
       stopScanner();
     };
   }, []);
 
-  // Función principal de verificación
+  // Verificación IMEI contra API
   const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
     const cleanedIMEI = imei.replace(/\D/g, '');
-    
     if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
-      return {
-        valido: false,
-        mensaje: 'IMEI inválido. Debe tener entre 10 y 20 dígitos'
-      };
+      return { valido: false, mensaje: 'IMEI inválido. Debe tener entre 10 y 20 dígitos' };
     }
 
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      
       if (!token) {
-        return {
-          valido: false,
-          mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.'
-        };
+        return { valido: false, mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.' };
       }
 
       const controller = new AbortController();
@@ -88,63 +75,33 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          IMEI: cleanedIMEI
-        }),
+        body: JSON.stringify({ IMEI: cleanedIMEI }),
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
       let responseText = '';
-      try {
-        responseText = await response.text();
-        console.log('📦 Response body:', responseText);
-      } catch (e) {
-        console.error('❌ Error leyendo respuesta:', e);
-      }
+      try { responseText = await response.text(); } catch (e) {}
 
       if (response.status === 401) {
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
-        
-        return {
-          valido: false,
-          mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.'
-        };
+        return { valido: false, mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.' };
       }
-
       if (response.status === 400) {
         try {
           const errorData = JSON.parse(responseText);
-          return {
-            valido: false,
-            mensaje: errorData.mensaje || errorData.message || 'Error en la solicitud'
-          };
-        } catch {
-          return {
-            valido: false,
-            mensaje: 'Formato de IMEI inválido'
-          };
-        }
+          return { valido: false, mensaje: errorData.mensaje || errorData.message || 'Error en la solicitud' };
+        } catch { return { valido: false, mensaje: 'Formato de IMEI inválido' }; }
       }
-
       if (!response.ok) {
-        return {
-          valido: false,
-          mensaje: `Error del servidor: ${response.status} ${response.statusText || ''}`
-        };
+        return { valido: false, mensaje: `Error del servidor: ${response.status} ${response.statusText || ''}` };
       }
 
       let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('❌ Error parseando respuesta:', parseError);
-        return {
-          valido: false,
-          mensaje: 'Error procesando respuesta del servidor'
-        };
+      try { data = JSON.parse(responseText); } catch {
+        return { valido: false, mensaje: 'Error procesando respuesta del servidor' };
       }
 
       return {
@@ -157,55 +114,32 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         fechaRegistro: data.dispositivo?.fechaRegistro || data.fechaRegistro,
         mensaje: data.mensaje || 'Verificación completada'
       };
-
     } catch (err: any) {
-      console.error('❌ Error de conexión:', err);
-      
-      if (err.name === 'AbortError') {
-        return {
-          valido: false,
-          mensaje: 'Tiempo de espera agotado. Verifique su conexión.'
-        };
-      }
-      
-      if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
-        return {
-          valido: false,
-          mensaje: 'No se pudo conectar con el servidor. Verifique su conexión.'
-        };
-      }
-      
-      return {
-        valido: false,
-        mensaje: 'Error de conexión con el servidor.'
-      };
+      if (err.name === 'AbortError') return { valido: false, mensaje: 'Tiempo de espera agotado. Verifique su conexión.' };
+      if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) return { valido: false, mensaje: 'No se pudo conectar con el servidor.' };
+      return { valido: false, mensaje: 'Error de conexión con el servidor.' };
     }
   };
 
-  // Función principal de verificación
   const handleVerificar = useCallback(async (imeiToCheck?: string) => {
     const imeiToVerify = (imeiToCheck || imei).trim();
-    
     if (!imeiToVerify) {
       setError('Por favor, ingresa un IMEI');
       if (inputRef.current) inputRef.current.focus();
       return;
     }
-
     const cleanedIMEI = imeiToVerify.replace(/\D/g, '');
     if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
       setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
       if (inputRef.current) inputRef.current.focus();
       return;
     }
-
     setLoading(true);
     setError('');
     setResultado(null);
-
     try {
-      const resultado = await verificarIMEI(cleanedIMEI);
-      setResultado(resultado);
+      const res = await verificarIMEI(cleanedIMEI);
+      setResultado(res);
       setImei(cleanedIMEI);
     } catch (err: any) {
       setError(err.message || 'Error al verificar IMEI');
@@ -219,7 +153,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     handleVerificar();
   };
 
-  // Función mejorada para extraer IMEI
+  // Extraer IMEI de texto escaneado
   const extractIMEIFromText = (text: string): string | null => {
     const patterns = [
       /IMEI[:\s]*(\d{10,20})/i,
@@ -229,300 +163,178 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       /(\d[\d\s\-]{10,30}\d)/,
       /01(\d{14})/
     ];
-    
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
-        const imei = match[1].replace(/\D/g, '');
-        if (imei.length >= 10 && imei.length <= 20) {
-          return imei;
-        }
+        const extracted = match[1].replace(/\D/g, '');
+        if (extracted.length >= 10 && extracted.length <= 20) return extracted;
       }
     }
-    
     const allNumbers = text.match(/\d+/g);
     if (allNumbers) {
       for (const num of allNumbers) {
-        if (num.length >= 10 && num.length <= 20) {
-          return num;
-        }
+        if (num.length >= 10 && num.length <= 20) return num;
       }
     }
-    
     return null;
   };
 
-  // Iniciar escáner - VERSIÓN MEJORADA (CÁMARA GRANDE + TRASERA)
-  const startScanner = useCallback(() => {
+  // Iniciar escáner — fuerza cámara trasera, sin UI nativa de selección
+  const startScanner = useCallback(async () => {
     if (!scannerContainerRef.current) return;
-    
     try {
       setScannerError(null);
       setIsScanning(true);
-      setCameraInitializing(true);
-      
-      // CONFIGURACIÓN MEJORADA
-      const config = {
-        fps: 10,
-        // 📏 CUADRO DE ESCANEO MÁS GRANDE
-        qrbox: { width: 350, height: 350 },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: true,
-        // 📱 PRIORIZAR CÁMARA TRASERA
-        videoConstraints: {
-          facingMode: { exact: "environment" }
-        }
-      };
 
-      scannerRef.current = new Html5QrcodeScanner(
-        "html5qr-scanner-container",
-        config,
-        false
-      );
-
-      const onScanSuccess = (decodedText: string) => {
-        setCameraInitializing(false);
-        const extractedIMEI = extractIMEIFromText(decodedText);
-        
-        if (extractedIMEI) {
-          if (scannerRef.current) {
-            scannerRef.current.pause();
-          }
-          
-          setImei(extractedIMEI);
-          stopScanner();
-          setShowScanner(false);
-          
-          setTimeout(() => {
-            handleVerificar(extractedIMEI);
-          }, 500);
-        } else {
-          setScannerError(`No se encontró IMEI válido.`);
-          
-          setTimeout(() => {
-            if (scannerRef.current) {
-              scannerRef.current.resume();
-            }
-          }, 2000);
-        }
-      };
-
-      const onScanError = (errorMessage: string) => {
-        setCameraInitializing(false);
-        console.log('⚠️ Error de escaneo:', errorMessage);
-        
-        // Si falla la cámara trasera, intentar con cualquier cámara
-        if (errorMessage.includes('facingMode') || errorMessage.includes('environment')) {
-          console.log('🔄 Cámara trasera no disponible, usando cámara por defecto');
-          setTimeout(() => {
-            if (showScanner) {
-              stopScanner();
-              startScannerWithFallback();
-            }
-          }, 500);
-          return;
-        }
-        
-        if (!errorMessage.includes('NotFoundException') && 
-            !errorMessage.includes('NoMultiFormatReader') &&
-            !errorMessage.includes('QR code parse error')) {
-          setScannerError('Error: ' + errorMessage.substring(0, 100));
-        }
-      };
-
-      // Timeout para ocultar loading
-      setTimeout(() => setCameraInitializing(false), 3000);
-      
-      scannerRef.current.render(onScanSuccess, onScanError);
-
-    } catch (err: any) {
-      console.error('❌ Error inicializando escáner:', err);
-      setCameraInitializing(false);
-      
-      if (err.message?.includes('facingMode') || err.message?.includes('environment')) {
-        console.log('🔄 Reintentando con cualquier cámara disponible...');
-        setTimeout(() => {
-          if (showScanner) {
-            stopScanner();
-            startScannerWithFallback();
-          }
-        }, 1000);
-      } else {
-        setScannerError('Error al iniciar la cámara.');
-        setIsScanning(false);
+      // Limpiar instancia previa
+      if (html5QrcodeRef.current) {
+        try {
+          const st = html5QrcodeRef.current.getState();
+          if (st === 2 || st === 3) await html5QrcodeRef.current.stop();
+          html5QrcodeRef.current.clear();
+        } catch (_) {}
+        html5QrcodeRef.current = null;
       }
-    }
-  }, [handleVerificar, showScanner]);
 
-  // Función de respaldo sin especificar cámara trasera
-  const startScannerWithFallback = useCallback(() => {
-    if (!scannerContainerRef.current) return;
-    
-    try {
-      setScannerError(null);
-      setIsScanning(true);
-      setCameraInitializing(true);
-      
-      const config = {
-        fps: 10,
-        qrbox: { width: 350, height: 350 },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: true,
-      };
-
-      scannerRef.current = new Html5QrcodeScanner(
-        "html5qr-scanner-container",
-        config,
-        false
-      );
+      const html5Qrcode = new Html5Qrcode('html5qr-scanner-container');
+      html5QrcodeRef.current = html5Qrcode;
 
       const onScanSuccess = (decodedText: string) => {
-        setCameraInitializing(false);
         const extractedIMEI = extractIMEIFromText(decodedText);
-        
         if (extractedIMEI) {
-          if (scannerRef.current) {
-            scannerRef.current.pause();
-          }
-          
-          setImei(extractedIMEI);
           stopScanner();
           setShowScanner(false);
-          
-          setTimeout(() => {
-            handleVerificar(extractedIMEI);
-          }, 500);
+          setImei(extractedIMEI);
+          setTimeout(() => handleVerificar(extractedIMEI), 300);
         } else {
-          setScannerError(`No se encontró IMEI válido.`);
-          
-          setTimeout(() => {
-            if (scannerRef.current) {
-              scannerRef.current.resume();
-            }
-          }, 2000);
+          setScannerError(`No se encontró IMEI en: "${decodedText.substring(0, 50)}"`);
         }
       };
 
-      const onScanError = (errorMessage: string) => {
-        setCameraInitializing(false);
-        console.log('⚠️ Error de escaneo (fallback):', errorMessage);
-        
-        if (!errorMessage.includes('NotFoundException') && 
-            !errorMessage.includes('NoMultiFormatReader')) {
-          setScannerError('Error: ' + errorMessage.substring(0, 100));
+      const onScanError = (msg: string) => {
+        // Ignorar errores normales de "no encontrado"
+        if (
+          !msg.includes('NotFoundException') &&
+          !msg.includes('NoMultiFormatReader') &&
+          !msg.includes('QR code parse error') &&
+          !msg.includes('No MultiFormat Readers')
+        ) {
+          console.warn('⚠️ Escáner:', msg);
         }
       };
 
-      setTimeout(() => setCameraInitializing(false), 3000);
-      scannerRef.current.render(onScanSuccess, onScanError);
+      // qrbox dinámico según ancho del contenedor
+      const containerWidth = scannerContainerRef.current.offsetWidth || 320;
+      const qrboxSize = Math.min(Math.floor(containerWidth * 0.82), 400);
 
+      const config = {
+        fps: 15,
+        qrbox: { width: qrboxSize, height: qrboxSize },
+        aspectRatio: 1.0,
+        showTorchButtonIfSupported: true,
+        showZoomSliderIfSupported: true,
+        defaultZoomValueIfSupported: 1.5,
+      };
+
+      // Intentar cámara trasera con 3 niveles de fallback
+      try {
+        // 1. Cámara trasera exacta
+        await html5Qrcode.start(
+          { facingMode: { exact: 'environment' } },
+          config, onScanSuccess, onScanError
+        );
+      } catch {
+        try {
+          // 2. Preferencia por trasera sin "exact"
+          await html5Qrcode.start(
+            { facingMode: 'environment' },
+            config, onScanSuccess, onScanError
+          );
+        } catch {
+          // 3. Última cámara de la lista (suele ser la trasera)
+          const cameras = await Html5Qrcode.getCameras();
+          if (cameras && cameras.length > 0) {
+            await html5Qrcode.start(
+              cameras[cameras.length - 1].id,
+              config, onScanSuccess, onScanError
+            );
+          } else {
+            throw new Error('No se encontraron cámaras disponibles');
+          }
+        }
+      }
     } catch (err: any) {
-      console.error('❌ Error en scanner de respaldo:', err);
-      setCameraInitializing(false);
-      setScannerError('Error al iniciar la cámara.');
+      console.error('❌ Error escáner:', err);
+      setScannerError(
+        err.message?.includes('Permission')
+          ? 'Permiso de cámara denegado. Actívalo en la configuración del navegador.'
+          : 'Error al iniciar la cámara. Verifique los permisos.'
+      );
       setIsScanning(false);
     }
   }, [handleVerificar]);
 
   // Detener escáner
-  const stopScanner = useCallback(() => {
-    if (scannerRef.current) {
+  const stopScanner = useCallback(async () => {
+    if (html5QrcodeRef.current) {
       try {
-        scannerRef.current.clear();
-      } catch (error) {
-        console.warn('Error al limpiar escáner:', error);
-      }
-      scannerRef.current = null;
+        const st = html5QrcodeRef.current.getState();
+        if (st === 2 || st === 3) await html5QrcodeRef.current.stop();
+        html5QrcodeRef.current.clear();
+      } catch (e) { console.warn('stopScanner:', e); }
+      html5QrcodeRef.current = null;
     }
     setIsScanning(false);
-    setCameraInitializing(false);
   }, []);
 
-  // Efecto para manejar escáner
+  // Arrancar/detener según showScanner
   useEffect(() => {
-    if (showScanner && scannerContainerRef.current) {
-      startScanner();
+    if (showScanner) {
+      const t = setTimeout(() => startScanner(), 100);
+      return () => clearTimeout(t);
     } else {
       stopScanner();
     }
-
-    return () => {
-      stopScanner();
-    };
-  }, [showScanner, startScanner, stopScanner]);
+    return () => { stopScanner(); };
+  }, [showScanner]);
 
   const handleClear = useCallback(() => {
     setImei('');
     setResultado(null);
     setError('');
     setScannerError(null);
-    if (showScanner) {
-      stopScanner();
-      setShowScanner(false);
-    }
+    if (showScanner) { stopScanner(); setShowScanner(false); }
     if (inputRef.current) inputRef.current.focus();
   }, [showScanner, stopScanner]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!/^\d$/.test(e.key) && 
-        e.key !== 'Backspace' && 
-        e.key !== 'Delete' && 
-        e.key !== 'Tab' &&
-        e.key !== 'Enter' &&
-        e.key !== 'ArrowLeft' &&
-        e.key !== 'ArrowRight' &&
-        e.key !== 'Home' &&
-        e.key !== 'End' &&
-        e.key !== 'Escape') {
+    if (
+      !/^\d$/.test(e.key) &&
+      !['Backspace','Delete','Tab','Enter','ArrowLeft','ArrowRight','Home','End','Escape'].includes(e.key)
+    ) {
       e.preventDefault();
     }
-    
-    if (e.key === 'Enter' && imei.length >= 10) {
-      handleVerificar();
-    }
+    if (e.key === 'Enter' && imei.length >= 10) handleVerificar();
   };
 
   const formatDate = useCallback((dateString?: string) => {
     if (!dateString) return 'No registrada';
     try {
       return new Date(dateString).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
-    } catch {
-      return 'Fecha inválida';
-    }
+    } catch { return 'Fecha inválida'; }
   }, []);
 
-  const formatIMEI = useCallback((imei: string) => {
-    const cleaned = imei.replace(/\D/g, '');
-    if (cleaned.length <= 15) return cleaned;
-    
-    const parts = [
-      cleaned.substring(0, 2),
-      cleaned.substring(2, 8),
-      cleaned.substring(8, 14),
-      cleaned.substring(14)
-    ].filter(part => part.length > 0);
-    
-    return parts.join('-');
+  const formatIMEI = useCallback((val: string) => {
+    const c = val.replace(/\D/g, '');
+    if (c.length <= 15) return c;
+    return [c.slice(0,2), c.slice(2,8), c.slice(8,14), c.slice(14)].filter(Boolean).join('-');
   }, []);
 
-  // Función para alternar escáner
   const handleToggleScanner = () => {
-    if (showScanner) {
-      stopScanner();
-      setShowScanner(false);
-    } else {
-      setShowScanner(true);
-    }
+    if (showScanner) { stopScanner(); setShowScanner(false); }
+    else setShowScanner(true);
   };
 
   return (
@@ -544,47 +356,18 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
               <h3>
                 <span role="img" aria-label="escáner">🔍</span>
                 Escáner de Códigos
-                {isMobile && <span className="mobile-indicator">📱 Cámara trasera</span>}
               </h3>
-              <button 
-                onClick={handleToggleScanner}
-                className="btn-close-camera"
-                aria-label="Cerrar escáner"
-              >
+              <button onClick={handleToggleScanner} className="btn-close-camera" aria-label="Cerrar escáner">
                 ×
               </button>
             </div>
-            
+
             <div className="camera-container-wrapper">
-              {cameraInitializing && (
-                <div className="camera-loading">
-                  <div className="spinner-large"></div>
-                  <p>Iniciando cámara trasera...</p>
-                </div>
-              )}
-              <div 
-                id="html5qr-scanner-container" 
+              <div
+                id="html5qr-scanner-container"
                 ref={scannerContainerRef}
                 className="html5qr-scanner"
-                style={{ display: cameraInitializing ? 'none' : 'block' }}
               />
-              
-              {/* Overlay con marco de escaneo personalizado */}
-              <div className="scan-frame-overlay">
-                <div className="corner-tr"></div>
-                <div className="corner-bl"></div>
-              </div>
-              <div className="scan-line"></div>
-              
-              <div className="camera-instructions">
-                <div className="instruction-main">
-                  <span>📷</span>
-                  <span>Apunta al código de barras o IMEI</span>
-                </div>
-                <div className="instruction-sub">
-                  El escaneo será automático
-                </div>
-              </div>
             </div>
 
             {scannerError && (
@@ -593,13 +376,10 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                 <span className="alert-text">{scannerError}</span>
               </div>
             )}
-            
+
             <div className="camera-actions">
-              <button
-                onClick={handleToggleScanner}
-                className="btn-cancel-camera"
-              >
-                <span role="img" aria-label="cancelar">←</span>
+              <button onClick={handleToggleScanner} className="btn-cancel-camera">
+                <span role="img" aria-label="volver">←</span>
                 Volver
               </button>
             </div>
@@ -609,15 +389,10 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         {!showScanner && (
           <>
             <div className="camera-trigger-section">
-              <button
-                onClick={handleToggleScanner}
-                className="btn-camera-trigger"
-                type="button"
-              >
+              <button onClick={handleToggleScanner} className="btn-camera-trigger" type="button">
                 <span role="img" aria-label="escáner" className="camera-icon">🔍</span>
-                {isMobile ? 'Escanear código con cámara trasera' : 'Usar escáner de códigos'}
+                {isMobile ? 'Escanear código' : 'Usar escáner de códigos'}
               </button>
-              
               <div className="divider-with-text">
                 <span>O ingresa manualmente</span>
               </div>
@@ -629,7 +404,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                   <span role="img" aria-label="número">🔢</span>
                   Número IMEI
                 </label>
-                
                 <div className="input-with-clear">
                   <input
                     id="imei-input"
@@ -649,20 +423,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                     inputMode="numeric"
                     autoComplete="off"
                   />
-                  
                   {imei && (
-                    <button
-                      type="button"
-                      onClick={handleClear}
-                      className="btn-clear-field"
-                      title="Limpiar campo"
-                      aria-label="Limpiar campo"
-                    >
+                    <button type="button" onClick={handleClear} className="btn-clear-field" aria-label="Limpiar">
                       ×
                     </button>
                   )}
                 </div>
-                
                 <div className="field-hint">
                   <span role="img" aria-label="consejo">💡</span>
                   Teclea *#06# en el teléfono para ver el IMEI
@@ -675,15 +441,9 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                 className={`btn-submit ${loading ? 'btn-loading' : ''}`}
               >
                 {loading ? (
-                  <>
-                    <span className="spinner"></span>
-                    VERIFICANDO...
-                  </>
+                  <><span className="spinner"></span>VERIFICANDO...</>
                 ) : (
-                  <>
-                    <span role="img" aria-label="verificar">✅</span>
-                    VERIFICAR IMEI
-                  </>
+                  <><span role="img" aria-label="verificar">✅</span>VERIFICAR IMEI</>
                 )}
               </button>
             </form>
@@ -698,9 +458,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
             {resultado && (
               <div className={`result-card ${resultado.valido ? 'result-valid' : 'result-invalid'}`}>
                 <div className="result-status">
-                  <div className="status-badge">
-                    {resultado.valido ? '✅' : '❌'}
-                  </div>
+                  <div className="status-badge">{resultado.valido ? '✅' : '❌'}</div>
                   <div className="status-text">
                     <h3 className="status-title">
                       {resultado.valido ? 'IMEI AUTORIZADO' : 'IMEI NO REGISTRADO'}
@@ -708,34 +466,23 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                     <p className="status-imei">{formatIMEI(imei)}</p>
                   </div>
                 </div>
-                
+
                 <div className="result-info">
                   {resultado.valido ? (
                     <>
                       <div className="info-row">
-                        <span className="info-label">
-                          <span role="img" aria-label="persona">👤</span>
-                          Propietario:
-                        </span>
+                        <span className="info-label"><span role="img" aria-label="persona">👤</span>Propietario:</span>
                         <span className="info-value">{resultado.personaNombre || 'No asignado'}</span>
                       </div>
-                      
                       {resultado.empresaNombre && (
                         <div className="info-row">
-                          <span className="info-label">
-                            <span role="img" aria-label="empresa">🏢</span>
-                            Empresa:
-                          </span>
+                          <span className="info-label"><span role="img" aria-label="empresa">🏢</span>Empresa:</span>
                           <span className="info-value">{resultado.empresaNombre}</span>
                         </div>
                       )}
-                      
                       {resultado.fechaRegistro && (
                         <div className="info-row">
-                          <span className="info-label">
-                            <span role="img" aria-label="calendario">📅</span>
-                            Registrado:
-                          </span>
+                          <span className="info-label"><span role="img" aria-label="fecha">📅</span>Registrado:</span>
                           <span className="info-value">{formatDate(resultado.fechaRegistro)}</span>
                         </div>
                       )}
@@ -746,12 +493,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                     </div>
                   )}
                 </div>
-                
-                <button 
-                  onClick={handleClear} 
-                  className="btn-reset"
-                  type="button"
-                >
+
+                <button onClick={handleClear} className="btn-reset" type="button">
                   <span role="img" aria-label="reiniciar">🔄</span>
                   Nueva Verificación
                 </button>
