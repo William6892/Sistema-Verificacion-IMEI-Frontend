@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { personasService } from '../../services/personasService';
 import { empresasService } from '../../services/empresasService';
 import PersonaForm from './PersonaForm';
+import PersonaDetail from './PersonaDetail';
 import { authService } from '../../services/authService';
 
 interface PersonasListProps { userRole: string; }
@@ -42,6 +43,7 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
   const [empresaFilter, setEmpresaFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm]         = useState(false);
   const [editingPersona, setEditingPersona] = useState<any>(null);
+  const [selectedPersona, setSelectedPersona] = useState<any>(null);
   const [searchFocused, setSearchFocused] = useState(false);
   const [hovRow, setHovRow]             = useState<number | null>(null);
   const [primaryHov, setPrimaryHov]     = useState(false);
@@ -83,6 +85,13 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ width: '44px', height: '44px', border: `3px solid ${tk.blueLight}`, borderTop: `3px solid ${tk.blue}`, borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
       <span style={{ color: tk.textSub }}>Cargando personas...</span>
+    </div>
+  );
+
+  // ── Detail view ──
+  if (selectedPersona) return (
+    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+      <PersonaDetail personaId={selectedPersona.id} onBack={() => setSelectedPersona(null)} />
     </div>
   );
 
@@ -237,7 +246,7 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
                         {/* Acciones */}
                         <td style={{ padding: '14px 18px' }}>
                           <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                            <HovBtn base={{ ...actionBase, background: tk.blueLight, color: tk.blue, border: `1px solid ${tk.blueBorder}` }} hover={{ background: '#bae7ff', transform: 'translateY(-1px)' }}>
+                            <HovBtn base={{ ...actionBase, background: tk.blueLight, color: tk.blue, border: `1px solid ${tk.blueBorder}` }} hover={{ background: '#bae7ff', transform: 'translateY(-1px)' }} onClick={() => setSelectedPersona(persona)}>
                               👁️ Ver
                             </HovBtn>
                             {isAdmin && (
