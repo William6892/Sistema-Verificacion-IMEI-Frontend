@@ -483,14 +483,6 @@ const Login: React.FC = () => {
             marginBottom: isMobile ? '24px' : '36px',
             textAlign: 'center',
           }}>
-            <h2 style={{
-              fontSize: isMobile ? '24px' : isTablet ? '28px' : '32px',
-              fontWeight: 700,
-              color: SAMSUNG_COLORS.text,
-              marginBottom: '8px',
-              letterSpacing: '-0.5px',
-              lineHeight: 1.2,
-            }}>Acceso Seguro</h2>
             <p style={{
               fontSize: isMobile ? '14px' : isTablet ? '15px' : '16px',
               color: SAMSUNG_COLORS.textLight,
