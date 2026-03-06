@@ -159,14 +159,15 @@ const s = {
   tableWrapper: {
     background: token.white,
     borderRadius: token.radius,
-    overflow: 'hidden',
     boxShadow: token.shadow,
     border: `1px solid ${token.border}`,
+    overflowX: 'auto' as const,
   },
 
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
+    minWidth: '700px',
   },
 
   th: {
@@ -228,54 +229,57 @@ const s = {
 
   actionsContainer: {
     display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
+    gap: '6px',
+    alignItems: 'center',
   },
 
   btnView: (hov: boolean): React.CSSProperties => ({
-    padding: '8px 14px',
+    padding: '7px 14px',
     borderRadius: token.radiusSm,
     border: `1px solid ${token.greenBorder}`,
     background: hov ? '#d9f7be' : token.greenBg,
     color: token.green,
     fontSize: '13px',
-    fontWeight: 500,
+    fontWeight: 600,
     cursor: 'pointer',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s',
     transform: hov ? 'translateY(-1px)' : 'none',
   }),
 
   btnEdit: (hov: boolean): React.CSSProperties => ({
-    padding: '8px 14px',
+    padding: '7px 14px',
     borderRadius: token.radiusSm,
     border: `1px solid ${token.blueBorder}`,
     background: hov ? '#bae7ff' : token.blueLight,
     color: token.blue,
     fontSize: '13px',
-    fontWeight: 500,
+    fontWeight: 600,
     cursor: 'pointer',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s',
     transform: hov ? 'translateY(-1px)' : 'none',
   }),
 
   btnDelete: (hov: boolean): React.CSSProperties => ({
-    padding: '8px 14px',
+    padding: '7px 14px',
     borderRadius: token.radiusSm,
     border: `1px solid ${token.redBorder}`,
     background: hov ? token.redBorder : token.redBg,
     color: token.red,
     fontSize: '13px',
-    fontWeight: 500,
+    fontWeight: 600,
     cursor: 'pointer',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s',
     transform: hov ? 'translateY(-1px)' : 'none',
   }),
@@ -535,8 +539,8 @@ const EmpresasList: React.FC<EmpresasListProps> = ({ userRole }) => {
             <tr>
               <th style={{ ...s.th, width: '80px' }}>ID</th>
               <th style={s.th}>Nombre</th>
-              <th style={{ ...s.th, width: '180px' }}>Fecha Creación</th>
-              <th style={{ ...s.th, width: '280px' }}>Acciones</th>
+              <th style={{ ...s.th, width: '160px' }}>Fecha Creación</th>
+              <th style={{ ...s.th, width: '240px' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>

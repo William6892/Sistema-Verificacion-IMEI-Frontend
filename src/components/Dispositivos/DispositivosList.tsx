@@ -79,10 +79,10 @@ const Btn = ({
 
 // ─── Shared button bases ──────────────────────────────────────────────────────
 const actionBase: React.CSSProperties = {
-  padding: '8px 12px', borderRadius: tk.radiusSm, border: 'none',
+  padding: '7px 11px', borderRadius: tk.radiusSm, border: 'none',
   fontSize: '12px', fontWeight: 600, cursor: 'pointer',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  gap: '5px', transition: 'all 0.2s', whiteSpace: 'nowrap', flex: 1,
+  gap: '4px', transition: 'all 0.2s', whiteSpace: 'nowrap',
 };
 
 const btnStyles = {
@@ -182,7 +182,9 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
   const formatDate = (ds: string) => {
     if (!ds) return '—';
     try {
-      const d = new Date(ds);
+      // Strip time component if present to avoid timezone shifts
+      const dateOnly = ds.split('T')[0];
+      const d = new Date(dateOnly + 'T00:00:00');
       if (isNaN(d.getTime())) return '—';
       return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
     } catch { return '—'; }
@@ -418,15 +420,24 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
 
             {/* Scrollable table */}
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '960px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
                 <thead>
                   <tr style={{ background: tk.bg }}>
-                    {['ID', 'IMEI', 'Persona', 'Empresa', 'Fecha', 'Estado', 'Acciones'].map(h => (
-                      <th key={h} style={{
+                    {([
+                      { label: 'ID',       width: '60px'  },
+                      { label: 'IMEI',     width: '200px' },
+                      { label: 'Persona',  width: '200px' },
+                      { label: 'Empresa',  width: '160px' },
+                      { label: 'Fecha',    width: '120px' },
+                      { label: 'Estado',   width: '110px' },
+                      { label: 'Acciones', width: '240px' },
+                    ] as { label: string; width: string }[]).map(({ label, width }) => (
+                      <th key={label} style={{
                         padding: '14px 18px', textAlign: 'left', fontWeight: 700,
                         color: '#444', borderBottom: `2px solid ${tk.border}`,
-                        fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.6px', whiteSpace: 'nowrap',
-                      }}>{h}</th>
+                        fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.6px',
+                        whiteSpace: 'nowrap', width,
+                      }}>{label}</th>
                     ))}
                   </tr>
                 </thead>
@@ -527,25 +538,21 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
                         {/* Acciones */}
                         <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
                           {isAdmin ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '130px' }}>
-                              <div style={{ display: 'flex', gap: '5px' }}>
-                                <Btn base={btnStyles.view} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)} title="Ver detalles">👁️ Ver</Btn>
-                                <Btn base={btnStyles.edit} hoverStyle={btnHoverStyles.edit} onClick={() => setEditingDev(dev)} title="Editar">✏️ Editar</Btn>
-                              </div>
-                              <div style={{ display: 'flex', gap: '5px' }}>
-                                <Btn
-                                  base={dev.activo ? btnStyles.deact : btnStyles.activ}
-                                  hoverStyle={dev.activo ? btnHoverStyles.deact : btnHoverStyles.activ}
-                                  onClick={() => handleToggle(dev.id, !dev.activo)}
-                                  title={dev.activo ? 'Desactivar' : 'Activar'}
-                                >
-                                  {dev.activo ? '⏸ Desact.' : '▶️ Activar'}
-                                </Btn>
-                                <Btn base={btnStyles.del} hoverStyle={btnHoverStyles.del} onClick={() => handleDelete(dev.id)} title="Eliminar">🗑️ Eliminar</Btn>
-                              </div>
+                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap', minWidth: '220px' }}>
+                              <Btn base={btnStyles.view} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)} title="Ver detalles">👁️ Ver</Btn>
+                              <Btn base={btnStyles.edit} hoverStyle={btnHoverStyles.edit} onClick={() => setEditingDev(dev)} title="Editar">✏️ Editar</Btn>
+                              <Btn
+                                base={dev.activo ? btnStyles.deact : btnStyles.activ}
+                                hoverStyle={dev.activo ? btnHoverStyles.deact : btnHoverStyles.activ}
+                                onClick={() => handleToggle(dev.id, !dev.activo)}
+                                title={dev.activo ? 'Desactivar' : 'Activar'}
+                              >
+                                {dev.activo ? '⏸ Desact.' : '▶️ Activar'}
+                              </Btn>
+                              <Btn base={btnStyles.del} hoverStyle={btnHoverStyles.del} onClick={() => handleDelete(dev.id)} title="Eliminar">🗑️ Elim.</Btn>
                             </div>
                           ) : (
-                            <Btn base={{ ...btnStyles.view, flex: 'none', width: '100%' }} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)}>👁️ Ver detalles</Btn>
+                            <Btn base={{ ...btnStyles.view, flex: 'none' }} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)}>👁️ Ver detalles</Btn>
                           )}
                         </td>
                       </tr>
