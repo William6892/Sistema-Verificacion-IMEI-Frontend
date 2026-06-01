@@ -4,6 +4,7 @@ import { personasService } from '../../services/personasService';
 import { empresasService } from '../../services/empresasService';
 import PersonaForm from './PersonaForm';
 import PersonaDetail from './PersonaDetail';
+import './Personas.css';
 import { authService } from '../../services/authService';
 interface PersonasListProps { userRole: string; }
 

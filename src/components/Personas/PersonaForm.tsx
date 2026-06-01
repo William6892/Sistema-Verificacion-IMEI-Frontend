@@ -1,6 +1,7 @@
 // src/components/Personas/PersonaForm.tsx
 import React, { useState, useEffect } from 'react';
 import { empresasService } from '../../services/empresasService';
+import './Personas.css';
 import { personasService } from '../../services/personasService';
 import { authService } from '../../services/authService';
 

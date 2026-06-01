@@ -5,6 +5,8 @@ import { personasService } from '../../services/personasService';
 import { empresasService } from '../../services/empresasService';
 import { dispositivosService } from '../../services/dispositivosService';
 import { authService } from '../../services/authService';
+import './Personas.css';
+
 
 interface PersonaDetailProps { onBack?: () => void; personaId?: number; }
 
