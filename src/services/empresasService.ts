@@ -18,8 +18,7 @@ export interface PersonaEmpresa {
 
 export const empresasService = {
   // Obtener todas las empresas - SOLO LA RUTA QUE FUNCIONA
-  getEmpresas: async (): Promise<Empresa[]> => {
-    console.log('🔍 Obteniendo empresas desde /api/empresas...');
+  getEmpresas: async (): Promise<Empresa[]> => {    
     const response = await api.get('/api/empresas');
     return response.data;
   },

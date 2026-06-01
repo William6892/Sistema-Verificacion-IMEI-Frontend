@@ -19,8 +19,7 @@ class DispositivosService {
     page: number; 
     limit: number; 
     totalPages: number 
-  }> {
-    console.log('🔍 Buscando dispositivos desde /api/Admin/dispositivos');
+  }> {    
     const response = await api.get('/api/Admin/dispositivos', { params });
     return response.data;
   }
