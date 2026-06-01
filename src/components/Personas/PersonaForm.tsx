@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { empresasService } from '../../services/empresasService';
 import { personasService } from '../../services/personasService';
 import { authService } from '../../services/authService';
-import './Personas.css';
 
 interface PersonaFormProps {
   personaToEdit?: any;
