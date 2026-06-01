@@ -55,7 +55,7 @@ export interface User {
   id: number;
   email: string;
   nombre: string;
-  rol: 'User' | 'Admin' | 'SuperAdmin';
+  rol: 'User' | 'Admin';
   token: string;
 }
 
