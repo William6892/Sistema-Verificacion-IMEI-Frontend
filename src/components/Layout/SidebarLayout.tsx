@@ -160,11 +160,11 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
   useEffect(() => {
     const role = user?.rol || 'Usuario';
     const all: MenuItem[] = [
-      { id: 'inicio',       label: 'Inicio',        icon: '🏠', roles: ['Admin','Usuario'] },
+      { id: 'inicio',       label: 'Inicio',        icon: '🏠', roles: ['Admin','Supervisor','Usuario'] },
       { id: 'empresas',     label: 'Empresas',       icon: '🏢', roles: ['Admin'] },
-      { id: 'personas',     label: 'Personas',       icon: '👥', roles: ['Admin'] },
-      { id: 'dispositivos', label: 'Dispositivos',   icon: '📲', roles: ['Admin'] },
-      { id: 'verificacion', label: 'Verificar IMEI', icon: '🔍', roles: ['Admin','Usuario'] },
+      { id: 'personas',     label: 'Personas',       icon: '👥', roles: ['Admin','Supervisor'] },  // ✅ Supervisor puede ver
+      { id: 'dispositivos', label: 'Dispositivos',   icon: '📲', roles: ['Admin','Supervisor'] },  // ✅ Supervisor puede ver
+      { id: 'verificacion', label: 'Verificar IMEI', icon: '🔍', roles: ['Admin','Supervisor','Usuario'] },
       { id: 'usuarios',     label: 'Usuarios',       icon: '👤', roles: ['Admin'] },
     ];
     setMenuItems(all.filter(i => i.roles.includes(role)));
