@@ -1,7 +1,6 @@
 // src/components/Personas/PersonaForm.tsx
 import React, { useState, useEffect } from 'react';
 import { empresasService } from '../../services/empresasService';
-import './Personas.css';
 import { personasService } from '../../services/personasService';
 import { authService } from '../../services/authService';
 
@@ -123,9 +122,9 @@ const PersonaForm: React.FC<PersonaFormProps> = ({ personaToEdit, onSuccess, onC
 
         {/* Success */}
         {success && (
-          <div className="personas-badge-status active" style={{ display: 'flex', width: '100%', padding: '14px 20px', boxSizing: 'border-box', borderRadius: 'var(--radius-md)', marginBottom: '24px', fontSize: '14px' }}>
-            <span className="personas-status-dot" />
-            <strong style={{ marginLeft: '4px' }}>{success}</strong>
+          <div className="personas-success-banner">
+            <span className="personas-status-dot" style={{ background: '#10b981' }} />
+            <strong>{success}</strong>
           </div>
         )}
 

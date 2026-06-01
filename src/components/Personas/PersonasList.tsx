@@ -1,11 +1,30 @@
 // src/components/Personas/PersonasList.tsx
 import React, { useState, useEffect } from 'react';
+import { 
+  Users, UserPlus, Search, Building2, Copy, Check, 
+  Eye, Edit2, Trash2, Phone, RotateCw 
+} from 'lucide-react';
 import { personasService } from '../../services/personasService';
 import { empresasService } from '../../services/empresasService';
 import PersonaForm from './PersonaForm';
 import PersonaDetail from './PersonaDetail';
-import './Personas.css';
 import { authService } from '../../services/authService';
+
+const getAvatarGradient = (nombre: string) => {
+  const code = (nombre || 'P').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const gradients = [
+    'linear-gradient(135deg, #1428A0 0%, #007BFF 100%)', // Samsung Royal Blue
+    'linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 100%)', // Lavender to Violet
+    'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)', // Pink
+    'linear-gradient(135deg, #10b981 0%, #34d399 100%)', // Emerald
+    'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', // Amber
+    'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)', // Cyan
+    'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', // Blue
+    'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)', // Purple
+  ];
+  return gradients[code % gradients.length];
+};
+
 interface PersonasListProps { userRole: string; }
 
 const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
@@ -51,31 +70,28 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
   });
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Eliminar esta persona?')) return;
+    if (!window.confirm('¿Estás seguro de eliminar esta persona?')) return;
     try { await personasService.deletePersona(id); loadData(); }
     catch { alert('Error al eliminar la persona'); }
   };
 
   const handleFormSuccess = () => { setShowForm(false); setEditingPersona(null); loadData(); };
 
-  // ── Loading ──
   if (loading) return (
     <div className="personas-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '16px' }}>
-      <div style={{ width: '44px', height: '44px', border: `3px solid var(--primary-light)`, borderTop: `3px solid var(--primary)`, borderRadius: '50%', animation: 'pulseDot 1s linear infinite' }} />
-      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Cargando personas...</span>
+      <div style={{ width: '44px', height: '44px', border: `3px solid var(--border-light)`, borderTop: `3px solid var(--primary)`, borderRadius: '50%', animation: 'pulseDot 1s linear infinite' }} />
+      <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Cargando información...</span>
     </div>
   );
 
-  // ── Detail view ──
   if (selectedPersona) return (
     <div className="personas-wrapper">
       <PersonaDetail personaId={selectedPersona.id} onBack={() => setSelectedPersona(null)} />
     </div>
   );
 
-  // ── Form view ──
   if (showForm) return (
-    <div className="personas-wrapper" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="personas-wrapper">
       <PersonaForm personaToEdit={editingPersona} onSuccess={handleFormSuccess} onCancel={() => { setShowForm(false); setEditingPersona(null); }} />
       <div style={{ marginTop: '24px', textAlign: 'center' }}>
         <button className="personas-btn personas-btn-secondary" onClick={() => setShowForm(false)}>
@@ -86,26 +102,29 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
   );
 
   return (
-    <div className="personas-wrapper personas-container">
+    <div className="personas-wrapper">
       {/* ── Header ── */}
       <div className="personas-header-card">
         <div className="personas-header-info">
-          <div className="personas-header-icon">👥</div>
+          <div className="personas-header-icon">
+            <Users size={28} />
+          </div>
           <div className="personas-header-title">
             <h1>Gestión de Personas</h1>
-            <p>Visualiza y administra todas las personas y contactos registrados en el sistema</p>
+            <p>Visualiza y administra todos los contactos del sistema</p>
           </div>
         </div>
 
         {isAdmin && (
           <button className="personas-btn personas-btn-primary" onClick={() => { setEditingPersona(null); setShowForm(true); }}>
-            <span style={{ fontSize: '16px', marginRight: '4px' }}>+</span> Registrar Persona
+            <UserPlus size={18} />
+            <span>Registrar Persona</span>
           </button>
         )}
       </div>
 
-      {/* Stat pills */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+      {/* ── Estadísticas ── */}
+      <div className="personas-stats-container">
         <div className="personas-stat-pill">
           <div className="personas-stat-value">{personas.length}</div>
           <div>
@@ -114,28 +133,25 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
           </div>
         </div>
         <div className="personas-stat-pill">
-          <div className="personas-stat-value" style={{ background: 'var(--secondary)' }}>{filtered.length}</div>
+          <div className="personas-stat-value">{filtered.length}</div>
           <div>
             <div className="personas-stat-label">Coincidencias</div>
-            <div className="personas-stat-text">Filtradas</div>
+            <div className="personas-stat-text">Filtradas actualmente</div>
           </div>
         </div>
       </div>
 
-      {/* ── Error ── */}
       {error && (
-        <div className="personas-error-banner">
-          <span>⚠️</span>
-          <span>{error}</span>
-          <button className="personas-error-close" onClick={() => setError('')}>×</button>
+        <div className="personas-error-banner" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between' }}>
+          <span>⚠️ {error}</span>
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>×</button>
         </div>
       )}
 
-      {/* ── Filters ── */}
+      {/* ── Filtros ── */}
       <div className="personas-filters-card">
-        {/* Search */}
         <div className="personas-search-wrapper">
-          <span className="personas-search-icon">🔍</span>
+          <Search size={18} className="personas-search-icon" />
           <input
             type="text"
             placeholder="Buscar por nombre o identificación..."
@@ -143,12 +159,8 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
             onChange={e => setSearchTerm(e.target.value)}
             className="personas-search-input"
           />
-          {searchTerm && (
-            <button className="personas-search-clear" onClick={() => setSearchTerm('')}>×</button>
-          )}
         </div>
 
-        {/* Company select */}
         <select
           value={empresaFilter}
           onChange={e => setEmpresaFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
@@ -159,11 +171,11 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
         </select>
       </div>
 
-      {/* ── Table card ── */}
+      {/* ── Tabla ── */}
       <div className="personas-table-card">
         {filtered.length > 0 ? (
           <>
-            <div className="personas-table-responsive">
+            <div style={{ overflowX: 'auto' }}>
               <table className="personas-table">
                 <thead className="personas-table-thead">
                   <tr>
@@ -171,7 +183,7 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
                     <th className="personas-table-th">Identificación</th>
                     <th className="personas-table-th">Empresa</th>
                     <th className="personas-table-th">Contacto</th>
-                    <th className="personas-table-th" style={{ width: '220px' }}>Acciones</th>
+                    <th className="personas-table-th" style={{ width: '150px', textAlign: 'center' }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,20 +193,19 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
 
                     return (
                       <tr key={persona.id} className="personas-table-row">
-                        {/* Persona */}
+                        
+                        {/* Persona Info */}
                         <td className="personas-table-td">
                           <div className="personas-cell-profile">
-                            <div className="personas-cell-avatar">
-                              {avatarInit}
-                            </div>
+                            <div className="personas-cell-avatar" style={{ background: getAvatarGradient(persona.nombre) }}>{avatarInit}</div>
                             <div>
                               <div className="personas-cell-name">{persona.nombre || 'Sin nombre'}</div>
-                              <div className="personas-cell-sub">ID del sistema: #{persona.id}</div>
+                              <div className="personas-cell-sub">ID: #{persona.id}</div>
                             </div>
                           </div>
                         </td>
 
-                        {/* Identificación */}
+                        {/* ID Document */}
                         <td className="personas-table-td">
                           <span className="personas-badge-id">
                             {persona.identificacion || 'N/A'}
@@ -204,7 +215,7 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
                                 onClick={() => copyToClipboard(persona.identificacion, persona.id)}
                                 title={isCopied ? '¡Copiado!' : 'Copiar documento'}
                               >
-                                {isCopied ? '✓' : '📋'}
+                                {isCopied ? <Check size={14} /> : <Copy size={14} />}
                               </button>
                             )}
                           </span>
@@ -212,8 +223,8 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
 
                         {/* Empresa */}
                         <td className="personas-table-td">
-                          <div className={`personas-badge-status ${persona.activo !== false ? 'active' : 'inactive'}`}>
-                            <span className="personas-status-dot" />
+                          <div className="personas-badge-status">
+                            <span className="personas-status-dot" style={{ background: persona.activo !== false ? 'var(--primary)' : 'var(--text-muted)' }} />
                             <span style={{ fontWeight: 600 }}>{persona.empresaNombre}</span>
                           </div>
                         </td>
@@ -221,28 +232,29 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
                         {/* Contacto */}
                         <td className="personas-table-td">
                           <span className="personas-cell-contact">
-                            📞 {persona.telefono || 'Sin teléfono'}
+                            <Phone size={14} /> {persona.telefono || 'Sin teléfono'}
                           </span>
                         </td>
 
                         {/* Acciones */}
                         <td className="personas-table-td">
-                          <div className="personas-actions-wrapper">
-                            <button className="personas-action-btn view" onClick={() => setSelectedPersona(persona)} title="Ver detalles completos">
-                              👁️ Ver
+                          <div className="personas-actions-wrapper" style={{ justifyContent: 'center' }}>
+                            <button className="personas-action-btn view" onClick={() => setSelectedPersona(persona)} title="Ver detalles">
+                              <Eye size={16} />
                             </button>
                             {isAdmin && (
-                              <button className="personas-action-btn edit" onClick={() => { setEditingPersona(persona); setShowForm(true); }} title="Editar información">
-                                ✏️ Editar
-                              </button>
-                            )}
-                            {isAdmin && (
-                              <button className="personas-action-btn delete" onClick={() => handleDelete(persona.id)} title="Eliminar registro">
-                                🗑️ Eliminar
-                              </button>
+                              <>
+                                <button className="personas-action-btn edit" onClick={() => { setEditingPersona(persona); setShowForm(true); }} title="Editar">
+                                  <Edit2 size={16} />
+                                </button>
+                                <button className="personas-action-btn delete" onClick={() => handleDelete(persona.id)} title="Eliminar">
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
                             )}
                           </div>
                         </td>
+
                       </tr>
                     );
                   })}
@@ -252,27 +264,26 @@ const PersonasList: React.FC<PersonasListProps> = ({ userRole }) => {
 
             {/* Footer */}
             <div className="personas-table-footer">
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Total: <strong>{personas.length}</strong> personas registradas
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                Total: <strong>{personas.length}</strong> personas
               </span>
-              <button className="personas-btn personas-btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }} onClick={loadData}>
-                🔄 Actualizar lista
+              <button className="personas-btn personas-btn-secondary" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={loadData}>
+                <RotateCw size={14} /> Actualizar
               </button>
             </div>
           </>
         ) : (
-          /* Empty state */
-          <div className="personas-empty-state">
-            <div className="personas-empty-icon">👤</div>
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Users size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
             <h3>No se encontraron personas</h3>
-            <p>
+            <p style={{ maxWidth: '400px', margin: '8px auto 24px' }}>
               {searchTerm || empresaFilter !== 'all' 
                 ? 'Prueba modificando tus filtros o borrando el término de búsqueda.' 
                 : 'Aún no se han registrado personas en el sistema.'}
             </p>
             {isAdmin && !searchTerm && empresaFilter === 'all' && (
-              <button className="personas-btn personas-btn-primary" onClick={() => { setEditingPersona(null); setShowForm(true); }}>
-                + Registrar primera persona
+              <button className="personas-btn personas-btn-primary" style={{ margin: '0 auto' }} onClick={() => { setEditingPersona(null); setShowForm(true); }}>
+                <UserPlus size={18} /> Registrar primera persona
               </button>
             )}
           </div>
