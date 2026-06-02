@@ -1,0 +1,75 @@
+[33m9e13166[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Correcion nueva
+[33mbaf6b65[m Correcion en verificacion imei para consultar 4 ultimos digitos
+[33m5525f0e[m Css
+[33mfe1d1a1[m Correcion en css de personas components
+[33ma3f810b[m Css Add in personas components
+[33mf5053fe[m Eliminar console logs para borrar registros
+[33m7d8e67c[m Fix: Eliminar import de Personas.css no existente
+[33m24836a8[m Supervisor autorizado y correcion de imports
+[33mfdf2611[m Supervisor autorizado
+[33md0cc2be[m Correcion en api.ts en console.log para no exponer variables e informacion
+[33m17f89df[m[33m ([m[1;32mversion-anterior[m[33m)[m refactor: Dashboard pages , full screen use
+[33m7fcaf78[m refactor: inline CSS into personaDetail and PeronsaList
+[33m4e9f908[m refactor: inline CSS into components, unify design system empresas and dispositivos
+[33m819e6bf[m refactor: inline CSS into components, unify design system
+[33m338cedc[m mejorar escaner IMEI en movil
+[33m7880ea7[m 📱 MEJORA: Escáner IMEI más grande y con cámara trasera default
+[33m6e070dc[m style: rediseñar sidebar con fondo blanco y botones más grandes claude
+[33m937acf0[m feat: aplicar tema azul Samsung al sidebar1.1
+[33m0af8850[m feat: aplicar tema azul Samsung al sidebar1.
+[33me8e07a5[m style: actualizar diseño del sidebar a versión blanca con botones grandes
+[33m7b04470[m feat: aplicar tema azul Samsung al sidebar
+[33m2eaf9af[m Reorganizar botones de acciones en DispositivosList
+[33mcaaaeec[m remove .env files from repo and add to gitignore
+[33m187143c[m feat: protege rutas básico - redirige a login si no hay token
+[33mb762f64[m style: mejora interfaz de cámara y scanner en VerificacionIMEI
+[33m80171ad[m style: aplica paleta azul Samsung a VerificacionIMEI.css
+[33m5b26e34[m fix: corrige personasService para usar prefijo /api/
+[33mf3772e4[m fix: corrige rutas API - todas ahora usan /api/
+[33m7539bf4[m fix: corrige conexión con backend y rutas API
+[33md8d8165[m Refacto page login in colors and routes 1.1
+[33m99b1a05[m Refacto page login in colors and routes
+[33m88f481b[m fix(UserManagement): corregir URLs de API para usar backend en producción
+[33md2c8524[m fix: configurar URL de API para producción en autservice
+[33m6f59f3f[m fix: configurar URL de API para producción
+[33m88a6aa8[m Limpieza de consolelogs expuestas
+[33me1a3c0c[m refactor: Verificacion..
+[33m1363949[m Installing depedences
+[33m5fa7afc[m refactor: Verificacion use backend cansado1
+[33mfa2e039[m refactor: Verificacion use backend cansado
+[33mdcdea5f[m refactor: Verificacion use backend 1.1
+[33m380774d[m refactor: Verificacion use backend .1.1
+[33m70e6517[m refactor: Verificacion use backend
+[33m207d0c9[m refactor: verificacion.jsx
+[33m5985634[m refactor: verificacion.css
+[33m376ad68[m refactor: Login
+[33m965542f[m feat: actualizar sidebar para ser responsive y correcion boton cerrar sesion
+[33m2c0b033[m refactor: Login.html
+[33m103891d[m feat: actualizar componente Login - diseño premium Samsung sin recuperación de contraseña
+[33m8551c26[m refactor: VerificacionIMEI.tsx - Reemplazado html5-qrcode con cámara nativa
+[33medf4ecc[m fix: Eliminado bucle infinito en Dashboard.tsx
+[33m1f4cb50[m fix: Corregido bucle infinito de redirecciones en MainLayout
+[33mef597fa[m Mejora del front en dispositivos y personas
+[33m66e41b7[m Css corregido in Form
+[33m27bedc2[m Css mejorado en dispositivos pages
+[33mfb12aa9[m Api correccion message console
+[33m45b0eb4[m fix: correcion de color en css para pagina de verificacion v.1.1.6
+[33m37cd0ee[m fix: correcion de color en css para pagina de verificacion v.1.1.5
+[33m2969dce[m fix: correcion de color en css para pagina de verificacion v.1.1.4
+[33mc47b1a5[m fix: correcion de color en css para pagina de verificacion v.1.1.3
+[33m54e4350[m fix: correcion de color en css para pagina de verificacion v.1.1.2
+[33m29b4cb5[m fix: correcion de color en css para pagina de verificacion v.1.1.1
+[33mee815f0[m fix: correcion de color en css para pagina de verificacion
+[33m8977ddd[m feat: configuración inicial verificacion imei
+[33m59e6f46[m fix: corrección de parámetros en html5-qrcode scanner
+[33m34a0399[m fix: eliminar credenciales demo y mejorar seguridad
+[33m40e9578[m fix: corrección de tipos TypeScript en estilos de Login
+[33md6fc65f[m feat: configuración inicial proyecto React + TypeScript
+[33m2036eb0[m Fix: Correcion pagina de login y verificacion imei
+[33m8f82120[m feat: Responsive camera scanner with mobile optimization and API timeout fix
+[33m5cdaa9a[m Fix: Increase API timeout to 2min and improve error handling for Render cold starts
+[33m186a6ba[m Change to HashRouter for production
+[33mebe647b[m Fix API URL configuration for production
+[33m461fcd9[m Update API URL to production and improve error handling
+[33m25ce52b[m Initial commit - Frontend React
+[33ma379377[m Initialize project using Create React App
