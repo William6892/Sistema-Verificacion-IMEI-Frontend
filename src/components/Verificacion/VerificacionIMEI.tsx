@@ -8,6 +8,19 @@ interface VerificacionIMEIProps {
   userEmpresaId?: number;
 }
 
+interface DispositivoResultado {
+  dispositivoId?: number;
+  personaNombre?: string;
+  personaId?: number;
+  empresaNombre?: string;
+  empresaId?: number;
+  fechaRegistro?: string;
+  modelo?: string;
+  marca?: string;
+  estado?: string;
+  imei?: string;
+}
+
 interface ResultadoVerificacion {
   valido: boolean;
   dispositivoId?: number;
@@ -20,10 +33,16 @@ interface ResultadoVerificacion {
   modelo?: string;
   marca?: string;
   estado?: string;
+  // Para búsqueda por últimos 4 dígitos puede venir lista
+  dispositivos?: DispositivoResultado[];
 }
+
+type SearchMode = 'full' | 'last4';
 
 const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpresaId }) => {
   const [imei, setImei] = useState('');
+  const [last4, setLast4] = useState('');
+  const [searchMode, setSearchMode] = useState<SearchMode>('full');
   const [resultado, setResultado] = useState<ResultadoVerificacion | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,6 +54,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const last4Ref = useRef<HTMLInputElement>(null);
 
   // Detectar móvil
   useEffect(() => {
@@ -51,13 +71,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     };
   }, []);
 
-  // Verificación IMEI contra API
-  const verificarIMEI = async (imei: string): Promise<ResultadoVerificacion> => {
-    const cleanedIMEI = imei.replace(/\D/g, '');
-    if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
-      return { valido: false, mensaje: 'IMEI inválido. Debe tener entre 10 y 20 dígitos' };
-    }
-
+  // Verificación IMEI completo contra API
+  const verificarIMEICompleto = async (cleanedIMEI: string): Promise<ResultadoVerificacion> => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -121,7 +136,119 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
   };
 
+  // Búsqueda por últimos 4 dígitos contra API
+  const buscarPorUltimos4 = async (digits: string): Promise<ResultadoVerificacion> => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        return { valido: false, mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.' };
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(`${API_URL}/api/verificacion/buscar-por-ultimos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ ultimosDigitos: digits }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      let responseText = '';
+      try { responseText = await response.text(); } catch (e) {}
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        return { valido: false, mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.' };
+      }
+      if (response.status === 400) {
+        try {
+          const errorData = JSON.parse(responseText);
+          return { valido: false, mensaje: errorData.mensaje || errorData.message || 'Error en la solicitud' };
+        } catch { return { valido: false, mensaje: 'Formato inválido' }; }
+      }
+      if (!response.ok) {
+        return { valido: false, mensaje: `Error del servidor: ${response.status} ${response.statusText || ''}` };
+      }
+
+      let data;
+      try { data = JSON.parse(responseText); } catch {
+        return { valido: false, mensaje: 'Error procesando respuesta del servidor' };
+      }
+
+      // El backend puede devolver un array de dispositivos o un único resultado
+      if (Array.isArray(data.dispositivos) || Array.isArray(data)) {
+        const lista: DispositivoResultado[] = (data.dispositivos || data).map((d: any) => ({
+          dispositivoId: d.id || d.dispositivoId,
+          personaNombre: d.persona?.nombre || d.personaNombre,
+          personaId: d.persona?.id || d.personaId,
+          empresaNombre: d.empresa?.nombre || d.empresaNombre,
+          empresaId: d.empresa?.id || d.empresaId,
+          fechaRegistro: d.fechaRegistro,
+          modelo: d.modelo,
+          marca: d.marca,
+          estado: d.estado,
+          imei: d.imei || d.IMEI,
+        }));
+        return {
+          valido: lista.length > 0,
+          dispositivos: lista,
+          mensaje: lista.length > 0
+            ? `Se encontraron ${lista.length} dispositivo(s)`
+            : 'No se encontraron dispositivos con esos dígitos'
+        };
+      }
+
+      // Respuesta simple (un solo dispositivo)
+      return {
+        valido: data.valido || false,
+        dispositivoId: data.dispositivo?.id || data.dispositivoId,
+        personaNombre: data.persona?.nombre || data.personaNombre,
+        personaId: data.persona?.id || data.personaId,
+        empresaNombre: data.empresa?.nombre || data.empresaNombre,
+        empresaId: data.empresa?.id || data.empresaId,
+        fechaRegistro: data.dispositivo?.fechaRegistro || data.fechaRegistro,
+        mensaje: data.mensaje || 'Búsqueda completada'
+      };
+    } catch (err: any) {
+      if (err.name === 'AbortError') return { valido: false, mensaje: 'Tiempo de espera agotado. Verifique su conexión.' };
+      if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) return { valido: false, mensaje: 'No se pudo conectar con el servidor.' };
+      return { valido: false, mensaje: 'Error de conexión con el servidor.' };
+    }
+  };
+
   const handleVerificar = useCallback(async (imeiToCheck?: string) => {
+    // Modo últimos 4 dígitos
+    if (searchMode === 'last4') {
+      const digits = last4.trim();
+      if (digits.length !== 4) {
+        setError('Ingresa exactamente 4 dígitos');
+        if (last4Ref.current) last4Ref.current.focus();
+        return;
+      }
+      setLoading(true);
+      setError('');
+      setResultado(null);
+      try {
+        const res = await buscarPorUltimos4(digits);
+        setResultado(res);
+      } catch (err: any) {
+        setError(err.message || 'Error al buscar dispositivos');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Modo IMEI completo
     const imeiToVerify = (imeiToCheck || imei).trim();
     if (!imeiToVerify) {
       setError('Por favor, ingresa un IMEI');
@@ -138,7 +265,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setError('');
     setResultado(null);
     try {
-      const res = await verificarIMEI(cleanedIMEI);
+      const res = await verificarIMEICompleto(cleanedIMEI);
       setResultado(res);
       setImei(cleanedIMEI);
     } catch (err: any) {
@@ -146,11 +273,22 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     } finally {
       setLoading(false);
     }
-  }, [imei]);
+  }, [imei, last4, searchMode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleVerificar();
+  };
+
+  // Cambiar modo de búsqueda
+  const handleChangeMode = (mode: SearchMode) => {
+    setSearchMode(mode);
+    setImei('');
+    setLast4('');
+    setResultado(null);
+    setError('');
+    setScannerError(null);
+    if (showScanner) { stopScanner(); setShowScanner(false); }
   };
 
   // Extraer IMEI de texto escaneado
@@ -179,14 +317,13 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     return null;
   };
 
-  // Iniciar escáner — fuerza cámara trasera, sin UI nativa de selección
+  // Iniciar escáner
   const startScanner = useCallback(async () => {
     if (!scannerContainerRef.current) return;
     try {
       setScannerError(null);
       setIsScanning(true);
 
-      // Limpiar instancia previa
       if (html5QrcodeRef.current) {
         try {
           const st = html5QrcodeRef.current.getState();
@@ -204,6 +341,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         if (extractedIMEI) {
           stopScanner();
           setShowScanner(false);
+          // Al escanear, forzar modo full con el IMEI completo
+          setSearchMode('full');
           setImei(extractedIMEI);
           setTimeout(() => handleVerificar(extractedIMEI), 300);
         } else {
@@ -212,7 +351,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       };
 
       const onScanError = (msg: string) => {
-        // Ignorar errores normales de "no encontrado"
         if (
           !msg.includes('NotFoundException') &&
           !msg.includes('NoMultiFormatReader') &&
@@ -223,7 +361,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         }
       };
 
-      // qrbox dinámico según ancho del contenedor
       const containerWidth = scannerContainerRef.current.offsetWidth || 320;
       const qrboxSize = Math.min(Math.floor(containerWidth * 0.82), 400);
 
@@ -236,22 +373,18 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
         defaultZoomValueIfSupported: 1.5,
       };
 
-      // Intentar cámara trasera con 3 niveles de fallback
       try {
-        // 1. Cámara trasera exacta
         await html5Qrcode.start(
           { facingMode: { exact: 'environment' } },
           config, onScanSuccess, onScanError
         );
       } catch {
         try {
-          // 2. Preferencia por trasera sin "exact"
           await html5Qrcode.start(
             { facingMode: 'environment' },
             config, onScanSuccess, onScanError
           );
         } catch {
-          // 3. Última cámara de la lista (suele ser la trasera)
           const cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
             await html5Qrcode.start(
@@ -274,7 +407,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     }
   }, [handleVerificar]);
 
-  // Detener escáner
   const stopScanner = useCallback(async () => {
     if (html5QrcodeRef.current) {
       try {
@@ -287,7 +419,6 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setIsScanning(false);
   }, []);
 
-  // Arrancar/detener según showScanner
   useEffect(() => {
     if (showScanner) {
       const t = setTimeout(() => startScanner(), 100);
@@ -300,14 +431,16 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
   const handleClear = useCallback(() => {
     setImei('');
+    setLast4('');
     setResultado(null);
     setError('');
     setScannerError(null);
     if (showScanner) { stopScanner(); setShowScanner(false); }
-    if (inputRef.current) inputRef.current.focus();
-  }, [showScanner, stopScanner]);
+    if (searchMode === 'full' && inputRef.current) inputRef.current.focus();
+    if (searchMode === 'last4' && last4Ref.current) last4Ref.current.focus();
+  }, [showScanner, stopScanner, searchMode]);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPressIMEI = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (
       !/^\d$/.test(e.key) &&
       !['Backspace','Delete','Tab','Enter','ArrowLeft','ArrowRight','Home','End','Escape'].includes(e.key)
@@ -315,6 +448,16 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       e.preventDefault();
     }
     if (e.key === 'Enter' && imei.length >= 10) handleVerificar();
+  };
+
+  const handleKeyPressLast4 = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      !/^\d$/.test(e.key) &&
+      !['Backspace','Delete','Tab','Enter','ArrowLeft','ArrowRight','Home','End','Escape'].includes(e.key)
+    ) {
+      e.preventDefault();
+    }
+    if (e.key === 'Enter' && last4.length === 4) handleVerificar();
   };
 
   const formatDate = useCallback((dateString?: string) => {
@@ -336,6 +479,12 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     if (showScanner) { stopScanner(); setShowScanner(false); }
     else setShowScanner(true);
   };
+
+  // Botón submit deshabilitado según modo
+  const isSubmitDisabled =
+    loading ||
+    (searchMode === 'full' && (!imei.trim() || imei.replace(/\D/g, '').length < 10)) ||
+    (searchMode === 'last4' && last4.trim().length !== 4);
 
   return (
     <div className="verificacion-container">
@@ -388,62 +537,131 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
         {!showScanner && (
           <>
-            <div className="camera-trigger-section">
-              <button onClick={handleToggleScanner} className="btn-camera-trigger" type="button">
-                <span role="img" aria-label="escáner" className="camera-icon">🔍</span>
-                {isMobile ? 'Escanear código' : 'Usar escáner de códigos'}
+            {/* Toggle modo de búsqueda */}
+            <div className="search-mode-toggle">
+              <button
+                type="button"
+                className={`mode-btn ${searchMode === 'full' ? 'active' : ''}`}
+                onClick={() => handleChangeMode('full')}
+              >
+                <span role="img" aria-label="imei">🔢</span>
+                IMEI Completo
               </button>
-              <div className="divider-with-text">
-                <span>O ingresa manualmente</span>
-              </div>
+              <button
+                type="button"
+                className={`mode-btn ${searchMode === 'last4' ? 'active' : ''}`}
+                onClick={() => handleChangeMode('last4')}
+              >
+                <span role="img" aria-label="últimos">🔎</span>
+                Últimos 4 dígitos
+              </button>
             </div>
+
+            {/* Botón escáner solo en modo IMEI completo */}
+            {searchMode === 'full' && (
+              <div className="camera-trigger-section">
+                <button onClick={handleToggleScanner} className="btn-camera-trigger" type="button">
+                  <span role="img" aria-label="escáner" className="camera-icon">🔍</span>
+                  {isMobile ? 'Escanear código' : 'Usar escáner de códigos'}
+                </button>
+                <div className="divider-with-text">
+                  <span>O ingresa manualmente</span>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="verification-form">
               <div className="form-field">
-                <label className="field-label" htmlFor="imei-input">
-                  <span role="img" aria-label="número">🔢</span>
-                  Número IMEI
-                </label>
-                <div className="input-with-clear">
-                  <input
-                    id="imei-input"
-                    ref={inputRef}
-                    type="text"
-                    value={imei}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      setImei(value);
-                      if (error) setError('');
-                    }}
-                    onKeyDown={handleKeyPress}
-                    placeholder="Ej: 358879090123456"
-                    maxLength={20}
-                    className="imei-field"
-                    disabled={loading}
-                    inputMode="numeric"
-                    autoComplete="off"
-                  />
-                  {imei && (
-                    <button type="button" onClick={handleClear} className="btn-clear-field" aria-label="Limpiar">
-                      ×
-                    </button>
-                  )}
-                </div>
-                <div className="field-hint">
-                  <span role="img" aria-label="consejo">💡</span>
-                  Teclea *#06# en el teléfono para ver el IMEI
-                </div>
+                {searchMode === 'full' ? (
+                  <>
+                    <label className="field-label" htmlFor="imei-input">
+                      <span role="img" aria-label="número">🔢</span>
+                      Número IMEI
+                    </label>
+                    <div className="input-with-clear">
+                      <input
+                        id="imei-input"
+                        ref={inputRef}
+                        type="text"
+                        value={imei}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          setImei(value);
+                          if (error) setError('');
+                        }}
+                        onKeyDown={handleKeyPressIMEI}
+                        placeholder="Ej: 358879090123456"
+                        maxLength={20}
+                        className="imei-field"
+                        disabled={loading}
+                        inputMode="numeric"
+                        autoComplete="off"
+                      />
+                      {imei && (
+                        <button type="button" onClick={handleClear} className="btn-clear-field" aria-label="Limpiar">
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    <div className="field-hint">
+                      <span role="img" aria-label="consejo">💡</span>
+                      Teclea *#06# en el teléfono para ver el IMEI
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <label className="field-label" htmlFor="last4-input">
+                      <span role="img" aria-label="número">🔎</span>
+                      Últimos 4 dígitos del IMEI
+                    </label>
+                    <div className="input-with-clear">
+                      <input
+                        id="last4-input"
+                        ref={last4Ref}
+                        type="text"
+                        value={last4}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setLast4(value);
+                          if (error) setError('');
+                        }}
+                        onKeyDown={handleKeyPressLast4}
+                        placeholder="Ej: 3456"
+                        maxLength={4}
+                        className="imei-field imei-field--last4"
+                        disabled={loading}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        autoFocus
+                      />
+                      {last4 && (
+                        <button type="button" onClick={handleClear} className="btn-clear-field" aria-label="Limpiar">
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    <div className="field-hint">
+                      <span role="img" aria-label="consejo">💡</span>
+                      Ingresa los últimos 4 números del IMEI del dispositivo
+                    </div>
+                  </>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !imei.trim() || imei.length < 10}
+                disabled={isSubmitDisabled}
                 className={`btn-submit ${loading ? 'btn-loading' : ''}`}
               >
                 {loading ? (
-                  <><span className="spinner"></span>VERIFICANDO...</>
+                  <><span className="spinner"></span>
+                    {searchMode === 'last4' ? 'BUSCANDO...' : 'VERIFICANDO...'}
+                  </>
                 ) : (
-                  <><span role="img" aria-label="verificar">✅</span>VERIFICAR IMEI</>
+                  <>
+                    <span role="img" aria-label="verificar">✅</span>
+                    {searchMode === 'last4' ? 'BUSCAR DISPOSITIVOS' : 'VERIFICAR IMEI'}
+                  </>
                 )}
               </button>
             </form>
@@ -455,7 +673,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
               </div>
             )}
 
-            {resultado && (
+            {/* Resultado para IMEI completo */}
+            {resultado && searchMode === 'full' && !resultado.dispositivos && (
               <div className={`result-card ${resultado.valido ? 'result-valid' : 'result-invalid'}`}>
                 <div className="result-status">
                   <div className="status-badge">{resultado.valido ? '✅' : '❌'}</div>
@@ -497,6 +716,85 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                 <button onClick={handleClear} className="btn-reset" type="button">
                   <span role="img" aria-label="reiniciar">🔄</span>
                   Nueva Verificación
+                </button>
+              </div>
+            )}
+
+            {/* Resultado para búsqueda por últimos 4 dígitos — lista de dispositivos */}
+            {resultado && searchMode === 'last4' && (
+              <div className={`result-card ${resultado.valido ? 'result-valid' : 'result-invalid'}`}>
+                <div className="result-status">
+                  <div className="status-badge">{resultado.valido ? '🔎' : '❌'}</div>
+                  <div className="status-text">
+                    <h3 className="status-title">
+                      {resultado.valido
+                        ? `DISPOSITIVOS ENCONTRADOS`
+                        : 'SIN RESULTADOS'}
+                    </h3>
+                    <p className="status-imei">Terminación: ···· {last4}</p>
+                  </div>
+                </div>
+
+                {resultado.valido && resultado.dispositivos && resultado.dispositivos.length > 0 ? (
+                  <div className="result-list">
+                    {resultado.dispositivos.map((d, idx) => (
+                      <div key={d.dispositivoId ?? idx} className="result-list-item">
+                        <div className="result-list-header">
+                          <span className="result-list-index">#{idx + 1}</span>
+                          {d.imei && (
+                            <span className="result-list-imei">{formatIMEI(d.imei)}</span>
+                          )}
+                        </div>
+                        <div className="result-info">
+                          <div className="info-row">
+                            <span className="info-label"><span role="img" aria-label="persona">👤</span>Propietario:</span>
+                            <span className="info-value">{d.personaNombre || 'No asignado'}</span>
+                          </div>
+                          {d.empresaNombre && (
+                            <div className="info-row">
+                              <span className="info-label"><span role="img" aria-label="empresa">🏢</span>Empresa:</span>
+                              <span className="info-value">{d.empresaNombre}</span>
+                            </div>
+                          )}
+                          {d.fechaRegistro && (
+                            <div className="info-row">
+                              <span className="info-label"><span role="img" aria-label="fecha">📅</span>Registrado:</span>
+                              <span className="info-value">{formatDate(d.fechaRegistro)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : resultado.valido && !resultado.dispositivos ? (
+                  // Respuesta simple (un solo dispositivo sin array)
+                  <div className="result-info">
+                    <div className="info-row">
+                      <span className="info-label"><span role="img" aria-label="persona">👤</span>Propietario:</span>
+                      <span className="info-value">{resultado.personaNombre || 'No asignado'}</span>
+                    </div>
+                    {resultado.empresaNombre && (
+                      <div className="info-row">
+                        <span className="info-label"><span role="img" aria-label="empresa">🏢</span>Empresa:</span>
+                        <span className="info-value">{resultado.empresaNombre}</span>
+                      </div>
+                    )}
+                    {resultado.fechaRegistro && (
+                      <div className="info-row">
+                        <span className="info-label"><span role="img" aria-label="fecha">📅</span>Registrado:</span>
+                        <span className="info-value">{formatDate(resultado.fechaRegistro)}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="result-message">
+                    <p>{resultado.mensaje || 'No se encontraron dispositivos con esos dígitos'}</p>
+                  </div>
+                )}
+
+                <button onClick={handleClear} className="btn-reset" type="button">
+                  <span role="img" aria-label="reiniciar">🔄</span>
+                  Nueva Búsqueda
                 </button>
               </div>
             )}
