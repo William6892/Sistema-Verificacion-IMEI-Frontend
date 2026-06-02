@@ -1,11 +1,58 @@
-// src/components/Dispositivos/DispositivosList.tsx
-import React, { useState, useEffect, useRef } from 'react';
+
+
+import React, {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { dispositivosService, Dispositivo } from '../../services/dispositivosService';
-import DispositivoForm from './DispositivoForm';
-import DispositivoDetail from './DispositivoDetail';
 import { empresasService } from '../../services/empresasService';
 
-interface DispositivosListProps {
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum SortDirection { ASC = 'asc', DESC = 'desc', NONE = 'none' }
+enum ViewMode      { Table = 'table', Grid = 'grid' }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES & INTERFACES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface Empresa { id: number; nombre: string; }
+
+interface DispositivoFormData {
+  imei: string;
+  personaId?: number;
+  empresaId?: number;
+  activo?: boolean;
+}
+
+interface FiltersState {
+  empresaId: number;
+  activo: boolean;
+  page: number;
+  limit: number;
+}
+
+interface SortState {
+  column: keyof Dispositivo | null;
+  direction: SortDirection;
+}
+
+interface ColumnDef {
+  key: keyof Dispositivo | 'acciones';
+  label: string;
+  sortable?: boolean;
+}
+
+export interface DispositivosListProps {
   userRole: string;
   userEmpresaId?: number;
   personaId?: number;
@@ -14,70 +61,70 @@ interface DispositivosListProps {
   onDispositivoSelect?: (dispositivoId: number) => void;
 }
 
-// ─── Design tokens (same system as Empresas) ─────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE_OPTIONS   = [10, 20, 50, 100] as const;
+const DEFAULT_PAGE_SIZE   = 20;
+const MAX_RETRY_ATTEMPTS  = 3;
+const RETRY_DELAY_MS      = 1000;
+const SKELETON_ROWS       = 5;
+
+const TABLE_COLUMNS: ColumnDef[] = [
+  { key: 'id',            label: 'ID',       sortable: true  },
+  { key: 'imei',          label: 'IMEI',     sortable: true  },
+  { key: 'personaNombre', label: 'Persona',  sortable: true  },
+  { key: 'empresaNombre', label: 'Empresa',  sortable: true  },
+  { key: 'fechaRegistro', label: 'Fecha',    sortable: true  },
+  { key: 'activo',        label: 'Estado',   sortable: true  },
+  { key: 'acciones',      label: 'Acciones', sortable: false },
+];
+
+const CSV_HEADERS = ['ID', 'IMEI', 'Persona', 'Empresa', 'Fecha Registro', 'Estado'];
+
+const createDefaultFilters = (empresaId = 0): FiltersState => ({
+  empresaId,
+  activo: true,
+  page: 1,
+  limit: DEFAULT_PAGE_SIZE,
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN TOKENS
+// ─────────────────────────────────────────────────────────────────────────────
+
 const tk = {
-  blue:        '#1890ff',
-  blueDark:    '#096dd9',
-  blueLight:   '#e6f7ff',
-  blueBorder:  '#91d5ff',
-  blueAlpha:   'rgba(24,144,255,0.08)',
-  green:       '#52c41a',
-  greenBg:     '#f6ffed',
-  greenBorder: '#b7eb8f',
-  orange:      '#fa8c16',
-  orangeBg:    '#fff7e6',
-  orangeBorder:'#ffd591',
-  red:         '#ff4d4f',
-  redBg:       '#fff2f0',
-  redBorder:   '#ffccc7',
-  purple:      '#722ed1',
-  purpleBg:    '#f9f0ff',
-  purpleBorder:'#d3adf7',
-  text:        '#1a1a1a',
-  textSub:     '#666',
-  textMuted:   '#999',
-  border:      '#f0f0f0',
-  borderMd:    '#e8e8e8',
-  bg:          '#fafafa',
-  white:       '#ffffff',
-  shadow:      '0 6px 20px rgba(0,0,0,0.08)',
-  radius:      '12px',
-  radiusSm:    '8px',
-};
+  primary:       '#1428A0',
+  secondary:     '#007BFF',
+  success:       '#10b981',
+  successBg:     '#d1fae5',
+  successBorder: '#a7f3d0',
+  danger:        '#ef4444',
+  dangerBg:      '#fee2e2',
+  dangerBorder:  '#fecaca',
+  text:          '#1e293b',
+  textSub:       '#64748b',
+  textMuted:     '#94a3b8',
+  border:        '#e2e8f0',
+  bg:            '#f8fafc',
+  white:         '#ffffff',
+  shadow:        '0 6px 20px rgba(0,0,0,0.08)',
+  radiusSm:      '6px',
+  radiusMd:      '10px',
+  radiusLg:      '14px',
+} as const;
 
-// ─── Reusable hover button ────────────────────────────────────────────────────
-const Btn = ({
-  base, hoverStyle, onClick, title, children, disabled = false, fullWidth = false,
-}: {
-  base: React.CSSProperties;
-  hoverStyle?: React.CSSProperties;
-  onClick?: () => void;
-  title?: string;
-  children: React.ReactNode;
-  disabled?: boolean;
-  fullWidth?: boolean;
-}) => {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      disabled={disabled}
-      onClick={onClick}
-      title={title}
-      onMouseEnter={() => !disabled && setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        ...base,
-        ...(hov && !disabled ? hoverStyle : {}),
-        ...(disabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}),
-        ...(fullWidth ? { width: '100%' } : {}),
-      }}
-    >
-      {children}
-    </button>
-  );
-};
+const GLOBAL_KEYFRAMES = `
+  @keyframes spin          { to { transform: rotate(360deg) } }
+  @keyframes slideDown     { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn        { from{opacity:0} to{opacity:1} }
+  @keyframes skeletonPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
+  @keyframes pulseGreen    { 0%{box-shadow:0 0 0 0 rgba(16,185,129,.4)} 70%{box-shadow:0 0 0 6px rgba(16,185,129,0)} 100%{box-shadow:0 0 0 0 rgba(16,185,129,0)} }
+`;
 
-// ─── Shared button bases ──────────────────────────────────────────────────────
+// ─── Action button base styles ───────────────────────────────────────────────
+
 const actionBase: React.CSSProperties = {
   padding: '7px 11px', borderRadius: tk.radiusSm, border: 'none',
   fontSize: '12px', fontWeight: 600, cursor: 'pointer',
@@ -86,543 +133,837 @@ const actionBase: React.CSSProperties = {
 };
 
 const btnStyles = {
-  view:   { ...actionBase, background: tk.blueLight, color: tk.blue, border: `1px solid ${tk.blueBorder}` },
-  edit:   { ...actionBase, background: tk.greenBg,   color: tk.green, border: `1px solid ${tk.greenBorder}` },
-  deact:  { ...actionBase, background: tk.orangeBg,  color: tk.orange, border: `1px solid ${tk.orangeBorder}` },
-  activ:  { ...actionBase, background: tk.greenBg,   color: tk.green, border: `1px solid ${tk.greenBorder}` },
-  del:    { ...actionBase, background: tk.redBg,     color: tk.red,   border: `1px solid ${tk.redBorder}` },
-};
+  view:  { ...actionBase, background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff' },
+  edit:  { ...actionBase, background: '#f6ffed', color: '#52c41a', border: '1px solid #b7eb8f' },
+  deact: { ...actionBase, background: '#fff7e6', color: '#fa8c16', border: '1px solid #ffd591' },
+  activ: { ...actionBase, background: '#f6ffed', color: '#52c41a', border: '1px solid #b7eb8f' },
+  del:   { ...actionBase, background: '#fff2f0', color: '#ff4d4f', border: '1px solid #ffccc7' },
+} as const;
 
 const btnHoverStyles = {
-  view:  { background: '#bae7ff', transform: 'translateY(-1px)', boxShadow: '0 3px 8px rgba(24,144,255,0.2)' },
-  edit:  { background: '#d9f7be', transform: 'translateY(-1px)', boxShadow: '0 3px 8px rgba(82,196,26,0.2)' },
-  deact: { background: '#ffe7ba', transform: 'translateY(-1px)', boxShadow: '0 3px 8px rgba(250,140,22,0.2)' },
-  activ: { background: '#d9f7be', transform: 'translateY(-1px)', boxShadow: '0 3px 8px rgba(82,196,26,0.2)' },
-  del:   { background: '#ffccc7', transform: 'translateY(-1px)', boxShadow: '0 3px 8px rgba(255,77,79,0.2)' },
+  view:  { background: '#bae7ff', transform: 'translateY(-1px)' },
+  edit:  { background: '#d9f7be', transform: 'translateY(-1px)' },
+  deact: { background: '#ffe7ba', transform: 'translateY(-1px)' },
+  activ: { background: '#d9f7be', transform: 'translateY(-1px)' },
+  del:   { background: '#ffccc7', transform: 'translateY(-1px)' },
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '—';
+  try {
+    const d = new Date(`${dateString.split('T')[0]}T00:00:00`);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch { return '—'; }
 };
 
-// ─── Cell icon wrapper ────────────────────────────────────────────────────────
-const CellIcon = ({ emoji, color, bg }: { emoji: string; color: string; bg: string }) => (
-  <div style={{
-    fontSize: '18px', color, background: bg,
-    width: '38px', height: '38px', borderRadius: '9px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  }}>
+const formatIMEI = (imei: string | undefined): string => {
+  if (!imei) return 'No disponible';
+  const c = imei.replace(/\D/g, '');
+  if (c.length !== 15) return c;
+  return `${c.slice(0, 6)}-${c.slice(6, 12)}-${c.slice(12)}`;
+};
+
+const extractErrorMessage = (err: unknown, fallback = 'Ha ocurrido un error inesperado'): string => {
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>;
+    const rd = e.response as Record<string, unknown> | undefined;
+    if (rd?.data && typeof rd.data === 'object') {
+      const d = rd.data as Record<string, unknown>;
+      if (typeof d.mensaje === 'string') return d.mensaje;
+    }
+    if (typeof e.message === 'string') return e.message;
+  }
+  return fallback;
+};
+
+const exportToCSV = (dispositivos: Dispositivo[], filename = 'dispositivos.csv'): void => {
+  const rows = [
+    CSV_HEADERS,
+    ...dispositivos.map(d => [
+      String(d.id), d.imei ?? '', d.personaNombre ?? 'Sin asignar',
+      d.empresaNombre ?? '—', formatDate(d.fechaRegistro), d.activo ? 'Activo' : 'Inactivo',
+    ]),
+  ];
+  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+const sortDispositivos = (
+  list: Dispositivo[],
+  column: keyof Dispositivo | null,
+  direction: SortDirection,
+): Dispositivo[] => {
+  if (!column || direction === SortDirection.NONE) return list;
+  return [...list].sort((a, b) => {
+    const cmp = String(a[column] ?? '').localeCompare(String(b[column] ?? ''), 'es', { numeric: true });
+    return direction === SortDirection.ASC ? cmp : -cmp;
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTERS REDUCER
+// ─────────────────────────────────────────────────────────────────────────────
+
+type FiltersAction =
+  | { type: 'SET_EMPRESA';    payload: number }
+  | { type: 'SET_ACTIVO';     payload: boolean }
+  | { type: 'SET_PAGE';       payload: number }
+  | { type: 'SET_LIMIT';      payload: number }
+  | { type: 'RESET';          payload: number }
+  | { type: 'SET_SEARCH_PAGE' };
+
+const filtersReducer = (state: FiltersState, action: FiltersAction): FiltersState => {
+  switch (action.type) {
+    case 'SET_EMPRESA':    return { ...state, empresaId: action.payload, page: 1 };
+    case 'SET_ACTIVO':     return { ...state, activo:    action.payload, page: 1 };
+    case 'SET_PAGE':       return { ...state, page:      action.payload };
+    case 'SET_LIMIT':      return { ...state, limit:     action.payload, page: 1 };
+    case 'RESET':          return createDefaultFilters(action.payload);
+    case 'SET_SEARCH_PAGE':return { ...state, page: 1 };
+    default:               return state;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOM HOOK — useDispositivos
+// ─────────────────────────────────────────────────────────────────────────────
+
+const useDispositivos = ({
+  userRole, userEmpresaId, personaId,
+}: { userRole: string; userEmpresaId?: number; personaId?: number }) => {
+  const isAdmin = userRole === 'Admin';
+
+  const [filters, dispatchFilters] = useReducer(filtersReducer, createDefaultFilters(userEmpresaId));
+
+  const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
+  const [total,        setTotal]        = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [retryCount,   setRetryCount]   = useState(0);
+
+  const empresasCacheRef = useRef<Empresa[] | null>(null);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+
+  const [searchTerm,      setSearchTerm]      = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [sort, setSort] = useState<SortState>({ column: null, direction: SortDirection.NONE });
+
+  const [selectedDev,    setSelectedDev]    = useState<Dispositivo | null>(null);
+  const [editingDev,     setEditingDev]     = useState<Dispositivo | null>(null);
+  const [showForm,       setShowForm]       = useState(false);
+  const [confirmDelete,  setConfirmDelete]  = useState<number | null>(null);
+  const [selectedIds,    setSelectedIds]    = useState<Set<number>>(new Set());
+
+  // ── Debounce (corregido con useRef) ─────────────────────────────────────
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      dispatchFilters({ type: 'SET_SEARCH_PAGE' });
+    }, 500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchTerm]);
+
+  // ── Empresas (con caché) ─────────────────────────────────────────────────
+  const loadEmpresas = useCallback(async () => {
+    if (!isAdmin && !userEmpresaId) return;
+    if (empresasCacheRef.current) { setEmpresas(empresasCacheRef.current); return; }
+    try {
+      const data = await empresasService.getEmpresas();
+      const arr: Empresa[] = Array.isArray(data) ? data : [];
+      empresasCacheRef.current = arr;
+      setEmpresas(arr);
+    } catch { /* no crítico */ }
+  }, [isAdmin, userEmpresaId]);
+
+  useEffect(() => { loadEmpresas(); }, [loadEmpresas]);
+
+  // ── Carga con retry ──────────────────────────────────────────────────────
+  const loadDispositivos = useCallback(async (attempt = 0) => {
+    try {
+      setLoading(true); setError('');
+      if (personaId) {
+        const data = await dispositivosService.getDispositivosPorPersona(personaId);
+        const arr = Array.isArray(data) ? (data as Dispositivo[]) : [];
+        setDispositivos(arr); setTotal(arr.length); setRetryCount(0); return;
+      }
+      const params: Record<string, unknown> = { ...filters, search: debouncedSearch || undefined };
+      if (!isAdmin && userEmpresaId) params.empresaId = userEmpresaId;
+      const result = await dispositivosService.getDispositivos(params);
+      const arr: Dispositivo[] = Array.isArray(result.dispositivos)
+        ? result.dispositivos
+        : Array.isArray(result) ? (result as Dispositivo[]) : [];
+      setDispositivos(arr); setTotal(result.total || arr.length); setRetryCount(0);
+    } catch (err) {
+      if (attempt < MAX_RETRY_ATTEMPTS) {
+        setTimeout(() => loadDispositivos(attempt + 1), RETRY_DELAY_MS * (attempt + 1));
+        setRetryCount(attempt + 1);
+      } else {
+        setError(extractErrorMessage(err, 'Error al cargar dispositivos'));
+        setDispositivos([]); setTotal(0); setRetryCount(0);
+      }
+    } finally { setLoading(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, personaId, debouncedSearch, isAdmin, userEmpresaId]);
+
+  useEffect(() => { loadDispositivos(); }, [loadDispositivos]);
+
+  // ── Memoizados ───────────────────────────────────────────────────────────
+  const totalPages = useMemo(() => Math.ceil(total / filters.limit), [total, filters.limit]);
+
+  const sortedDispositivos = useMemo(
+    () => sortDispositivos(dispositivos, sort.column, sort.direction),
+    [dispositivos, sort],
+  );
+
+  // ── CRUD ─────────────────────────────────────────────────────────────────
+  const handleCreate = useCallback(async (data: DispositivoFormData) => {
+    await dispositivosService.createDispositivo(data);
+    setShowForm(false); loadDispositivos();
+  }, [loadDispositivos]);
+
+  const handleUpdate = useCallback(async (id: number, data: DispositivoFormData) => {
+    await dispositivosService.updateDispositivo(id, data);
+    setEditingDev(null); loadDispositivos();
+  }, [loadDispositivos]);
+
+  const handleDeleteConfirm = useCallback(async (id: number) => {
+    try {
+      await dispositivosService.deleteDispositivo(id);
+      setConfirmDelete(null); loadDispositivos();
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Error al eliminar'));
+      setConfirmDelete(null);
+    }
+  }, [loadDispositivos]);
+
+  const handleToggle = useCallback(async (id: number, activo: boolean) => {
+    try { await dispositivosService.toggleActivo(id, activo); loadDispositivos(); }
+    catch (err) { setError(extractErrorMessage(err, 'Error al cambiar estado')); }
+  }, [loadDispositivos]);
+
+  // ── Ordenamiento ─────────────────────────────────────────────────────────
+  const handleSort = useCallback((column: keyof Dispositivo) => {
+    setSort(prev => {
+      if (prev.column !== column) return { column, direction: SortDirection.ASC };
+      if (prev.direction === SortDirection.ASC) return { column, direction: SortDirection.DESC };
+      return { column: null, direction: SortDirection.NONE };
+    });
+  }, []);
+
+  // ── Selección ────────────────────────────────────────────────────────────
+  const toggleSelection = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds(prev =>
+      prev.size === sortedDispositivos.length
+        ? new Set()
+        : new Set(sortedDispositivos.map(d => d.id)),
+    );
+  }, [sortedDispositivos]);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  return {
+    dispositivos: sortedDispositivos, total, loading, error, retryCount, empresas,
+    filters, dispatchFilters,
+    searchTerm, setSearchTerm, debouncedSearch,
+    sort, handleSort,
+    selectedDev, setSelectedDev, editingDev, setEditingDev,
+    showForm, setShowForm, confirmDelete, setConfirmDelete,
+    handleCreate, handleUpdate, handleDeleteConfirm, handleToggle,
+    totalPages, selectedIds, toggleSelection, toggleSelectAll, clearSelection,
+    isAdmin,
+    clearError: () => setError(''),
+    retry: () => loadDispositivos(),
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED UI COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Btn ──────────────────────────────────────────────────────────────────────
+interface BtnProps {
+  base: React.CSSProperties;
+  hoverStyle?: React.CSSProperties;
+  onClick?: () => void;
+  title?: string;
+  'aria-label'?: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+const Btn = memo<BtnProps>(({ base, hoverStyle, onClick, title, 'aria-label': ariaLabel, children, disabled = false }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      title={title}
+      aria-label={ariaLabel ?? title}
+      onMouseEnter={() => !disabled && setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{ ...base, ...(hov && !disabled ? hoverStyle : {}), ...(disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}) }}
+    >
+      {children}
+    </button>
+  );
+});
+Btn.displayName = 'Btn';
+
+// ── ActionBtn ────────────────────────────────────────────────────────────────
+type ActionVariant = keyof typeof btnStyles;
+interface ActionBtnProps { variant: ActionVariant; onClick: () => void; label: string; icon: string; title?: string; }
+const ActionBtn = memo<ActionBtnProps>(({ variant, onClick, label, icon, title }) => (
+  <Btn base={btnStyles[variant]} hoverStyle={btnHoverStyles[variant]} onClick={onClick} title={title ?? label} aria-label={label}>
+    {icon} {label}
+  </Btn>
+));
+ActionBtn.displayName = 'ActionBtn';
+
+// ── CellIcon ─────────────────────────────────────────────────────────────────
+const CellIcon = memo(({ emoji, color, bg }: { emoji: string; color: string; bg: string }) => (
+  <div aria-hidden style={{ fontSize: '18px', color, background: bg, width: '38px', height: '38px', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
     {emoji}
+  </div>
+));
+CellIcon.displayName = 'CellIcon';
+
+// ── StatusBadge ──────────────────────────────────────────────────────────────
+const StatusBadge = memo(({ activo }: { activo: boolean }) => (
+  <span role="status" aria-label={activo ? 'Activo' : 'Inactivo'} style={{
+    display: 'inline-flex', alignItems: 'center', gap: '7px',
+    padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap',
+    background: activo ? tk.successBg : tk.dangerBg,
+    color:      activo ? '#065f46'    : '#991b1b',
+    border: `1px solid ${activo ? tk.successBorder : tk.dangerBorder}`,
+  }}>
+    <span aria-hidden style={{ width: '8px', height: '8px', borderRadius: '50%', background: activo ? tk.success : tk.danger, animation: activo ? 'pulseGreen 2s infinite' : 'none' }} />
+    {activo ? 'Activo' : 'Inactivo'}
+  </span>
+));
+StatusBadge.displayName = 'StatusBadge';
+
+// ── SkeletonRow ──────────────────────────────────────────────────────────────
+const SkeletonRow = memo(() => (
+  <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+    {[70, 160, 140, 120, 100, 80, 200].map((w, i) => (
+      <td key={i} style={{ padding: '18px 18px' }}>
+        <div style={{ height: '14px', borderRadius: '6px', background: '#e8edf4', width: `${w}px`, animation: 'skeletonPulse 1.5s ease-in-out infinite' }} />
+      </td>
+    ))}
+  </tr>
+));
+SkeletonRow.displayName = 'SkeletonRow';
+
+// ── ConfirmModal ─────────────────────────────────────────────────────────────
+const ConfirmModal = memo(({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) => (
+  <div role="dialog" aria-modal="true" aria-label="Confirmar eliminación"
+    onClick={onCancel}
+    style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', animation: 'fadeIn 0.15s ease' }}>
+    <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '16px', padding: '32px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', animation: 'slideDown 0.2s ease' }}>
+      <div style={{ fontSize: '40px', textAlign: 'center', marginBottom: '16px' }}>⚠️</div>
+      <h3 style={{ textAlign: 'center', margin: '0 0 8px', fontSize: '18px', fontWeight: 700 }}>¿Confirmar eliminación?</h3>
+      <p  style={{ textAlign: 'center', color: '#64748b', margin: '0 0 28px', fontSize: '14px' }}>{message}</p>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <button autoFocus onClick={onCancel}  style={{ padding: '10px 24px', borderRadius: '8px', fontWeight: 600, background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancelar</button>
+        <button          onClick={onConfirm} style={{ padding: '10px 24px', borderRadius: '8px', fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+      </div>
+    </div>
+  </div>
+));
+ConfirmModal.displayName = 'ConfirmModal';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEARCH INPUT
+// ─────────────────────────────────────────────────────────────────────────────
+const SearchInput = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const [focused, setFocused] = useState(false);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value), [onChange]);
+  return (
+    <div role="search" style={{ display: 'flex', alignItems: 'center', background: 'white', border: `2px solid ${focused ? '#1890ff' : '#e8e8e8'}`, borderRadius: '10px', padding: '0 14px', boxShadow: focused ? '0 0 0 3px rgba(24,144,255,0.08)' : 'none', transition: 'all 0.2s' }}>
+      <span aria-hidden style={{ color: '#999', marginRight: '8px', fontSize: '16px' }}>🔍</span>
+      <input
+        type="search" aria-label="Buscar dispositivos"
+        placeholder="Buscar por IMEI, persona o empresa..."
+        value={value} onChange={handleChange}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        style={{ flex: 1, border: 'none', padding: '13px 0', fontSize: '15px', outline: 'none', background: 'transparent', color: '#1a1a1a' }}
+      />
+      {value && <button aria-label="Limpiar búsqueda" onClick={() => onChange('')} style={{ background: 'none', border: 'none', color: '#999', fontSize: '20px', cursor: 'pointer' }}>×</button>}
+    </div>
+  );
+});
+SearchInput.displayName = 'SearchInput';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTERS PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const selectSt: React.CSSProperties = { width: '100%', padding: '10px 14px', border: '2px solid #e8e8e8', borderRadius: '9px', fontSize: '14px', background: 'white', cursor: 'pointer', outline: 'none' };
+const labelSt:  React.CSSProperties = { fontSize: '13px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px', display: 'block' };
+
+const FiltersPanel = memo(({
+  filters, dispatch, empresas, isAdmin, hasPersonaFilter, defaultEmpresaId,
+}: {
+  filters: FiltersState; dispatch: (a: FiltersAction) => void;
+  empresas: Empresa[]; isAdmin: boolean; hasPersonaFilter: boolean; defaultEmpresaId: number;
+}) => (
+  <div role="group" aria-label="Filtros de búsqueda" style={{ background: 'white', borderRadius: '14px', padding: '22px 24px', marginBottom: '20px', boxShadow: tk.shadow, border: '1px solid #f0f0f0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', animation: 'slideDown 0.2s ease' }}>
+    <div>
+      <label htmlFor="fl-empresa" style={labelSt}>🏢 Empresa</label>
+      <select id="fl-empresa" value={filters.empresaId} onChange={e => dispatch({ type: 'SET_EMPRESA', payload: +e.target.value })} disabled={!isAdmin || hasPersonaFilter} style={selectSt}>
+        <option value={0}>Todas las empresas</option>
+        {empresas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+      </select>
+    </div>
+    <div>
+      <label htmlFor="fl-estado" style={labelSt}>⚡ Estado</label>
+      <select id="fl-estado" value={String(filters.activo)} onChange={e => dispatch({ type: 'SET_ACTIVO', payload: e.target.value === 'true' })} style={selectSt}>
+        <option value="true">✅ Activos</option>
+        <option value="false">⏸ Inactivos</option>
+      </select>
+    </div>
+    <div>
+      <label htmlFor="fl-limit" style={labelSt}>📊 Por página</label>
+      <select id="fl-limit" value={filters.limit} onChange={e => dispatch({ type: 'SET_LIMIT', payload: +e.target.value })} style={selectSt}>
+        {PAGE_SIZE_OPTIONS.map(n => <option key={n} value={n}>{n} dispositivos</option>)}
+      </select>
+    </div>
+    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+      <button onClick={() => dispatch({ type: 'RESET', payload: defaultEmpresaId })} aria-label="Restablecer filtros" style={{ background: 'none', border: 'none', color: '#1890ff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+        🗑️ Limpiar filtros
+      </button>
+    </div>
+  </div>
+));
+FiltersPanel.displayName = 'FiltersPanel';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SORT ICON
+// ─────────────────────────────────────────────────────────────────────────────
+const SortIcon = ({ column, sort }: { column: keyof Dispositivo; sort: SortState }) => {
+  if (sort.column !== column) return <span style={{ opacity: 0.3, marginLeft: '4px' }}>⇅</span>;
+  return <span style={{ marginLeft: '4px', color: '#1890ff' }}>{sort.direction === SortDirection.ASC ? '↑' : '↓'}</span>;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DISPOSITIVOS TABLE
+// ─────────────────────────────────────────────────────────────────────────────
+interface TableProps {
+  dispositivos: Dispositivo[]; loading: boolean; total: number;
+  isAdmin: boolean; debouncedSearch: string; sort: SortState;
+  selectedIds: Set<number>; page: number;
+  onSort: (c: keyof Dispositivo) => void;
+  onView: (d: Dispositivo) => void; onEdit: (d: Dispositivo) => void;
+  onToggle: (id: number, a: boolean) => void; onDeleteRequest: (id: number) => void;
+  onRowClick?: (d: Dispositivo) => void;
+  onSelectAll: () => void; onToggleSelect: (id: number) => void;
+}
+
+const DispositivosTable = memo<TableProps>(({
+  dispositivos, loading, total, isAdmin, debouncedSearch, sort,
+  selectedIds, page, onSort, onView, onEdit, onToggle, onDeleteRequest,
+  onRowClick, onSelectAll, onToggleSelect,
+}) => {
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, dev: Dispositivo) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(dev); }
+  }, [onView]);
+
+  if (!loading && dispositivos.length === 0) return (
+    <div style={{ padding: '70px 20px', textAlign: 'center' }}>
+      <div aria-hidden style={{ fontSize: '56px', opacity: 0.25, marginBottom: '18px' }}>📱</div>
+      <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '10px' }}>No hay dispositivos</h3>
+      <p style={{ color: '#666', marginBottom: '12px' }}>
+        {debouncedSearch ? `No se encontraron resultados para "${debouncedSearch}"` : 'Aún no hay dispositivos registrados en el sistema.'}
+      </p>
+      {debouncedSearch && (
+        <ul style={{ color: '#94a3b8', fontSize: '13px', listStyle: 'none', padding: 0, lineHeight: 2 }}>
+          <li>• Verifica que el IMEI esté completo (15 dígitos)</li>
+          <li>• Prueba buscar por nombre de persona o empresa</li>
+          <li>• Revisa el filtro de estado activo/inactivo</li>
+        </ul>
+      )}
+    </div>
+  );
+
+  const allSelected = dispositivos.length > 0 && selectedIds.size === dispositivos.length;
+
+  return (
+    <>
+      {dispositivos.length > 0 && (
+        <div style={{ padding: '14px 22px', background: '#fafafa', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#666', fontWeight: 500 }}>
+          <span aria-live="polite" role="status">
+            Mostrando <strong style={{ color: '#1a1a1a' }}>{dispositivos.length}</strong> de <strong style={{ color: '#1a1a1a' }}>{total}</strong> dispositivos
+            {debouncedSearch && <span> · buscando "<em>{debouncedSearch}</em>"</span>}
+            {selectedIds.size > 0 && <span style={{ color: '#1890ff', marginLeft: '8px' }}>· {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>}
+          </span>
+          <span style={{ color: '#1890ff', fontWeight: 600 }}>Página {page}</span>
+        </div>
+      )}
+      <div style={{ overflowX: 'auto' }}>
+        <table role="grid" aria-label="Lista de dispositivos" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
+          <thead>
+            <tr style={{ background: '#fafafa' }}>
+              {isAdmin && (
+                <th style={{ padding: '14px 12px', borderBottom: '2px solid #f0f0f0', width: '44px' }}>
+                  <input type="checkbox" aria-label="Seleccionar todos" checked={allSelected} onChange={onSelectAll} style={{ cursor: 'pointer' }} />
+                </th>
+              )}
+              {TABLE_COLUMNS.map(col => (
+                <th key={col.key} scope="col"
+                  aria-sort={col.sortable && col.key !== 'acciones'
+                    ? (sort.column === col.key ? (sort.direction === SortDirection.ASC ? 'ascending' : 'descending') : 'none')
+                    : undefined}
+                  onClick={col.sortable && col.key !== 'acciones' ? () => onSort(col.key as keyof Dispositivo) : undefined}
+                  style={{ padding: '14px 18px', textAlign: 'left', fontWeight: 700, color: '#444', borderBottom: '2px solid #f0f0f0', fontSize: '12px', cursor: col.sortable ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                  {col.label}
+                  {col.sortable && col.key !== 'acciones' && <SortIcon column={col.key as keyof Dispositivo} sort={sort} />}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading
+              ? Array.from({ length: SKELETON_ROWS }).map((_, i) => <SkeletonRow key={i} />)
+              : dispositivos.map(dev => {
+                  const isHovered  = hoveredRowId === dev.id;
+                  const isSelected = selectedIds.has(dev.id);
+                  return (
+                    <tr key={dev.id} role="row" tabIndex={0} aria-selected={isSelected}
+                      onMouseEnter={() => setHoveredRowId(dev.id)} onMouseLeave={() => setHoveredRowId(null)}
+                      onClick={() => onRowClick ? onRowClick(dev) : onView(dev)}
+                      onKeyDown={e => handleKeyDown(e, dev)}
+                      style={{ borderBottom: '1px solid #f0f0f0', background: isSelected ? 'rgba(24,144,255,0.08)' : !dev.activo ? (isHovered ? '#fff5f5' : '#fffafa') : (isHovered ? 'rgba(24,144,255,0.04)' : 'white'), cursor: 'pointer', outline: 'none', transition: 'background 0.15s' }}>
+                      {isAdmin && (
+                        <td style={{ padding: '16px 12px' }} onClick={e => e.stopPropagation()}>
+                          <input type="checkbox" aria-label={`Seleccionar dispositivo ${dev.imei}`} checked={isSelected} onChange={() => onToggleSelect(dev.id)} style={{ cursor: 'pointer' }} />
+                        </td>
+                      )}
+                      <td style={{ padding: '16px 18px' }}>
+                        <span style={{ background: '#fafafa', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, fontFamily: 'monospace' }}>#{dev.id}</span>
+                      </td>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <CellIcon emoji="📱" color="#1890ff" bg="#e6f7ff" />
+                          <div>
+                            <div style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '14px' }}>{formatIMEI(dev.imei)}</div>
+                            {dev.imei && <div style={{ fontSize: '11px', color: '#999' }}>{dev.imei.replace(/\D/g, '').length} dígitos</div>}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <CellIcon emoji="👤" color="#52c41a" bg="#f6ffed" />
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{dev.personaNombre || 'Sin asignar'}</div>
+                            {dev.personaId && <div style={{ fontSize: '11px', color: '#999' }}>ID: {dev.personaId}</div>}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <CellIcon emoji="🏢" color="#722ed1" bg="#f9f0ff" />
+                          <span>{dev.empresaNombre || '—'}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <CellIcon emoji="📅" color="#fa8c16" bg="#fff7e6" />
+                          <span>{formatDate(dev.fechaRegistro)}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 18px' }}><StatusBadge activo={dev.activo} /></td>
+                      <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                        {isAdmin ? (
+                          <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap' }}>
+                            <ActionBtn variant="view"  icon="👁️" label="Ver"     title="Ver detalles"              onClick={() => onView(dev)} />
+                            <ActionBtn variant="edit"  icon="✏️" label="Editar"  title="Editar dispositivo"        onClick={() => onEdit(dev)} />
+                            <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? '⏸' : '▶️'} label={dev.activo ? 'Desact.' : 'Activar'} title={dev.activo ? 'Desactivar' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
+                            <ActionBtn variant="del"   icon="🗑️" label="Elim."   title="Eliminar permanentemente"  onClick={() => onDeleteRequest(dev.id)} />
+                          </div>
+                        ) : (
+                          <ActionBtn variant="view" icon="👁️" label="Ver detalles" onClick={() => onView(dev)} />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+});
+DispositivosTable.displayName = 'DispositivosTable';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GRID VIEW (vista tarjetas)
+// ─────────────────────────────────────────────────────────────────────────────
+interface GridViewProps {
+  dispositivos: Dispositivo[]; isAdmin: boolean; selectedIds: Set<number>;
+  onView: (d: Dispositivo) => void; onEdit: (d: Dispositivo) => void;
+  onToggle: (id: number, a: boolean) => void; onDeleteRequest: (id: number) => void;
+  onToggleSelect: (id: number) => void;
+}
+
+const DevCard = memo(({ dev, isAdmin, isSelected, onView, onEdit, onToggle, onDeleteRequest, onToggleSelect }: {
+  dev: Dispositivo; isAdmin: boolean; isSelected: boolean;
+  onView: (d: Dispositivo) => void; onEdit: (d: Dispositivo) => void;
+  onToggle: (id: number, a: boolean) => void; onDeleteRequest: (id: number) => void;
+  onToggleSelect: (id: number) => void;
+}) => (
+  <div onClick={() => onView(dev)} style={{ background: isSelected ? 'rgba(24,144,255,0.06)' : '#fff', border: `1.5px solid ${isSelected ? '#91d5ff' : tk.border}`, borderRadius: tk.radiusLg, padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: tk.shadow, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#e6f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📱</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <StatusBadge activo={dev.activo} />
+        {isAdmin && <input type="checkbox" aria-label={`Seleccionar ${dev.imei}`} checked={isSelected} onChange={() => onToggleSelect(dev.id)} onClick={e => e.stopPropagation()} style={{ cursor: 'pointer' }} />}
+      </div>
+    </div>
+    <div>
+      <div style={{ fontSize: '11px', color: tk.textMuted, fontWeight: 600, textTransform: 'uppercase', marginBottom: '2px' }}>IMEI</div>
+      <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '14px', color: '#1890ff' }}>{formatIMEI(dev.imei)}</div>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
+      {[['Persona', dev.personaNombre || 'Sin asignar'], ['Empresa', dev.empresaNombre || '—'], ['Registro', formatDate(dev.fechaRegistro)], ['ID', `#${dev.id}`]].map(([label, value]) => (
+        <div key={label}>
+          <div style={{ color: tk.textMuted, fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
+          <div style={{ fontWeight: 600, color: tk.text }}>{value}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', borderTop: `1px solid ${tk.border}`, paddingTop: '12px' }} onClick={e => e.stopPropagation()}>
+      <ActionBtn variant="view" icon="👁️" label="Ver" onClick={() => onView(dev)} />
+      {isAdmin && <>
+        <ActionBtn variant="edit"  icon="✏️" label="Editar" onClick={() => onEdit(dev)} />
+        <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? '⏸' : '▶️'} label={dev.activo ? 'Desact.' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
+        <ActionBtn variant="del"  icon="🗑️" label="Elim."  onClick={() => onDeleteRequest(dev.id)} />
+      </>}
+    </div>
+  </div>
+));
+DevCard.displayName = 'DevCard';
+
+const GridView = memo<GridViewProps>(({ dispositivos, isAdmin, selectedIds, onView, onEdit, onToggle, onDeleteRequest, onToggleSelect }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px', padding: '20px' }}>
+    {dispositivos.map(dev => (
+      <DevCard key={dev.id} dev={dev} isAdmin={isAdmin} isSelected={selectedIds.has(dev.id)}
+        onView={onView} onEdit={onEdit} onToggle={onToggle} onDeleteRequest={onDeleteRequest} onToggleSelect={onToggleSelect} />
+    ))}
+  </div>
+));
+GridView.displayName = 'GridView';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAZY MODALS
+// ─────────────────────────────────────────────────────────────────────────────
+const DispositivoForm   = lazy(() => import('./DispositivoForm'));
+const DispositivoDetail = lazy(() => import('./DispositivoDetail'));
+
+const ModalFallback = () => (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}>
+    <div style={{ width: '44px', height: '44px', border: '3px solid #e6f7ff', borderTop: '3px solid #1890ff', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
   </div>
 );
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 const DispositivosList: React.FC<DispositivosListProps> = ({
   userRole, userEmpresaId, personaId,
   modo = 'full', showHeader = true, onDispositivoSelect,
 }) => {
-  const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
-  const [showForm, setShowForm]         = useState(false);
-  const [selectedDev, setSelectedDev]   = useState<Dispositivo | null>(null);
-  const [editingDev, setEditingDev]     = useState<Dispositivo | null>(null);
-  const [searchTerm, setSearchTerm]     = useState('');
-  const [debouncedSearch, setDebSearch] = useState('');
-  const [filters, setFilters]           = useState({ empresaId: userEmpresaId || 0, activo: true, page: 1, limit: 20 });
-  const [empresas, setEmpresas]         = useState<any[]>([]);
-  const [total, setTotal]               = useState(0);
-  const [showFilters, setShowFilters]   = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [hovRow, setHovRow]             = useState<number | null>(null);
-  const [primaryHov, setPrimaryHov]     = useState(false);
-  const [filterHov, setFilterHov]       = useState(false);
+  const {
+    dispositivos, total, loading, error, retryCount, empresas,
+    filters, dispatchFilters,
+    searchTerm, setSearchTerm, debouncedSearch,
+    sort, handleSort,
+    selectedDev, setSelectedDev, editingDev, setEditingDev,
+    showForm, setShowForm, confirmDelete, setConfirmDelete,
+    handleCreate, handleUpdate, handleDeleteConfirm, handleToggle,
+    totalPages, selectedIds, toggleSelection, toggleSelectAll, clearSelection,
+    isAdmin, clearError, retry,
+  } = useDispositivos({ userRole, userEmpresaId, personaId });
 
-  // Debounce search
-  useEffect(() => {
-    const t = setTimeout(() => { setDebSearch(searchTerm); setFilters(f => ({ ...f, page: 1 })); }, 500);
-    return () => clearTimeout(t);
-  }, [searchTerm]);
+  const [viewMode,     setViewMode]     = useState<ViewMode>(ViewMode.Table);
+  const [showFilters,  setShowFilters]  = useState(false);
 
-  useEffect(() => { loadEmpresas(); }, []);
-  useEffect(() => { loadDispositivos(); }, [filters, personaId, debouncedSearch]);
+  const handleRowClick = useCallback((dev: Dispositivo) => {
+    onDispositivoSelect ? onDispositivoSelect(dev.id) : setSelectedDev(dev);
+  }, [onDispositivoSelect, setSelectedDev]);
 
-  const loadEmpresas = async () => {
-    if (userRole !== 'Admin' && !userEmpresaId) return;
-    try { const d = await empresasService.getEmpresas(); setEmpresas(Array.isArray(d) ? d : []); } catch {}
-  };
-
-  const loadDispositivos = async () => {
-    try {
-      setLoading(true); setError('');
-      if (personaId) {
-        const d = await dispositivosService.getDispositivosPorPersona(personaId);
-        const arr = Array.isArray(d) ? d : [];
-        setDispositivos(arr); setTotal(arr.length); return;
-      }
-      const params: any = { ...filters, search: debouncedSearch || undefined };
-      if (userRole !== 'Admin' && userEmpresaId) params.empresaId = userEmpresaId;
-      const result = await dispositivosService.getDispositivos(params);
-      const arr = Array.isArray(result.dispositivos) ? result.dispositivos : Array.isArray(result) ? result : [];
-      setDispositivos(arr); setTotal(result.total || arr.length);
-    } catch (err: any) {
-      setError(err.response?.data?.mensaje || err.message || 'Error al cargar dispositivos');
-      setDispositivos([]); setTotal(0);
-    } finally { setLoading(false); }
-  };
-
-  const handleCreate = async (data: any) => { await dispositivosService.createDispositivo(data); setShowForm(false); loadDispositivos(); };
-  const handleUpdate = async (id: number, data: any) => { await dispositivosService.updateDispositivo(id, data); setEditingDev(null); loadDispositivos(); };
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Eliminar este dispositivo?')) return;
-    try { await dispositivosService.deleteDispositivo(id); loadDispositivos(); }
-    catch (err: any) { setError(err.response?.data?.mensaje || 'Error al eliminar'); }
-  };
-  const handleToggle = async (id: number, activo: boolean) => {
-    try { await dispositivosService.toggleActivo(id, activo); loadDispositivos(); }
-    catch (err: any) { setError(err.response?.data?.mensaje || 'Error al cambiar estado'); }
-  };
-
-  const formatDate = (ds: string) => {
-    if (!ds) return '—';
-    try {
-      // Strip time component if present to avoid timezone shifts
-      const dateOnly = ds.split('T')[0];
-      const d = new Date(dateOnly + 'T00:00:00');
-      if (isNaN(d.getTime())) return '—';
-      return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
-    } catch { return '—'; }
-  };
-
-  const formatIMEI = (imei: string | undefined) => {
-    if (!imei) return 'No disponible';
-    const c = imei.toString().replace(/\D/g, '');
-    if (c.length !== 15) return c;
-    return `${c.slice(0,6)}-${c.slice(6,12)}-${c.slice(12)}`;
-  };
-
-  const totalPages = Math.ceil(total / filters.limit);
-  const isAdmin = userRole === 'Admin';
-
-  // ── Loading ──
-  if (loading && dispositivos.length === 0) return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '16px' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ width: '44px', height: '44px', border: `3px solid ${tk.blueLight}`, borderTop: `3px solid ${tk.blue}`, borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
-      <span style={{ color: tk.textSub, fontSize: '15px' }}>Cargando dispositivos...</span>
-    </div>
-  );
-
-  const searchBorderColor = searchFocused ? tk.blue : tk.borderMd;
+  const handleExportCSV = useCallback(() => exportToCSV(dispositivos, 'dispositivos.csv'), [dispositivos]);
 
   return (
     <div style={{ padding: modo === 'embedded' ? 0 : '24px', maxWidth: '1400px', margin: '0 auto', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-        @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
+      <style>{GLOBAL_KEYFRAMES}</style>
 
-      {/* ── Header ── */}
+      {/* ── HEADER ── */}
       {showHeader && (
-        <div style={{
-          background: tk.white, borderRadius: '16px', padding: '24px 28px',
-          marginBottom: '24px', boxShadow: tk.shadow, border: `1px solid ${tk.border}`,
-        }}>
-          {/* Title row */}
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '24px 28px', marginBottom: '24px', boxShadow: tk.shadow, border: '1px solid #f0f0f0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
             <div>
-              <h1 style={{
-                fontSize: '26px', fontWeight: 800, margin: 0,
-                background: `linear-gradient(135deg, ${tk.blue} 0%, ${tk.blueDark} 100%)`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>
+              <h1 style={{ fontSize: '26px', fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #1428A0 0%, #096dd9 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                 📱 Dispositivos Registrados
               </h1>
-              <div style={{ color: tk.textSub, fontSize: '15px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ color: '#666', fontSize: '15px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span>{personaId ? 'Dispositivos asignados a esta persona' : 'Gestión de dispositivos móviles'}</span>
-                <span style={{
-                  background: tk.blueLight, color: tk.blue,
-                  border: `1px solid ${tk.blueBorder}`,
-                  padding: '3px 12px', borderRadius: '12px', fontSize: '13px', fontWeight: 600,
-                }}>
+                <span aria-live="polite" style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '3px 12px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}>
                   {total} {total === 1 ? 'dispositivo' : 'dispositivos'}
                 </span>
               </div>
             </div>
 
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Toggle vista tabla/tarjetas */}
+              <div style={{ display: 'flex', border: '1px solid #e8e8e8', borderRadius: '8px', overflow: 'hidden' }}>
+                {([ViewMode.Table, ViewMode.Grid] as const).map((m, i) => (
+                  <button key={m} aria-label={m === ViewMode.Table ? 'Vista tabla' : 'Vista tarjetas'} aria-pressed={viewMode === m}
+                    onClick={() => setViewMode(m)}
+                    style={{ padding: '8px 12px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === m ? '#e6f7ff' : 'white', color: viewMode === m ? '#1890ff' : '#666', borderLeft: i > 0 ? '1px solid #e8e8e8' : undefined }}>
+                    {m === ViewMode.Table ? '☰' : '⊞'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Exportar CSV */}
+              <Btn base={{ background: 'white', color: '#52c41a', border: '2px solid #b7eb8f', padding: '10px 16px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                hoverStyle={{ background: '#f6ffed', borderColor: '#52c41a' }} onClick={handleExportCSV} title="Exportar a CSV">
+                📥 Exportar
+              </Btn>
+
+              {/* Filtros */}
+              <Btn base={{ background: showFilters ? '#e6f7ff' : 'white', color: showFilters ? '#1890ff' : '#666', border: `2px solid ${showFilters ? '#1890ff' : '#e8e8e8'}`, padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                hoverStyle={{ borderColor: '#1890ff', color: '#1890ff', background: '#e6f7ff' }} aria-label="Mostrar/ocultar filtros" onClick={() => setShowFilters(f => !f)}>
+                🔧 {showFilters ? 'Ocultar filtros' : 'Filtros'}
+              </Btn>
+
+              {/* Nuevo dispositivo */}
               {isAdmin && (
-                <Btn
-                  base={{
-                    background: `linear-gradient(135deg, ${tk.blue} 0%, ${tk.blueDark} 100%)`,
-                    color: tk.white, border: 'none', padding: '11px 22px',
-                    borderRadius: '10px', fontSize: '14px', fontWeight: 700,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 4px 12px rgba(24,144,255,0.3)', transition: 'all 0.2s',
-                  }}
-                  hoverStyle={{ transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(24,144,255,0.4)' }}
-                  onClick={() => setShowForm(true)}
-                >
+                <Btn base={{ background: 'linear-gradient(135deg, #1428A0 0%, #096dd9 100%)', color: 'white', border: 'none', padding: '11px 22px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(20,40,160,0.3)' }}
+                  hoverStyle={{ transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(20,40,160,0.4)' }} aria-label="Nuevo dispositivo" onClick={() => setShowForm(true)}>
                   <span style={{ fontSize: '18px', fontWeight: 900 }}>+</span> Nuevo Dispositivo
                 </Btn>
               )}
-              <Btn
-                base={{
-                  background: tk.white, color: tk.textSub,
-                  border: `2px solid ${showFilters ? tk.blue : tk.borderMd}`,
-                  padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: 600,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s',
-                  ...(showFilters ? { color: tk.blue, background: tk.blueLight } : {}),
-                }}
-                hoverStyle={{ borderColor: tk.blue, color: tk.blue, background: tk.blueLight }}
-                onClick={() => setShowFilters(f => !f)}
-              >
-                🔧 {showFilters ? 'Ocultar filtros' : 'Filtros'}
-              </Btn>
             </div>
           </div>
-
-          {/* Search */}
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: tk.white, border: `2px solid ${searchBorderColor}`,
-            borderRadius: '10px', padding: '0 14px',
-            boxShadow: searchFocused ? `0 0 0 3px ${tk.blueAlpha}` : 'none',
-            transition: 'all 0.2s',
-          }}>
-            <span style={{ color: tk.textMuted, marginRight: '8px', fontSize: '16px' }}>🔍</span>
-            <input
-              type="text"
-              placeholder="Buscar por IMEI, persona o empresa..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              style={{
-                flex: 1, border: 'none', padding: '13px 0', fontSize: '15px',
-                outline: 'none', background: 'transparent', color: tk.text,
-              }}
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', color: tk.textMuted, fontSize: '20px', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>×</button>
-            )}
-          </div>
+          <SearchInput value={searchTerm} onChange={setSearchTerm} />
         </div>
       )}
 
-      {/* ── Filters panel ── */}
+      {/* ── FILTROS ── */}
       {showFilters && (
-        <div style={{
-          background: tk.white, borderRadius: '14px', padding: '22px 24px',
-          marginBottom: '20px', boxShadow: tk.shadow, border: `1px solid ${tk.border}`,
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px',
-          animation: 'slideDown 0.2s ease',
-        }}>
-          {/* Empresa filter */}
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: tk.text, marginBottom: '8px' }}>🏢 Empresa</label>
-            <select
-              value={filters.empresaId}
-              onChange={e => setFilters(f => ({ ...f, empresaId: +e.target.value, page: 1 }))}
-              disabled={!isAdmin || !!personaId}
-              style={{ width: '100%', padding: '10px 14px', border: `2px solid ${tk.borderMd}`, borderRadius: '9px', fontSize: '14px', background: tk.white, color: tk.text, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value={0}>Todas las empresas</option>
-              {empresas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-            </select>
-          </div>
+        <FiltersPanel filters={filters} dispatch={dispatchFilters} empresas={empresas}
+          isAdmin={isAdmin} hasPersonaFilter={!!personaId} defaultEmpresaId={userEmpresaId ?? 0} />
+      )}
 
-          {/* Estado filter */}
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: tk.text, marginBottom: '8px' }}>⚡ Estado</label>
-            <select
-              value={String(filters.activo)}
-              onChange={e => setFilters(f => ({ ...f, activo: e.target.value === 'true', page: 1 }))}
-              style={{ width: '100%', padding: '10px 14px', border: `2px solid ${tk.borderMd}`, borderRadius: '9px', fontSize: '14px', background: tk.white, color: tk.text, outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="true">✅ Activos</option>
-              <option value="false">⏸ Inactivos</option>
-            </select>
-          </div>
-
-          {/* Per page filter */}
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: tk.text, marginBottom: '8px' }}>📊 Por página</label>
-            <select
-              value={filters.limit}
-              onChange={e => setFilters(f => ({ ...f, limit: +e.target.value, page: 1 }))}
-              style={{ width: '100%', padding: '10px 14px', border: `2px solid ${tk.borderMd}`, borderRadius: '9px', fontSize: '14px', background: tk.white, color: tk.text, outline: 'none', cursor: 'pointer' }}
-            >
-              {[10,20,50,100].map(n => <option key={n} value={n}>{n} dispositivos</option>)}
-            </select>
-          </div>
-
-          {/* Clear */}
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button
-              onClick={() => setFilters({ empresaId: userEmpresaId || 0, activo: true, page: 1, limit: 20 })}
-              style={{ background: 'none', border: 'none', color: tk.blue, fontSize: '14px', fontWeight: 600, cursor: 'pointer', padding: '10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              🗑️ Limpiar filtros
-            </button>
-          </div>
+      {/* ── RETRY NOTICE ── */}
+      {retryCount > 0 && (
+        <div role="status" aria-live="polite" style={{ background: '#fff7e6', border: '1px solid #ffd591', padding: '12px 18px', borderRadius: '10px', marginBottom: '16px', fontSize: '14px', color: '#d46b08' }}>
+          ⏳ Reintentando conexión… intento {retryCount}
         </div>
       )}
 
-      {/* ── Error ── */}
+      {/* ── ERROR ── */}
       {error && (
-        <div style={{
-          background: `linear-gradient(135deg, ${tk.redBg} 0%, ${tk.redBorder} 100%)`,
-          border: `1px solid #ffa39e`, color: tk.red,
-          padding: '14px 18px', borderRadius: '10px', marginBottom: '18px',
-          display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px',
-        }}>
-          <span>⚠️</span>
+        <div role="alert" aria-live="assertive" style={{ background: '#fff2f0', border: '1px solid #ffccc7', color: '#ff4d4f', padding: '14px 18px', borderRadius: '10px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span aria-hidden>⚠️</span>
           <span style={{ flex: 1 }}>{error}</span>
-          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: tk.red, fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>×</button>
+          <button aria-label="Reintentar" onClick={retry}    style={{ background: '#fff2f0', border: '1px solid #ffccc7', color: '#ff4d4f', padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Reintentar</button>
+          <button aria-label="Cerrar error" onClick={clearError} style={{ background: 'none', border: 'none', color: '#ff4d4f', fontSize: '20px', cursor: 'pointer' }}>×</button>
         </div>
       )}
 
-      {/* ── Modals ── */}
-      {(showForm || editingDev) && (
-        <DispositivoForm
-          dispositivo={editingDev}
-          onSubmit={editingDev ? (d: any) => handleUpdate(editingDev.id, d) : handleCreate}
-          onCancel={() => { setShowForm(false); setEditingDev(null); }}
-          title={editingDev ? 'Editar Dispositivo' : 'Nuevo Dispositivo'}
-          empresas={empresas} userRole={userRole} userEmpresaId={userEmpresaId}
-        />
-      )}
-      {selectedDev && (
-        <DispositivoDetail
-          dispositivo={selectedDev}
-          onClose={() => setSelectedDev(null)}
-          onEdit={() => { setSelectedDev(null); setEditingDev(selectedDev); }}
-          userRole={userRole}
-        />
+      {/* ── BARRA SELECCIÓN MÚLTIPLE ── */}
+      {isAdmin && selectedIds.size > 0 && (
+        <div style={{ background: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: '10px', padding: '12px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', animation: 'slideDown 0.2s ease' }}>
+          <span style={{ fontWeight: 600, color: '#1890ff' }}>{selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>
+          <button onClick={clearSelection} style={{ background: 'none', border: 'none', color: '#1890ff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Cancelar selección</button>
+        </div>
       )}
 
-      {/* ── Table card ── */}
-      <div style={{ background: tk.white, borderRadius: '16px', overflow: 'hidden', boxShadow: tk.shadow, border: `1px solid ${tk.border}` }}>
-
-        {dispositivos.length > 0 ? (
-          <>
-            {/* Table info bar */}
-            <div style={{
-              padding: '14px 22px', background: tk.bg, borderBottom: `1px solid ${tk.border}`,
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              fontSize: '13px', color: tk.textSub, fontWeight: 500,
-            }}>
-              <span>
-                Mostrando <strong style={{ color: tk.text }}>{dispositivos.length}</strong> de <strong style={{ color: tk.text }}>{total}</strong> dispositivos
-                {debouncedSearch && <span> · buscando "<em>{debouncedSearch}</em>"</span>}
-              </span>
-              <span style={{ color: tk.blue, fontWeight: 600 }}>Página {filters.page}</span>
-            </div>
-
-            {/* Scrollable table */}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
-                <thead>
-                  <tr style={{ background: tk.bg }}>
-                    {([
-                      { label: 'ID',       width: '60px'  },
-                      { label: 'IMEI',     width: '200px' },
-                      { label: 'Persona',  width: '200px' },
-                      { label: 'Empresa',  width: '160px' },
-                      { label: 'Fecha',    width: '120px' },
-                      { label: 'Estado',   width: '110px' },
-                      { label: 'Acciones', width: '240px' },
-                    ] as { label: string; width: string }[]).map(({ label, width }) => (
-                      <th key={label} style={{
-                        padding: '14px 18px', textAlign: 'left', fontWeight: 700,
-                        color: '#444', borderBottom: `2px solid ${tk.border}`,
-                        fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.6px',
-                        whiteSpace: 'nowrap', width,
-                      }}>{label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dispositivos.map(dev => {
-                    const isHov = hovRow === dev.id;
-                    return (
-                      <tr
-                        key={dev.id}
-                        onMouseEnter={() => setHovRow(dev.id)}
-                        onMouseLeave={() => setHovRow(null)}
-                        onClick={() => onDispositivoSelect ? onDispositivoSelect(dev.id) : setSelectedDev(dev)}
-                        style={{
-                          borderBottom: `1px solid ${tk.border}`,
-                          background: !dev.activo
-                            ? isHov ? '#fff5f5' : '#fffafa'
-                            : isHov ? tk.blueAlpha : tk.white,
-                          transition: 'background 0.15s',
-                          cursor: onDispositivoSelect ? 'pointer' : 'default',
-                        }}
-                      >
-                        {/* ID */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <span style={{
-                            background: tk.bg, color: tk.textSub,
-                            padding: '5px 10px', borderRadius: '6px',
-                            fontSize: '12px', fontWeight: 700, fontFamily: 'monospace',
-                          }}>#{dev.id}</span>
-                        </td>
-
-                        {/* IMEI */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <CellIcon emoji="📱" color={tk.blue} bg={tk.blueLight} />
-                            <div>
-                              <div style={{ fontFamily: 'monospace', fontWeight: 600, color: tk.text, fontSize: '14px', letterSpacing: '0.3px' }}>
-                                {formatIMEI(dev.imei)}
-                              </div>
-                              {dev.imei && (
-                                <div style={{ fontSize: '11px', color: tk.textMuted, marginTop: '2px' }}>
-                                  {dev.imei.toString().replace(/\D/g, '').length} dígitos
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Persona */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <CellIcon emoji="👤" color={tk.green} bg={tk.greenBg} />
-                            <div>
-                              <div style={{ fontWeight: 600, color: tk.text, fontSize: '14px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {dev.personaNombre || 'Sin asignar'}
-                              </div>
-                              {dev.personaId && <div style={{ fontSize: '11px', color: tk.textMuted, fontFamily: 'monospace' }}>ID: {dev.personaId}</div>}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Empresa */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <CellIcon emoji="🏢" color={tk.purple} bg={tk.purpleBg} />
-                            <span style={{ color: tk.text, fontSize: '14px', fontWeight: 500, maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {dev.empresaNombre || '—'}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Fecha */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <CellIcon emoji="📅" color={tk.orange} bg={tk.orangeBg} />
-                            <span style={{ color: tk.textSub, fontSize: '13px', fontWeight: 500 }}>{formatDate(dev.fechaRegistro)}</span>
-                          </div>
-                        </td>
-
-                        {/* Estado */}
-                        <td style={{ padding: '16px 18px' }}>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '7px',
-                            padding: '6px 14px', borderRadius: '20px',
-                            fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap',
-                            ...(dev.activo
-                              ? { background: tk.greenBg, color: '#237804', border: `1px solid ${tk.greenBorder}` }
-                              : { background: tk.redBg,   color: '#a8071a', border: `1px solid ${tk.redBorder}` }),
-                          }}>
-                            <span style={{
-                              width: '8px', height: '8px', borderRadius: '50%',
-                              background: dev.activo ? tk.green : tk.red,
-                              boxShadow: dev.activo ? `0 0 6px ${tk.green}` : `0 0 6px ${tk.red}`,
-                            }} />
-                            {dev.activo ? 'Activo' : 'Inactivo'}
-                          </span>
-                        </td>
-
-                        {/* Acciones */}
-                        <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
-                          {isAdmin ? (
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap', minWidth: '220px' }}>
-                              <Btn base={btnStyles.view} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)} title="Ver detalles">👁️ Ver</Btn>
-                              <Btn base={btnStyles.edit} hoverStyle={btnHoverStyles.edit} onClick={() => setEditingDev(dev)} title="Editar">✏️ Editar</Btn>
-                              <Btn
-                                base={dev.activo ? btnStyles.deact : btnStyles.activ}
-                                hoverStyle={dev.activo ? btnHoverStyles.deact : btnHoverStyles.activ}
-                                onClick={() => handleToggle(dev.id, !dev.activo)}
-                                title={dev.activo ? 'Desactivar' : 'Activar'}
-                              >
-                                {dev.activo ? '⏸ Desact.' : '▶️ Activar'}
-                              </Btn>
-                              <Btn base={btnStyles.del} hoverStyle={btnHoverStyles.del} onClick={() => handleDelete(dev.id)} title="Eliminar">🗑️ Elim.</Btn>
-                            </div>
-                          ) : (
-                            <Btn base={{ ...btnStyles.view, flex: 'none' }} hoverStyle={btnHoverStyles.view} onClick={() => setSelectedDev(dev)}>👁️ Ver detalles</Btn>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* ── Pagination ── */}
-            {totalPages > 1 && (
-              <div style={{
-                padding: '16px 22px', borderTop: `1px solid ${tk.border}`, background: tk.bg,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px',
-              }}>
-                <span style={{ fontSize: '13px', color: tk.textSub, fontWeight: 500 }}>
-                  Página <strong style={{ color: tk.text }}>{filters.page}</strong> de <strong style={{ color: tk.text }}>{totalPages}</strong>
-                  <span style={{ marginLeft: '8px', color: tk.textMuted }}>({total} total)</span>
-                </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[
-                    { label: '← Anterior', page: filters.page - 1, disabled: filters.page === 1 },
-                    { label: 'Siguiente →', page: filters.page + 1, disabled: filters.page >= totalPages },
-                  ].map(({ label, page, disabled }) => (
-                    <Btn
-                      key={label}
-                      disabled={disabled}
-                      base={{
-                        padding: '9px 20px', border: `2px solid ${tk.borderMd}`, background: tk.white,
-                        borderRadius: '9px', cursor: 'pointer', fontWeight: 600, fontSize: '13px',
-                        color: tk.textSub, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px',
-                      }}
-                      hoverStyle={{ borderColor: tk.blue, color: tk.blue, background: tk.blueLight }}
-                      onClick={() => setFilters(f => ({ ...f, page }))}
-                    >
-                      {label}
-                    </Btn>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+      {/* ── TABLA / GRID ── */}
+      <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: tk.shadow, border: '1px solid #f0f0f0' }}>
+        {viewMode === ViewMode.Table ? (
+          <DispositivosTable
+            dispositivos={dispositivos} loading={loading} total={total}
+            isAdmin={isAdmin} debouncedSearch={debouncedSearch} sort={sort}
+            selectedIds={selectedIds} page={filters.page}
+            onSort={handleSort} onView={setSelectedDev} onEdit={setEditingDev}
+            onToggle={handleToggle} onDeleteRequest={setConfirmDelete}
+            onRowClick={onDispositivoSelect ? handleRowClick : undefined}
+            onSelectAll={toggleSelectAll} onToggleSelect={toggleSelection}
+          />
         ) : (
-          /* ── Empty state ── */
-          <div style={{ padding: '70px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '56px', opacity: 0.25, marginBottom: '18px' }}>📱</div>
-            <h3 style={{ color: tk.text, fontSize: '20px', fontWeight: 700, margin: '0 0 10px' }}>No hay dispositivos</h3>
-            <p style={{ color: tk.textSub, marginBottom: '28px', maxWidth: '360px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-              {debouncedSearch
-                ? `No se encontraron resultados para "${debouncedSearch}"`
-                : 'Aún no hay dispositivos registrados en el sistema.'}
-            </p>
-            {isAdmin && !debouncedSearch && (
-              <Btn
-                base={{
-                  background: `linear-gradient(135deg, ${tk.blue} 0%, ${tk.blueDark} 100%)`,
-                  color: tk.white, border: 'none', padding: '12px 24px',
-                  borderRadius: '10px', fontSize: '14px', fontWeight: 700,
-                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  boxShadow: '0 4px 12px rgba(24,144,255,0.3)', transition: 'all 0.2s',
-                }}
-                hoverStyle={{ transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(24,144,255,0.4)' }}
-                onClick={() => setShowForm(true)}
-              >
-                + Registrar primer dispositivo
-              </Btn>
-            )}
+          <GridView dispositivos={dispositivos} isAdmin={isAdmin} selectedIds={selectedIds}
+            onView={setSelectedDev} onEdit={setEditingDev} onToggle={handleToggle}
+            onDeleteRequest={setConfirmDelete} onToggleSelect={toggleSelection} />
+        )}
+
+        {/* ── PAGINACIÓN ── */}
+        {totalPages > 1 && (
+          <div style={{ padding: '16px 22px', borderTop: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <span>Página <strong>{filters.page}</strong> de <strong>{totalPages}</strong> ({total} total)</span>
+            <div style={{ display: 'flex', gap: '8px' }} role="navigation" aria-label="Paginación">
+              <Btn disabled={filters.page === 1}        base={{ padding: '8px 16px', border: '1px solid #d9d9d9', background: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} hoverStyle={{ borderColor: '#1890ff', color: '#1890ff' }} aria-label="Página anterior" onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page - 1 })}>← Anterior</Btn>
+              <Btn disabled={filters.page >= totalPages} base={{ padding: '8px 16px', border: '1px solid #d9d9d9', background: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} hoverStyle={{ borderColor: '#1890ff', color: '#1890ff' }} aria-label="Página siguiente" onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page + 1 })}>Siguiente →</Btn>
+            </div>
           </div>
         )}
       </div>
+
+      {/* ── MODALES (lazy) ── */}
+      {(showForm || editingDev) && (
+        <Suspense fallback={<ModalFallback />}>
+          <DispositivoForm
+            dispositivo={editingDev}
+            onSubmit={editingDev ? (d: DispositivoFormData) => handleUpdate(editingDev.id, d) : handleCreate}
+            onCancel={() => { setShowForm(false); setEditingDev(null); }}
+            title={editingDev ? 'Editar Dispositivo' : 'Nuevo Dispositivo'}
+            empresas={empresas} userRole={userRole} userEmpresaId={userEmpresaId}
+          />
+        </Suspense>
+      )}
+
+      {selectedDev && (
+        <Suspense fallback={<ModalFallback />}>
+          <DispositivoDetail
+            dispositivo={selectedDev}
+            onClose={() => setSelectedDev(null)}
+            onEdit={() => { setSelectedDev(null); setEditingDev(selectedDev); }}
+            userRole={userRole}
+          />
+        </Suspense>
+      )}
+
+      {/* ── CONFIRM DELETE ── */}
+      {confirmDelete !== null && (
+        <ConfirmModal
+          message="Esta acción eliminará el dispositivo de forma permanente. ¿Deseas continuar?"
+          onConfirm={() => handleDeleteConfirm(confirmDelete)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   );
 };
