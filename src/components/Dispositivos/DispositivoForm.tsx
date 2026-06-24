@@ -466,24 +466,24 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
                               className="dispositivos-form-persona-item"
                               onClick={() => !loading && handleSelectPersona(persona)}
                             >
-                              <div className="dispositivos-form-persona-avatar">
+                              <div className="dispositivos-form-persona-item-avatar">
                                 {persona.nombre?.charAt(0).toUpperCase() || '👤'}
                               </div>
-                              <div className="dispositivos-form-persona-info">
-                                <div className="dispositivos-form-persona-name">{persona.nombre}</div>
-                                <div className="dispositivos-form-persona-details">
-                                  <span className="dispositivos-form-persona-detail">🆔 ID: {persona.identificacion}</span>
+                              <div className="dispositivos-form-persona-item-info">
+                                <div className="dispositivos-form-persona-item-name">{persona.nombre}</div>
+                                <div className="dispositivos-form-persona-item-details">
+                                  <span className="dispositivos-form-persona-item-detail">🆔 ID: {persona.identificacion}</span>
                                   {persona.telefono && (
-                                    <span className="dispositivos-form-persona-detail">📞 {persona.telefono}</span>
+                                    <span className="dispositivos-form-persona-item-detail">📞 {persona.telefono}</span>
                                   )}
-                                  <span className="dispositivos-form-persona-detail">
+                                  <span className="dispositivos-form-persona-item-detail">
                                     📱 {persona.cantidadDispositivos || 0} dispositivo{persona.cantidadDispositivos !== 1 ? 's' : ''}
                                   </span>
                                 </div>
                               </div>
                               <button 
                                 type="button"
-                                className="dispositivos-form-btn-select"
+                                className="dispositivos-form-persona-item-select"
                                 disabled={loading}
                               >
                                 Seleccionar
@@ -491,7 +491,7 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
                             </div>
                           ))
                         ) : (
-                          <div className="dispositivos-form-no-results">
+                          <div className="dispositivos-form-persona-no-results">
                             <p style={{ marginBottom: '10px' }}>
                               <strong>No se encontraron personas con "{searchTerm}"</strong>
                             </p>
@@ -508,7 +508,7 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
                   )}
 
                   {personas.length === 0 && !loadingPersonas && (
-                    <div className="dispositivos-form-no-personas">
+                    <div className="dispositivos-form-no-personas-warning">
                       <p className="dispositivos-form-hint-warning">
                         <AlertTriangle size={18} style={{ flexShrink: 0 }} />
                         Esta empresa no tiene personas registradas. 
@@ -519,38 +519,38 @@ const DispositivoForm: React.FC<DispositivoFormProps> = ({
                 </div>
               ) : (
                 <div className="dispositivos-form-selected-persona">
-                  <div className="dispositivos-form-selected-header">
-                    <div className="dispositivos-form-selected-title">
+                  <div className="dispositivos-form-selected-persona-header">
+                    <div className="dispositivos-form-selected-persona-title">
                       <CheckCircle2 size={20} style={{ color: 'var(--success)' }} />
                       Persona seleccionada:
                     </div>
                     <button
                       type="button"
                       onClick={clearPersonaSelection}
-                      className="dispositivos-form-btn-change"
+                      className="dispositivos-form-selected-persona-change"
                       disabled={loading}
                     >
                       Cambiar propietario
                     </button>
                   </div>
-                  <div className="dispositivos-form-selected-details">
-                    <div className="dispositivos-form-detail-row">
-                      <span className="dispositivos-form-detail-label">
+                  <div className="dispositivos-form-selected-persona-details">
+                    <div className="dispositivos-form-selected-persona-row">
+                      <span className="dispositivos-form-selected-persona-label">
                         Nombre:
                       </span>
-                      <span className="dispositivos-form-detail-value">{formData.personaNombre}</span>
+                      <span className="dispositivos-form-selected-persona-value">{formData.personaNombre}</span>
                     </div>
-                    <div className="dispositivos-form-detail-row">
-                      <span className="dispositivos-form-detail-label">
+                    <div className="dispositivos-form-selected-persona-row">
+                      <span className="dispositivos-form-selected-persona-label">
                         Identificación:
                       </span>
-                      <span className="dispositivos-form-detail-value">{formData.identificacion}</span>
+                      <span className="dispositivos-form-selected-persona-value">{formData.identificacion}</span>
                     </div>
-                    <div className="dispositivos-form-detail-row">
-                      <span className="dispositivos-form-detail-label">
+                    <div className="dispositivos-form-selected-persona-row">
+                      <span className="dispositivos-form-selected-persona-label">
                         Empresa:
                       </span>
-                      <span className="dispositivos-form-detail-value">{formData.empresaNombre}</span>
+                      <span className="dispositivos-form-selected-persona-value">{formData.empresaNombre}</span>
                     </div>
                   </div>
                 </div>
