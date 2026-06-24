@@ -1,5 +1,3 @@
-
-
 import React, {
   lazy,
   memo,
@@ -13,6 +11,11 @@ import React, {
 } from 'react';
 import { dispositivosService, Dispositivo } from '../../services/dispositivosService';
 import { empresasService } from '../../services/empresasService';
+import { 
+  Smartphone, Search, Plus, Eye, Edit2, Trash2, Calendar, User, 
+  Building2, Filter, Download, Play, Pause, ChevronLeft, ChevronRight, AlertTriangle, X 
+} from 'lucide-react';
+import './DispositivosList.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENUMS
@@ -89,64 +92,6 @@ const createDefaultFilters = (empresaId = 0): FiltersState => ({
   page: 1,
   limit: DEFAULT_PAGE_SIZE,
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DESIGN TOKENS
-// ─────────────────────────────────────────────────────────────────────────────
-
-const tk = {
-  primary:       '#1428A0',
-  secondary:     '#007BFF',
-  success:       '#10b981',
-  successBg:     '#d1fae5',
-  successBorder: '#a7f3d0',
-  danger:        '#ef4444',
-  dangerBg:      '#fee2e2',
-  dangerBorder:  '#fecaca',
-  text:          '#1e293b',
-  textSub:       '#64748b',
-  textMuted:     '#94a3b8',
-  border:        '#e2e8f0',
-  bg:            '#f8fafc',
-  white:         '#ffffff',
-  shadow:        '0 6px 20px rgba(0,0,0,0.08)',
-  radiusSm:      '6px',
-  radiusMd:      '10px',
-  radiusLg:      '14px',
-} as const;
-
-const GLOBAL_KEYFRAMES = `
-  @keyframes spin          { to { transform: rotate(360deg) } }
-  @keyframes slideDown     { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeIn        { from{opacity:0} to{opacity:1} }
-  @keyframes skeletonPulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
-  @keyframes pulseGreen    { 0%{box-shadow:0 0 0 0 rgba(16,185,129,.4)} 70%{box-shadow:0 0 0 6px rgba(16,185,129,0)} 100%{box-shadow:0 0 0 0 rgba(16,185,129,0)} }
-`;
-
-// ─── Action button base styles ───────────────────────────────────────────────
-
-const actionBase: React.CSSProperties = {
-  padding: '7px 11px', borderRadius: tk.radiusSm, border: 'none',
-  fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  gap: '4px', transition: 'all 0.2s', whiteSpace: 'nowrap',
-};
-
-const btnStyles = {
-  view:  { ...actionBase, background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff' },
-  edit:  { ...actionBase, background: '#f6ffed', color: '#52c41a', border: '1px solid #b7eb8f' },
-  deact: { ...actionBase, background: '#fff7e6', color: '#fa8c16', border: '1px solid #ffd591' },
-  activ: { ...actionBase, background: '#f6ffed', color: '#52c41a', border: '1px solid #b7eb8f' },
-  del:   { ...actionBase, background: '#fff2f0', color: '#ff4d4f', border: '1px solid #ffccc7' },
-} as const;
-
-const btnHoverStyles = {
-  view:  { background: '#bae7ff', transform: 'translateY(-1px)' },
-  edit:  { background: '#d9f7be', transform: 'translateY(-1px)' },
-  deact: { background: '#ffe7ba', transform: 'translateY(-1px)' },
-  activ: { background: '#d9f7be', transform: 'translateY(-1px)' },
-  del:   { background: '#ffccc7', transform: 'translateY(-1px)' },
-} as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITIES
@@ -265,7 +210,7 @@ const useDispositivos = ({
   const [confirmDelete,  setConfirmDelete]  = useState<number | null>(null);
   const [selectedIds,    setSelectedIds]    = useState<Set<number>>(new Set());
 
-  // ── Debounce (corregido con useRef) ─────────────────────────────────────
+  // ── Debounce ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -275,7 +220,7 @@ const useDispositivos = ({
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [searchTerm]);
 
-  // ── Empresas (con caché) ─────────────────────────────────────────────────
+  // ── Empresas ─────────────────────────────────────────────────────────────
   const loadEmpresas = useCallback(async () => {
     if (!isAdmin && !userEmpresaId) return;
     if (empresasCacheRef.current) { setEmpresas(empresasCacheRef.current); return; }
@@ -400,62 +345,33 @@ const useDispositivos = ({
 // SHARED UI COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Btn ──────────────────────────────────────────────────────────────────────
-interface BtnProps {
-  base: React.CSSProperties;
-  hoverStyle?: React.CSSProperties;
-  onClick?: () => void;
-  title?: string;
-  'aria-label'?: string;
-  children: React.ReactNode;
-  disabled?: boolean;
-}
-const Btn = memo<BtnProps>(({ base, hoverStyle, onClick, title, 'aria-label': ariaLabel, children, disabled = false }) => {
-  const [hov, setHov] = useState(false);
+// ── ActionBtn ────────────────────────────────────────────────────────────────
+type ActionVariant = 'view' | 'edit' | 'deact' | 'activ' | 'del';
+interface ActionBtnProps { variant: ActionVariant; onClick: () => void; label: string; icon: React.ReactNode; title?: string; }
+const ActionBtn = memo<ActionBtnProps>(({ variant, onClick, label, icon, title }) => {
+  const cssClass = variant === 'view' ? 'view' : variant === 'edit' ? 'edit' : variant === 'del' ? 'delete' : 'toggle';
   return (
     <button
-      disabled={disabled}
       onClick={onClick}
-      title={title}
-      aria-label={ariaLabel ?? title}
-      onMouseEnter={() => !disabled && setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{ ...base, ...(hov && !disabled ? hoverStyle : {}), ...(disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}) }}
+      title={title ?? label}
+      aria-label={label}
+      className={`dispositivos-action-btn ${cssClass}`}
     >
-      {children}
+      {icon}
+      <span>{label}</span>
     </button>
   );
 });
-Btn.displayName = 'Btn';
-
-// ── ActionBtn ────────────────────────────────────────────────────────────────
-type ActionVariant = keyof typeof btnStyles;
-interface ActionBtnProps { variant: ActionVariant; onClick: () => void; label: string; icon: string; title?: string; }
-const ActionBtn = memo<ActionBtnProps>(({ variant, onClick, label, icon, title }) => (
-  <Btn base={btnStyles[variant]} hoverStyle={btnHoverStyles[variant]} onClick={onClick} title={title ?? label} aria-label={label}>
-    {icon} {label}
-  </Btn>
-));
 ActionBtn.displayName = 'ActionBtn';
-
-// ── CellIcon ─────────────────────────────────────────────────────────────────
-const CellIcon = memo(({ emoji, color, bg }: { emoji: string; color: string; bg: string }) => (
-  <div aria-hidden style={{ fontSize: '18px', color, background: bg, width: '38px', height: '38px', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-    {emoji}
-  </div>
-));
-CellIcon.displayName = 'CellIcon';
 
 // ── StatusBadge ──────────────────────────────────────────────────────────────
 const StatusBadge = memo(({ activo }: { activo: boolean }) => (
-  <span role="status" aria-label={activo ? 'Activo' : 'Inactivo'} style={{
-    display: 'inline-flex', alignItems: 'center', gap: '7px',
-    padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap',
-    background: activo ? tk.successBg : tk.dangerBg,
-    color:      activo ? '#065f46'    : '#991b1b',
-    border: `1px solid ${activo ? tk.successBorder : tk.dangerBorder}`,
-  }}>
-    <span aria-hidden style={{ width: '8px', height: '8px', borderRadius: '50%', background: activo ? tk.success : tk.danger, animation: activo ? 'pulseGreen 2s infinite' : 'none' }} />
+  <span 
+    role="status" 
+    aria-label={activo ? 'Activo' : 'Inactivo'} 
+    className={`dispositivos-badge-status ${activo ? 'active' : 'inactive'}`}
+  >
+    <span aria-hidden className="dispositivos-status-dot" />
     {activo ? 'Activo' : 'Inactivo'}
   </span>
 ));
@@ -463,10 +379,10 @@ StatusBadge.displayName = 'StatusBadge';
 
 // ── SkeletonRow ──────────────────────────────────────────────────────────────
 const SkeletonRow = memo(() => (
-  <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+  <tr className="dispositivos-table-row">
     {[70, 160, 140, 120, 100, 80, 200].map((w, i) => (
-      <td key={i} style={{ padding: '18px 18px' }}>
-        <div style={{ height: '14px', borderRadius: '6px', background: '#e8edf4', width: `${w}px`, animation: 'skeletonPulse 1.5s ease-in-out infinite' }} />
+      <td key={i} className="dispositivos-table-td">
+        <div style={{ height: '14px', borderRadius: '6px', background: 'var(--gray-200)', width: `${w}px`, animation: 'shimmer 2s infinite' }} />
       </td>
     ))}
   </tr>
@@ -477,14 +393,16 @@ SkeletonRow.displayName = 'SkeletonRow';
 const ConfirmModal = memo(({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) => (
   <div role="dialog" aria-modal="true" aria-label="Confirmar eliminación"
     onClick={onCancel}
-    style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', animation: 'fadeIn 0.15s ease' }}>
-    <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '16px', padding: '32px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', animation: 'slideDown 0.2s ease' }}>
-      <div style={{ fontSize: '40px', textAlign: 'center', marginBottom: '16px' }}>⚠️</div>
-      <h3 style={{ textAlign: 'center', margin: '0 0 8px', fontSize: '18px', fontWeight: 700 }}>¿Confirmar eliminación?</h3>
-      <p  style={{ textAlign: 'center', color: '#64748b', margin: '0 0 28px', fontSize: '14px' }}>{message}</p>
+    style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.15s ease' }}>
+    <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '24px', padding: '36px', maxWidth: '440px', width: '90%', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--gray-200)', animation: 'slideUp 0.2s ease' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', color: 'var(--danger)' }}>
+        <AlertTriangle size={48} />
+      </div>
+      <h3 style={{ textAlign: 'center', margin: '0 0 12px', fontSize: '20px', fontWeight: 700, color: 'var(--gray-900)' }}>¿Confirmar eliminación?</h3>
+      <p  style={{ textAlign: 'center', color: 'var(--gray-500)', margin: '0 0 28px', fontSize: '14px', lineHeight: 1.5 }}>{message}</p>
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button autoFocus onClick={onCancel}  style={{ padding: '10px 24px', borderRadius: '8px', fontWeight: 600, background: '#f1f5f9', border: '1px solid #e2e8f0', cursor: 'pointer' }}>Cancelar</button>
-        <button          onClick={onConfirm} style={{ padding: '10px 24px', borderRadius: '8px', fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+        <button autoFocus onClick={onCancel} style={{ padding: '10px 24px', borderRadius: '12px', fontWeight: 600, background: 'var(--gray-100)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)', cursor: 'pointer', transition: 'all 0.2s' }}>Cancelar</button>
+        <button          onClick={onConfirm} style={{ padding: '10px 24px', borderRadius: '12px', fontWeight: 600, background: 'var(--danger)', color: '#fff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>Eliminar</button>
       </div>
     </div>
   </div>
@@ -495,19 +413,27 @@ ConfirmModal.displayName = 'ConfirmModal';
 // SEARCH INPUT
 // ─────────────────────────────────────────────────────────────────────────────
 const SearchInput = memo(({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-  const [focused, setFocused] = useState(false);
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value), [onChange]);
   return (
-    <div role="search" style={{ display: 'flex', alignItems: 'center', background: 'white', border: `2px solid ${focused ? '#1890ff' : '#e8e8e8'}`, borderRadius: '10px', padding: '0 14px', boxShadow: focused ? '0 0 0 3px rgba(24,144,255,0.08)' : 'none', transition: 'all 0.2s' }}>
-      <span aria-hidden style={{ color: '#999', marginRight: '8px', fontSize: '16px' }}>🔍</span>
+    <div className="dispositivos-search-wrapper" role="search">
       <input
         type="search" aria-label="Buscar dispositivos"
         placeholder="Buscar por IMEI, persona o empresa..."
         value={value} onChange={handleChange}
-        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        style={{ flex: 1, border: 'none', padding: '13px 0', fontSize: '15px', outline: 'none', background: 'transparent', color: '#1a1a1a' }}
+        className="dispositivos-search-input"
       />
-      {value && <button aria-label="Limpiar búsqueda" onClick={() => onChange('')} style={{ background: 'none', border: 'none', color: '#999', fontSize: '20px', cursor: 'pointer' }}>×</button>}
+      <span aria-hidden className="dispositivos-search-icon">
+        <Search size={18} />
+      </span>
+      {value && (
+        <button 
+          aria-label="Limpiar búsqueda" 
+          onClick={() => onChange('')} 
+          style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--gray-400)', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          <X size={18} />
+        </button>
+      )}
     </div>
   );
 });
@@ -517,39 +443,40 @@ SearchInput.displayName = 'SearchInput';
 // FILTERS PANEL
 // ─────────────────────────────────────────────────────────────────────────────
 
-const selectSt: React.CSSProperties = { width: '100%', padding: '10px 14px', border: '2px solid #e8e8e8', borderRadius: '9px', fontSize: '14px', background: 'white', cursor: 'pointer', outline: 'none' };
-const labelSt:  React.CSSProperties = { fontSize: '13px', fontWeight: 600, color: '#1a1a1a', marginBottom: '8px', display: 'block' };
-
 const FiltersPanel = memo(({
   filters, dispatch, empresas, isAdmin, hasPersonaFilter, defaultEmpresaId,
 }: {
   filters: FiltersState; dispatch: (a: FiltersAction) => void;
   empresas: Empresa[]; isAdmin: boolean; hasPersonaFilter: boolean; defaultEmpresaId: number;
 }) => (
-  <div role="group" aria-label="Filtros de búsqueda" style={{ background: 'white', borderRadius: '14px', padding: '22px 24px', marginBottom: '20px', boxShadow: tk.shadow, border: '1px solid #f0f0f0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', animation: 'slideDown 0.2s ease' }}>
-    <div>
-      <label htmlFor="fl-empresa" style={labelSt}>🏢 Empresa</label>
-      <select id="fl-empresa" value={filters.empresaId} onChange={e => dispatch({ type: 'SET_EMPRESA', payload: +e.target.value })} disabled={!isAdmin || hasPersonaFilter} style={selectSt}>
+  <div role="group" aria-label="Filtros de búsqueda" className="dispositivos-filters-card">
+    <div style={{ flex: 1 }}>
+      <label htmlFor="fl-empresa" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '8px', display: 'block' }}>🏢 Empresa</label>
+      <select id="fl-empresa" value={filters.empresaId} onChange={e => dispatch({ type: 'SET_EMPRESA', payload: +e.target.value })} disabled={!isAdmin || hasPersonaFilter} className="dispositivos-filter-select">
         <option value={0}>Todas las empresas</option>
         {empresas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
       </select>
     </div>
-    <div>
-      <label htmlFor="fl-estado" style={labelSt}>⚡ Estado</label>
-      <select id="fl-estado" value={String(filters.activo)} onChange={e => dispatch({ type: 'SET_ACTIVO', payload: e.target.value === 'true' })} style={selectSt}>
+    <div style={{ flex: 1 }}>
+      <label htmlFor="fl-estado" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '8px', display: 'block' }}>⚡ Estado</label>
+      <select id="fl-estado" value={String(filters.activo)} onChange={e => dispatch({ type: 'SET_ACTIVO', payload: e.target.value === 'true' })} className="dispositivos-filter-select">
         <option value="true">✅ Activos</option>
         <option value="false">⏸ Inactivos</option>
       </select>
     </div>
-    <div>
-      <label htmlFor="fl-limit" style={labelSt}>📊 Por página</label>
-      <select id="fl-limit" value={filters.limit} onChange={e => dispatch({ type: 'SET_LIMIT', payload: +e.target.value })} style={selectSt}>
+    <div style={{ flex: 1 }}>
+      <label htmlFor="fl-limit" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--gray-700)', marginBottom: '8px', display: 'block' }}>📊 Por página</label>
+      <select id="fl-limit" value={filters.limit} onChange={e => dispatch({ type: 'SET_LIMIT', payload: +e.target.value })} className="dispositivos-filter-select">
         {PAGE_SIZE_OPTIONS.map(n => <option key={n} value={n}>{n} dispositivos</option>)}
       </select>
     </div>
-    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-      <button onClick={() => dispatch({ type: 'RESET', payload: defaultEmpresaId })} aria-label="Restablecer filtros" style={{ background: 'none', border: 'none', color: '#1890ff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-        🗑️ Limpiar filtros
+    <div style={{ display: 'flex', alignItems: 'flex-end', height: '46px' }}>
+      <button 
+        onClick={() => dispatch({ type: 'RESET', payload: defaultEmpresaId })} 
+        aria-label="Restablecer filtros" 
+        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+      >
+        <Trash2 size={16} /> Limpiar filtros
       </button>
     </div>
   </div>
@@ -560,8 +487,8 @@ FiltersPanel.displayName = 'FiltersPanel';
 // SORT ICON
 // ─────────────────────────────────────────────────────────────────────────────
 const SortIcon = ({ column, sort }: { column: keyof Dispositivo; sort: SortState }) => {
-  if (sort.column !== column) return <span style={{ opacity: 0.3, marginLeft: '4px' }}>⇅</span>;
-  return <span style={{ marginLeft: '4px', color: '#1890ff' }}>{sort.direction === SortDirection.ASC ? '↑' : '↓'}</span>;
+  if (sort.column !== column) return <span style={{ opacity: 0.3, marginLeft: '6px' }}>⇅</span>;
+  return <span style={{ marginLeft: '6px', color: 'var(--primary)' }}>{sort.direction === SortDirection.ASC ? '↑' : '↓'}</span>;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -583,21 +510,22 @@ const DispositivosTable = memo<TableProps>(({
   selectedIds, page, onSort, onView, onEdit, onToggle, onDeleteRequest,
   onRowClick, onSelectAll, onToggleSelect,
 }) => {
-  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, dev: Dispositivo) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(dev); }
   }, [onView]);
 
   if (!loading && dispositivos.length === 0) return (
-    <div style={{ padding: '70px 20px', textAlign: 'center' }}>
-      <div aria-hidden style={{ fontSize: '56px', opacity: 0.25, marginBottom: '18px' }}>📱</div>
-      <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '10px' }}>No hay dispositivos</h3>
-      <p style={{ color: '#666', marginBottom: '12px' }}>
+    <div className="dispositivos-empty-state">
+      <div aria-hidden className="dispositivos-empty-icon">
+        <Smartphone size={64} style={{ margin: '0 auto' }} />
+      </div>
+      <h3>No hay dispositivos</h3>
+      <p>
         {debouncedSearch ? `No se encontraron resultados para "${debouncedSearch}"` : 'Aún no hay dispositivos registrados en el sistema.'}
       </p>
       {debouncedSearch && (
-        <ul style={{ color: '#94a3b8', fontSize: '13px', listStyle: 'none', padding: 0, lineHeight: 2 }}>
+        <ul style={{ color: 'var(--gray-500)', fontSize: '13px', listStyle: 'none', padding: 0, lineHeight: 2 }}>
           <li>• Verifica que el IMEI esté completo (15 dígitos)</li>
           <li>• Prueba buscar por nombre de persona o empresa</li>
           <li>• Revisa el filtro de estado activo/inactivo</li>
@@ -611,31 +539,32 @@ const DispositivosTable = memo<TableProps>(({
   return (
     <>
       {dispositivos.length > 0 && (
-        <div style={{ padding: '14px 22px', background: '#fafafa', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#666', fontWeight: 500 }}>
+        <div style={{ padding: '14px 22px', background: 'var(--gray-50)', borderBottom: '1px solid var(--gray-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: 'var(--gray-500)', fontWeight: 500 }}>
           <span aria-live="polite" role="status">
-            Mostrando <strong style={{ color: '#1a1a1a' }}>{dispositivos.length}</strong> de <strong style={{ color: '#1a1a1a' }}>{total}</strong> dispositivos
+            Mostrando <strong style={{ color: 'var(--gray-900)' }}>{dispositivos.length}</strong> de <strong style={{ color: 'var(--gray-900)' }}>{total}</strong> dispositivos
             {debouncedSearch && <span> · buscando "<em>{debouncedSearch}</em>"</span>}
-            {selectedIds.size > 0 && <span style={{ color: '#1890ff', marginLeft: '8px' }}>· {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>}
+            {selectedIds.size > 0 && <span style={{ color: 'var(--primary)', marginLeft: '8px' }}>· {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>}
           </span>
-          <span style={{ color: '#1890ff', fontWeight: 600 }}>Página {page}</span>
+          <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Página {page}</span>
         </div>
       )}
       <div style={{ overflowX: 'auto' }}>
-        <table role="grid" aria-label="Lista de dispositivos" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
+        <table role="grid" aria-label="Lista de dispositivos" className="dispositivos-table">
           <thead>
-            <tr style={{ background: '#fafafa' }}>
+            <tr style={{ background: 'var(--gray-50)' }}>
               {isAdmin && (
-                <th style={{ padding: '14px 12px', borderBottom: '2px solid #f0f0f0', width: '44px' }}>
+                <th style={{ padding: '14px 12px', borderBottom: '2px solid var(--gray-200)', width: '44px' }}>
                   <input type="checkbox" aria-label="Seleccionar todos" checked={allSelected} onChange={onSelectAll} style={{ cursor: 'pointer' }} />
                 </th>
               )}
               {TABLE_COLUMNS.map(col => (
                 <th key={col.key} scope="col"
+                  className="dispositivos-table-th"
                   aria-sort={col.sortable && col.key !== 'acciones'
                     ? (sort.column === col.key ? (sort.direction === SortDirection.ASC ? 'ascending' : 'descending') : 'none')
                     : undefined}
                   onClick={col.sortable && col.key !== 'acciones' ? () => onSort(col.key as keyof Dispositivo) : undefined}
-                  style={{ padding: '14px 18px', textAlign: 'left', fontWeight: 700, color: '#444', borderBottom: '2px solid #f0f0f0', fontSize: '12px', cursor: col.sortable ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                  style={{ cursor: col.sortable ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap' }}>
                   {col.label}
                   {col.sortable && col.key !== 'acciones' && <SortIcon column={col.key as keyof Dispositivo} sort={sort} />}
                 </th>
@@ -646,63 +575,70 @@ const DispositivosTable = memo<TableProps>(({
             {loading
               ? Array.from({ length: SKELETON_ROWS }).map((_, i) => <SkeletonRow key={i} />)
               : dispositivos.map(dev => {
-                  const isHovered  = hoveredRowId === dev.id;
                   const isSelected = selectedIds.has(dev.id);
                   return (
                     <tr key={dev.id} role="row" tabIndex={0} aria-selected={isSelected}
-                      onMouseEnter={() => setHoveredRowId(dev.id)} onMouseLeave={() => setHoveredRowId(null)}
+                      className={`dispositivos-table-row ${dev.activo ? '' : 'inactive'}`}
                       onClick={() => onRowClick ? onRowClick(dev) : onView(dev)}
                       onKeyDown={e => handleKeyDown(e, dev)}
-                      style={{ borderBottom: '1px solid #f0f0f0', background: isSelected ? 'rgba(24,144,255,0.08)' : !dev.activo ? (isHovered ? '#fff5f5' : '#fffafa') : (isHovered ? 'rgba(24,144,255,0.04)' : 'white'), cursor: 'pointer', outline: 'none', transition: 'background 0.15s' }}>
+                      style={{ background: isSelected ? 'rgba(20, 40, 160, 0.08)' : undefined }}>
                       {isAdmin && (
-                        <td style={{ padding: '16px 12px' }} onClick={e => e.stopPropagation()}>
+                        <td className="dispositivos-table-td" onClick={e => e.stopPropagation()}>
                           <input type="checkbox" aria-label={`Seleccionar dispositivo ${dev.imei}`} checked={isSelected} onChange={() => onToggleSelect(dev.id)} style={{ cursor: 'pointer' }} />
                         </td>
                       )}
-                      <td style={{ padding: '16px 18px' }}>
-                        <span style={{ background: '#fafafa', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, fontFamily: 'monospace' }}>#{dev.id}</span>
+                      <td className="dispositivos-table-td">
+                        <span style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)', padding: '5px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, fontFamily: 'monospace' }}>#{dev.id}</span>
                       </td>
-                      <td style={{ padding: '16px 18px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <CellIcon emoji="📱" color="#1890ff" bg="#e6f7ff" />
+                      <td className="dispositivos-table-td">
+                        <div className="dispositivos-cell-profile">
+                          <div className="dispositivos-cell-avatar">
+                            <Smartphone size={18} />
+                          </div>
                           <div>
-                            <div style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '14px' }}>{formatIMEI(dev.imei)}</div>
-                            {dev.imei && <div style={{ fontSize: '11px', color: '#999' }}>{dev.imei.replace(/\D/g, '').length} dígitos</div>}
+                            <div className="dispositivos-imei-text">{formatIMEI(dev.imei)}</div>
+                            {dev.imei && <div className="dispositivos-cell-sub">{dev.imei.replace(/\D/g, '').length} dígitos</div>}
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px 18px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <CellIcon emoji="👤" color="#52c41a" bg="#f6ffed" />
+                      <td className="dispositivos-table-td">
+                        <div className="dispositivos-cell-profile">
+                          <div className="dispositivos-cell-avatar" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}>
+                            <User size={18} />
+                          </div>
                           <div>
-                            <div style={{ fontWeight: 600 }}>{dev.personaNombre || 'Sin asignar'}</div>
-                            {dev.personaId && <div style={{ fontSize: '11px', color: '#999' }}>ID: {dev.personaId}</div>}
+                            <div style={{ fontWeight: 700, color: 'var(--gray-900)' }}>{dev.personaNombre || 'Sin asignar'}</div>
+                            {dev.personaId && <div className="dispositivos-cell-sub">ID: {dev.personaId}</div>}
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px 18px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <CellIcon emoji="🏢" color="#722ed1" bg="#f9f0ff" />
-                          <span>{dev.empresaNombre || '—'}</span>
+                      <td className="dispositivos-table-td">
+                        <div className="dispositivos-cell-profile">
+                          <div className="dispositivos-cell-avatar" style={{ background: 'rgba(114, 46, 209, 0.1)', color: '#722ed1' }}>
+                            <Building2 size={18} />
+                          </div>
+                          <span style={{ fontWeight: 600 }}>{dev.empresaNombre || '—'}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px 18px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <CellIcon emoji="📅" color="#fa8c16" bg="#fff7e6" />
+                      <td className="dispositivos-table-td">
+                        <div className="dispositivos-cell-profile">
+                          <div className="dispositivos-cell-avatar" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}>
+                            <Calendar size={18} />
+                          </div>
                           <span>{formatDate(dev.fechaRegistro)}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px 18px' }}><StatusBadge activo={dev.activo} /></td>
-                      <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                      <td className="dispositivos-table-td"><StatusBadge activo={dev.activo} /></td>
+                      <td className="dispositivos-table-td" onClick={e => e.stopPropagation()}>
                         {isAdmin ? (
-                          <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap' }}>
-                            <ActionBtn variant="view"  icon="👁️" label="Ver"     title="Ver detalles"              onClick={() => onView(dev)} />
-                            <ActionBtn variant="edit"  icon="✏️" label="Editar"  title="Editar dispositivo"        onClick={() => onEdit(dev)} />
-                            <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? '⏸' : '▶️'} label={dev.activo ? 'Desact.' : 'Activar'} title={dev.activo ? 'Desactivar' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
-                            <ActionBtn variant="del"   icon="🗑️" label="Elim."   title="Eliminar permanentemente"  onClick={() => onDeleteRequest(dev.id)} />
+                          <div className="dispositivos-actions-wrapper">
+                            <ActionBtn variant="view"  icon={<Eye size={14} />} label="Ver"     title="Ver detalles"              onClick={() => onView(dev)} />
+                            <ActionBtn variant="edit"  icon={<Edit2 size={14} />} label="Editar"  title="Editar dispositivo"        onClick={() => onEdit(dev)} />
+                            <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? <Pause size={14} /> : <Play size={14} />} label={dev.activo ? 'Desact.' : 'Activar'} title={dev.activo ? 'Desactivar' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
+                            <ActionBtn variant="del"   icon={<Trash2 size={14} />} label="Elim."   title="Eliminar permanentemente"  onClick={() => onDeleteRequest(dev.id)} />
                           </div>
                         ) : (
-                          <ActionBtn variant="view" icon="👁️" label="Ver detalles" onClick={() => onView(dev)} />
+                          <ActionBtn variant="view" icon={<Eye size={14} />} label="Ver detalles" onClick={() => onView(dev)} />
                         )}
                       </td>
                     </tr>
@@ -732,32 +668,34 @@ const DevCard = memo(({ dev, isAdmin, isSelected, onView, onEdit, onToggle, onDe
   onToggle: (id: number, a: boolean) => void; onDeleteRequest: (id: number) => void;
   onToggleSelect: (id: number) => void;
 }) => (
-  <div onClick={() => onView(dev)} style={{ background: isSelected ? 'rgba(24,144,255,0.06)' : '#fff', border: `1.5px solid ${isSelected ? '#91d5ff' : tk.border}`, borderRadius: tk.radiusLg, padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: tk.shadow, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+  <div onClick={() => onView(dev)} style={{ background: isSelected ? 'rgba(20, 40, 160, 0.04)' : '#fff', border: `1.5px solid ${isSelected ? 'var(--primary)' : 'var(--gray-200)'}`, borderRadius: 'var(--radius-lg)', padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-md)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#e6f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>📱</div>
+      <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(20, 40, 160, 0.08)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Smartphone size={22} />
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <StatusBadge activo={dev.activo} />
         {isAdmin && <input type="checkbox" aria-label={`Seleccionar ${dev.imei}`} checked={isSelected} onChange={() => onToggleSelect(dev.id)} onClick={e => e.stopPropagation()} style={{ cursor: 'pointer' }} />}
       </div>
     </div>
     <div>
-      <div style={{ fontSize: '11px', color: tk.textMuted, fontWeight: 600, textTransform: 'uppercase', marginBottom: '2px' }}>IMEI</div>
-      <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '14px', color: '#1890ff' }}>{formatIMEI(dev.imei)}</div>
+      <div style={{ fontSize: '11px', color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '2px' }}>IMEI</div>
+      <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '14px', color: 'var(--primary)' }}>{formatIMEI(dev.imei)}</div>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
       {[['Persona', dev.personaNombre || 'Sin asignar'], ['Empresa', dev.empresaNombre || '—'], ['Registro', formatDate(dev.fechaRegistro)], ['ID', `#${dev.id}`]].map(([label, value]) => (
         <div key={label}>
-          <div style={{ color: tk.textMuted, fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
-          <div style={{ fontWeight: 600, color: tk.text }}>{value}</div>
+          <div style={{ color: 'var(--gray-400)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
+          <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{value}</div>
         </div>
       ))}
     </div>
-    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', borderTop: `1px solid ${tk.border}`, paddingTop: '12px' }} onClick={e => e.stopPropagation()}>
-      <ActionBtn variant="view" icon="👁️" label="Ver" onClick={() => onView(dev)} />
+    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', borderTop: '1px solid var(--gray-200)', paddingTop: '12px' }} onClick={e => e.stopPropagation()}>
+      <ActionBtn variant="view" icon={<Eye size={14} />} label="Ver" onClick={() => onView(dev)} />
       {isAdmin && <>
-        <ActionBtn variant="edit"  icon="✏️" label="Editar" onClick={() => onEdit(dev)} />
-        <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? '⏸' : '▶️'} label={dev.activo ? 'Desact.' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
-        <ActionBtn variant="del"  icon="🗑️" label="Elim."  onClick={() => onDeleteRequest(dev.id)} />
+        <ActionBtn variant="edit"  icon={<Edit2 size={14} />} label="Editar" onClick={() => onEdit(dev)} />
+        <ActionBtn variant={dev.activo ? 'deact' : 'activ'} icon={dev.activo ? <Pause size={14} /> : <Play size={14} />} label={dev.activo ? 'Desact.' : 'Activar'} onClick={() => onToggle(dev.id, !dev.activo)} />
+        <ActionBtn variant="del"  icon={<Trash2 size={14} />} label="Elim."  onClick={() => onDeleteRequest(dev.id)} />
       </>}
     </div>
   </div>
@@ -782,16 +720,21 @@ const DispositivoDetail = lazy(() => import('./DispositivoDetail'));
 
 const ModalFallback = () => (
   <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}>
-    <div style={{ width: '44px', height: '44px', border: '3px solid #e6f7ff', borderTop: '3px solid #1890ff', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
+    <div style={{ width: '44px', height: '44px', border: '3px solid rgba(20, 40, 160, 0.1)', borderTop: '3px solid var(--primary)', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
   </div>
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
+
 const DispositivosList: React.FC<DispositivosListProps> = ({
-  userRole, userEmpresaId, personaId,
-  modo = 'full', showHeader = true, onDispositivoSelect,
+  userRole,
+  userEmpresaId,
+  personaId,
+  modo = 'full',
+  showHeader = true,
+  onDispositivoSelect,
 }) => {
   const {
     dispositivos, total, loading, error, retryCount, empresas,
@@ -815,58 +758,88 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
   const handleExportCSV = useCallback(() => exportToCSV(dispositivos, 'dispositivos.csv'), [dispositivos]);
 
   return (
-    <div style={{ padding: modo === 'embedded' ? 0 : '24px', maxWidth: '1400px', margin: '0 auto', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-      <style>{GLOBAL_KEYFRAMES}</style>
-
+    <div className="dispositivos-wrapper" style={{ padding: modo === 'embedded' ? 0 : undefined }}>
+      
       {/* ── HEADER ── */}
       {showHeader && (
-        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '24px 28px', marginBottom: '24px', boxShadow: tk.shadow, border: '1px solid #f0f0f0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <h1 style={{ fontSize: '26px', fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #1428A0 0%, #096dd9 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                📱 Dispositivos Registrados
-              </h1>
-              <div style={{ color: '#666', fontSize: '15px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>{personaId ? 'Dispositivos asignados a esta persona' : 'Gestión de dispositivos móviles'}</span>
-                <span aria-live="polite" style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '3px 12px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}>
-                  {total} {total === 1 ? 'dispositivo' : 'dispositivos'}
-                </span>
-              </div>
+        <div className="dispositivos-header-card">
+          <div className="dispositivos-header-info">
+            <div className="dispositivos-header-icon">
+              <Smartphone size={28} />
             </div>
-
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Toggle vista tabla/tarjetas */}
-              <div style={{ display: 'flex', border: '1px solid #e8e8e8', borderRadius: '8px', overflow: 'hidden' }}>
-                {([ViewMode.Table, ViewMode.Grid] as const).map((m, i) => (
-                  <button key={m} aria-label={m === ViewMode.Table ? 'Vista tabla' : 'Vista tarjetas'} aria-pressed={viewMode === m}
-                    onClick={() => setViewMode(m)}
-                    style={{ padding: '8px 12px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === m ? '#e6f7ff' : 'white', color: viewMode === m ? '#1890ff' : '#666', borderLeft: i > 0 ? '1px solid #e8e8e8' : undefined }}>
-                    {m === ViewMode.Table ? '☰' : '⊞'}
-                  </button>
-                ))}
-              </div>
-
-              {/* Exportar CSV */}
-              <Btn base={{ background: 'white', color: '#52c41a', border: '2px solid #b7eb8f', padding: '10px 16px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                hoverStyle={{ background: '#f6ffed', borderColor: '#52c41a' }} onClick={handleExportCSV} title="Exportar a CSV">
-                📥 Exportar
-              </Btn>
-
-              {/* Filtros */}
-              <Btn base={{ background: showFilters ? '#e6f7ff' : 'white', color: showFilters ? '#1890ff' : '#666', border: `2px solid ${showFilters ? '#1890ff' : '#e8e8e8'}`, padding: '10px 18px', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                hoverStyle={{ borderColor: '#1890ff', color: '#1890ff', background: '#e6f7ff' }} aria-label="Mostrar/ocultar filtros" onClick={() => setShowFilters(f => !f)}>
-                🔧 {showFilters ? 'Ocultar filtros' : 'Filtros'}
-              </Btn>
-
-              {/* Nuevo dispositivo */}
-              {isAdmin && (
-                <Btn base={{ background: 'linear-gradient(135deg, #1428A0 0%, #096dd9 100%)', color: 'white', border: 'none', padding: '11px 22px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(20,40,160,0.3)' }}
-                  hoverStyle={{ transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(20,40,160,0.4)' }} aria-label="Nuevo dispositivo" onClick={() => setShowForm(true)}>
-                  <span style={{ fontSize: '18px', fontWeight: 900 }}>+</span> Nuevo Dispositivo
-                </Btn>
-              )}
+            <div className="dispositivos-header-title">
+              <h1>Dispositivos Registrados</h1>
+              <p>{personaId ? 'Dispositivos asignados a esta persona' : 'Gestión de dispositivos móviles'}</p>
             </div>
           </div>
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', zIndex: 2 }}>
+            {/* Toggle vista tabla/tarjetas */}
+            <div style={{ display: 'flex', border: '1px solid var(--gray-200)', borderRadius: '8px', overflow: 'hidden' }}>
+              {([ViewMode.Table, ViewMode.Grid] as const).map((m, i) => (
+                <button key={m} aria-label={m === ViewMode.Table ? 'Vista tabla' : 'Vista tarjetas'} aria-pressed={viewMode === m}
+                  onClick={() => setViewMode(m)}
+                  style={{ padding: '8px 12px', border: 'none', cursor: 'pointer', fontSize: '14px', background: viewMode === m ? 'rgba(20, 40, 160, 0.08)' : 'white', color: viewMode === m ? 'var(--primary)' : 'var(--gray-500)', borderLeft: i > 0 ? '1px solid var(--gray-200)' : undefined }}>
+                  {m === ViewMode.Table ? '☰' : '⊞'}
+                </button>
+              ))}
+            </div>
+
+            {/* Exportar CSV */}
+            <button 
+              onClick={handleExportCSV} 
+              className="dispositivos-btn dispositivos-btn-secondary"
+            >
+              <Download size={16} /> Exportar
+            </button>
+
+            {/* Filtros */}
+            <button 
+              onClick={() => setShowFilters(f => !f)}
+              className="dispositivos-btn dispositivos-btn-secondary"
+              style={{ background: showFilters ? 'rgba(20, 40, 160, 0.08)' : undefined, color: showFilters ? 'var(--primary)' : undefined, borderColor: showFilters ? 'var(--primary)' : undefined }}
+            >
+              <Filter size={16} /> {showFilters ? 'Ocultar filtros' : 'Filtros'}
+            </button>
+
+            {/* Nuevo dispositivo */}
+            {isAdmin && (
+              <button 
+                onClick={() => setShowForm(true)}
+                className="dispositivos-btn dispositivos-btn-primary"
+              >
+                <Plus size={18} /> Nuevo Dispositivo
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── ESTADÍSTICAS ── */}
+      {showHeader && (
+        <div className="dispositivos-stats-container">
+          <div className="dispositivos-stat-pill">
+            <div className="dispositivos-stat-value">{total}</div>
+            <div>
+              <div className="dispositivos-stat-label">Total</div>
+              <div className="dispositivos-stat-text">Dispositivos registrados</div>
+            </div>
+          </div>
+          <div className="dispositivos-stat-pill">
+            <div className="dispositivos-stat-value">
+              {dispositivos.filter(d => d.activo).length}
+            </div>
+            <div>
+              <div className="dispositivos-stat-label">Activos</div>
+              <div className="dispositivos-stat-text">Dispositivos en línea</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── BÚSQUEDA ── */}
+      {showHeader && (
+        <div style={{ marginBottom: '24px' }}>
           <SearchInput value={searchTerm} onChange={setSearchTerm} />
         </div>
       )}
@@ -886,49 +859,71 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
 
       {/* ── ERROR ── */}
       {error && (
-        <div role="alert" aria-live="assertive" style={{ background: '#fff2f0', border: '1px solid #ffccc7', color: '#ff4d4f', padding: '14px 18px', borderRadius: '10px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span aria-hidden>⚠️</span>
-          <span style={{ flex: 1 }}>{error}</span>
-          <button aria-label="Reintentar" onClick={retry}    style={{ background: '#fff2f0', border: '1px solid #ffccc7', color: '#ff4d4f', padding: '4px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Reintentar</button>
-          <button aria-label="Cerrar error" onClick={clearError} style={{ background: 'none', border: 'none', color: '#ff4d4f', fontSize: '20px', cursor: 'pointer' }}>×</button>
+        <div className="dispositivos-error-banner" role="alert" aria-live="assertive">
+          <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertTriangle size={18} /> {error}
+          </span>
+          <button aria-label="Reintentar" onClick={retry} style={{ marginRight: '12px', fontSize: '13px', fontWeight: 600 }}>Reintentar</button>
+          <button aria-label="Cerrar error" onClick={clearError}><X size={18} /></button>
         </div>
       )}
 
       {/* ── BARRA SELECCIÓN MÚLTIPLE ── */}
       {isAdmin && selectedIds.size > 0 && (
-        <div style={{ background: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: '10px', padding: '12px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', animation: 'slideDown 0.2s ease' }}>
-          <span style={{ fontWeight: 600, color: '#1890ff' }}>{selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>
-          <button onClick={clearSelection} style={{ background: 'none', border: 'none', color: '#1890ff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Cancelar selección</button>
+        <div style={{ background: 'rgba(0, 123, 255, 0.08)', border: '1px solid rgba(0, 123, 255, 0.2)', borderRadius: '12px', padding: '12px 18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', animation: 'slideDown 0.2s ease' }}>
+          <span style={{ fontWeight: 600, color: 'var(--secondary)' }}>{selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}</span>
+          <button onClick={clearSelection} style={{ background: 'none', border: 'none', color: 'var(--secondary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Cancelar selección</button>
         </div>
       )}
 
       {/* ── TABLA / GRID ── */}
-      <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: tk.shadow, border: '1px solid #f0f0f0' }}>
-        {viewMode === ViewMode.Table ? (
-          <DispositivosTable
-            dispositivos={dispositivos} loading={loading} total={total}
-            isAdmin={isAdmin} debouncedSearch={debouncedSearch} sort={sort}
-            selectedIds={selectedIds} page={filters.page}
-            onSort={handleSort} onView={setSelectedDev} onEdit={setEditingDev}
-            onToggle={handleToggle} onDeleteRequest={setConfirmDelete}
-            onRowClick={onDispositivoSelect ? handleRowClick : undefined}
-            onSelectAll={toggleSelectAll} onToggleSelect={toggleSelection}
-          />
-        ) : (
-          <GridView dispositivos={dispositivos} isAdmin={isAdmin} selectedIds={selectedIds}
-            onView={setSelectedDev} onEdit={setEditingDev} onToggle={handleToggle}
-            onDeleteRequest={setConfirmDelete} onToggleSelect={toggleSelection} />
-        )}
-
-        {/* ── PAGINACIÓN ── */}
-        {totalPages > 1 && (
-          <div style={{ padding: '16px 22px', borderTop: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <span>Página <strong>{filters.page}</strong> de <strong>{totalPages}</strong> ({total} total)</span>
-            <div style={{ display: 'flex', gap: '8px' }} role="navigation" aria-label="Paginación">
-              <Btn disabled={filters.page === 1}        base={{ padding: '8px 16px', border: '1px solid #d9d9d9', background: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} hoverStyle={{ borderColor: '#1890ff', color: '#1890ff' }} aria-label="Página anterior" onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page - 1 })}>← Anterior</Btn>
-              <Btn disabled={filters.page >= totalPages} base={{ padding: '8px 16px', border: '1px solid #d9d9d9', background: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} hoverStyle={{ borderColor: '#1890ff', color: '#1890ff' }} aria-label="Página siguiente" onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page + 1 })}>Siguiente →</Btn>
-            </div>
+      <div className="dispositivos-table-card">
+        {loading && dispositivos.length === 0 ? (
+          <div className="dispositivos-loading">
+            <div className="dispositivos-spinner" />
+            <span>Cargando dispositivos...</span>
           </div>
+        ) : (
+          <>
+            {viewMode === ViewMode.Table ? (
+              <DispositivosTable
+                dispositivos={dispositivos} loading={loading} total={total}
+                isAdmin={isAdmin} debouncedSearch={debouncedSearch} sort={sort}
+                selectedIds={selectedIds} page={filters.page}
+                onSort={handleSort} onView={setSelectedDev} onEdit={setEditingDev}
+                onToggle={handleToggle} onDeleteRequest={setConfirmDelete}
+                onRowClick={onDispositivoSelect ? handleRowClick : undefined}
+                onSelectAll={toggleSelectAll} onToggleSelect={toggleSelection}
+              />
+            ) : (
+              <GridView dispositivos={dispositivos} isAdmin={isAdmin} selectedIds={selectedIds}
+                onView={setSelectedDev} onEdit={setEditingDev} onToggle={handleToggle}
+                onDeleteRequest={setConfirmDelete} onToggleSelect={toggleSelection} />
+            )}
+
+            {/* ── PAGINACIÓN ── */}
+            {totalPages > 1 && (
+              <div className="dispositivos-table-footer">
+                <span>Página <strong>{filters.page}</strong> de <strong>{totalPages}</strong> ({total} total)</span>
+                <div className="dispositivos-pagination" role="navigation" aria-label="Paginación">
+                  <button 
+                    disabled={filters.page === 1} 
+                    onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page - 1 })}
+                    className="dispositivos-pagination-btn"
+                  >
+                    <ChevronLeft size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> Anterior
+                  </button>
+                  <button 
+                    disabled={filters.page >= totalPages} 
+                    onClick={() => dispatchFilters({ type: 'SET_PAGE', payload: filters.page + 1 })}
+                    className="dispositivos-pagination-btn"
+                  >
+                    Siguiente <ChevronRight size={16} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
