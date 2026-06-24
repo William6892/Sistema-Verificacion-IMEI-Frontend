@@ -129,7 +129,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   // ─── Cerrar dropdown al hacer clic fuera ─────────────────────────────────
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: MouseEvent | TouchEvent) => {
       if (
         sugerenciasRef.current && !sugerenciasRef.current.contains(e.target as Node) &&
         inputRef.current && !inputRef.current.contains(e.target as Node)
@@ -138,7 +138,11 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   // ─── Búsqueda parcial con debounce ────────────────────────────────────────
@@ -157,7 +161,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setSugerenciaActiva(-1);
 
     try {
-      const response = await api.get('/api/Admin/dispositivos', {
+      const response = await api.get('/api/Verificacion/buscar-dispositivos', {
         params: { search: q, limit: 10 }
       });
       const results = response.data?.dispositivos || [];
@@ -302,7 +306,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       setResultado(null);
       setShowSugerencias(false);
       try {
-        const response = await api.get('/api/Admin/dispositivos', {
+        const response = await api.get('/api/Verificacion/buscar-dispositivos', {
           params: { search: cleanedIMEI, limit: 30 }
         });
         const results = response.data?.dispositivos || [];
@@ -388,14 +392,10 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       }
     }
 
-    // Validación normal de teclas
-    if (
-      !/^\d$/.test(e.key) &&
-      !['Backspace','Delete','Tab','Enter','ArrowLeft','ArrowRight','Home','End','Escape'].includes(e.key)
-    ) {
+    if (e.key === 'Enter' && imei.length >= 4) {
       e.preventDefault();
+      handleVerificar();
     }
-    if (e.key === 'Enter' && imei.length >= 4) handleVerificar();
   };
 
   // ─── Escáner ──────────────────────────────────────────────────────────────
@@ -626,6 +626,10 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
                   onMouseLeave={() => setSugerenciaActiva(-1)}
                   onMouseDown={(e) => {
                     // mouseDown en lugar de click para ejecutar antes del blur
+                    e.preventDefault();
+                    handleSeleccionarSugerencia(d);
+                  }}
+                  onTouchStart={(e) => {
                     e.preventDefault();
                     handleSeleccionarSugerencia(d);
                   }}
