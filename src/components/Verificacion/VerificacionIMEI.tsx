@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../Verificacion/Verificacion.css';
 import { Html5Qrcode } from 'html5-qrcode';
+import api from '../../services/api';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,9 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
   /** Índice de sugerencia resaltada con teclado (-1 = ninguna) */
   const [sugerenciaActiva, setSugerenciaActiva] = useState(-1);
 
+  const [resultadosBusqueda, setResultadosBusqueda] = useState<DispositivoSugerencia[]>([]);
+  const [showResultadosBusqueda, setShowResultadosBusqueda] = useState(false);
+
   const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -153,18 +157,25 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setSugerenciaActiva(-1);
 
     try {
-      // ── Para usar el endpoint real, reemplaza buscarDispositivosMock ──────
-      // const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
-      // const apiURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      // const results = await buscarDispositivosAPI(q, token, apiURL);
-      const results = await buscarDispositivosMock(q);
+      const response = await api.get('/api/Admin/dispositivos', {
+        params: { search: q, limit: 10 }
+      });
+      const results = response.data?.dispositivos || [];
+      const suggestions: DispositivoSugerencia[] = results.map((d: any) => ({
+        imei: d.imei,
+        personaNombre: d.personaNombre,
+        empresaNombre: d.empresaNombre,
+        modelo: d.modelo,
+        marca: d.marca
+      }));
 
-      setSugerencias(results);
+      setSugerencias(suggestions);
       setShowSugerencias(true);
-      if (results.length === 0) {
+      if (suggestions.length === 0) {
         setSugerenciasError(`No se encontraron dispositivos con "${q}"`);
       }
-    } catch {
+    } catch (err) {
+      console.error('Error al buscar sugerencias:', err);
       setSugerenciasError('Error al buscar dispositivos');
       setSugerencias([]);
       setShowSugerencias(true);
@@ -279,14 +290,46 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       return;
     }
     const cleanedIMEI = imeiToVerify.replace(/\D/g, '');
-    if (cleanedIMEI.length < 10 || cleanedIMEI.length > 20) {
-      setError('IMEI inválido. Debe contener solo números (10-20 dígitos)');
-      if (inputRef.current) inputRef.current.focus();
+    
+    // Si tiene menos de 10 dígitos, hacemos una búsqueda de coincidencia en lugar de verificar directamente
+    if (cleanedIMEI.length < 10) {
+      if (cleanedIMEI.length < 4) {
+        setError('Ingresa al menos 4 dígitos para buscar');
+        return;
+      }
+      setLoading(true);
+      setError('');
+      setResultado(null);
+      setShowSugerencias(false);
+      try {
+        const response = await api.get('/api/Admin/dispositivos', {
+          params: { search: cleanedIMEI, limit: 30 }
+        });
+        const results = response.data?.dispositivos || [];
+        const mapped = results.map((d: any) => ({
+          imei: d.imei,
+          personaNombre: d.personaNombre,
+          empresaNombre: d.empresaNombre,
+          modelo: d.modelo,
+          marca: d.marca
+        }));
+        setResultadosBusqueda(mapped);
+        setShowResultadosBusqueda(true);
+        if (mapped.length === 0) {
+          setError(`No se encontraron dispositivos que coincidan con "${cleanedIMEI}"`);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Error al buscar dispositivos');
+      } finally {
+        setLoading(false);
+      }
       return;
     }
+
     setLoading(true);
     setError('');
     setResultado(null);
+    setShowResultadosBusqueda(false);
     setShowSugerencias(false);
     try {
       const res = await verificarIMEI(cleanedIMEI);
@@ -308,6 +351,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setSugerencias([]);
     setShowSugerencias(false);
     setSugerenciaActiva(-1);
+    setShowResultadosBusqueda(false);
+    setResultadosBusqueda([]);
     setTimeout(() => handleVerificarRef.current(dispositivo.imei), 50);
   }, []);
 
@@ -350,7 +395,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     ) {
       e.preventDefault();
     }
-    if (e.key === 'Enter' && imei.length >= 10) handleVerificar();
+    if (e.key === 'Enter' && imei.length >= 4) handleVerificar();
   };
 
   // ─── Escáner ──────────────────────────────────────────────────────────────
@@ -491,6 +536,8 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
     setShowSugerencias(false);
     setSugerenciasError('');
     setSugerenciaActiva(-1);
+    setShowResultadosBusqueda(false);
+    setResultadosBusqueda([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (showScanner) { stopScanner(); setShowScanner(false); }
     if (inputRef.current) inputRef.current.focus();
@@ -949,13 +996,15 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
 
               <button
                 type="submit"
-                disabled={loading || !imei.trim() || imei.length < 10}
+                disabled={loading || !imei.trim() || imei.length < 4}
                 className={`btn-submit ${loading ? 'btn-loading' : ''}`}
               >
                 {loading ? (
                   <><span className="spinner"></span>VERIFICANDO...</>
-                ) : (
+                ) : imei.length >= 10 ? (
                   <><span role="img" aria-label="verificar">✅</span>VERIFICAR IMEI</>
+                ) : (
+                  <><span role="img" aria-label="buscar">🔍</span>BUSCAR POR COINCIDENCIAS</>
                 )}
               </button>
             </form>
@@ -964,6 +1013,86 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
               <div className="alert alert-error">
                 <span className="alert-icon" role="img" aria-label="error">⚠️</span>
                 <span className="alert-text">{error}</span>
+              </div>
+            )}
+
+            {showResultadosBusqueda && (
+              <div className="search-results-section" style={{ marginTop: '24px', borderTop: '1px solid var(--gray-200)', paddingTop: '24px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>📋</span> Resultados de Búsqueda ({resultadosBusqueda.length})
+                </h3>
+                {resultadosBusqueda.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                    {resultadosBusqueda.map((d) => (
+                      <div 
+                        key={d.imei} 
+                        style={{ 
+                          background: 'var(--bg-light)', 
+                          border: '1.5px solid var(--gray-300)', 
+                          borderRadius: '12px', 
+                          padding: '16px', 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '8px',
+                          boxShadow: 'var(--shadow-sm)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '20px' }}>📱</span>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '15px', color: 'var(--samsung-blue)' }}>
+                            {formatIMEI(d.imei)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {d.personaNombre && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>👤</span> Propietario: <strong>{d.personaNombre}</strong>
+                            </span>
+                          )}
+                          {d.empresaNombre && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>🏢</span> Empresa: {d.empresaNombre}
+                            </span>
+                          )}
+                          {d.marca && d.modelo && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontStyle: 'italic' }}>
+                              📱 Modelo: {d.marca} {d.modelo}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleSeleccionarSugerencia(d)}
+                          style={{
+                            marginTop: '8px',
+                            background: 'var(--samsung-blue)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '8px 12px',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--samsung-blue-light)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'var(--samsung-blue)'}
+                        >
+                          Verificar dispositivo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="alert alert-error" style={{ margin: 0 }}>
+                    <span className="alert-icon" role="img" aria-label="error">⚠️</span>
+                    <span className="alert-text">No se encontraron dispositivos que coincidan con la búsqueda.</span>
+                  </div>
+                )}
               </div>
             )}
 
