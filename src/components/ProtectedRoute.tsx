@@ -6,13 +6,38 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const decodedJson = atob(payloadBase64);
+    const decoded = JSON.parse(decodedJson);
+    const exp = decoded.exp;
+    if (!exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return now >= exp;
+  } catch {
+    return true; // Si hay error al decodificar, asumimos expirado
+  }
+};
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Solo verifica si existe el token
     const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token); // true si hay token, false si no
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    const expired = isTokenExpired(token);
+    if (expired) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+    } else {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   // Mientras verifica, muestra "Cargando..."
