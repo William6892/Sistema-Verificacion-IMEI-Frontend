@@ -11,14 +11,18 @@ interface DashboardStats {
   totalUsuarios: number;
   usuariosActivos: number;
   usuariosPorRol: Array<{ rol: string; cantidad: number }>;
+  totalEscaneos?: number;
+  escaneosExitosos?: number;
+  escaneosFallidos?: number;
 }
 
 interface RecentActivity {
   id: number;
-  action: string;
-  user: string;
+  imei: string;
   timestamp: string;
-  details?: string;
+  resultado: boolean;
+  username: string;
+  detalles: string;
 }
 
 interface UserData {
@@ -98,20 +102,30 @@ const RoleBar = ({ rol, cantidad, total, color }: { rol: string; cantidad: numbe
 };
 
 // ─── Activity row ─────────────────────────────────────────────────────────────
-const ActivityRow = ({ action, user, timestamp, details, index }: { action: string; user: string; timestamp: string; details?: string; index: number }) => {
-  const colors = [tk.blue, tk.green, tk.orange, tk.purple, tk.red];
-  const color = colors[index % colors.length];
+const ActivityRow = ({ 
+  imei, timestamp, resultado, username, detalles 
+}: { 
+  imei: string; 
+  timestamp: string; 
+  resultado: boolean; 
+  username: string; 
+  detalles: string; 
+}) => {
   return (
     <div className="dash-activity-row">
-      <div className="dash-activity-icon" style={{ background: `${color}18` }}>
-        {index === 0 ? '👤' : index === 1 ? '📱' : index === 2 ? '📊' : '🏢'}
+      <div className="dash-activity-icon" style={{ background: resultado ? `${tk.green}18` : `${tk.red}18`, color: resultado ? tk.green : tk.red, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+        {resultado ? '✅' : '❌'}
       </div>
       <div className="dash-activity-content">
-        <div className="dash-activity-action">{action}</div>
-        <div className="dash-activity-detail">{details}</div>
+        <div className="dash-activity-action">
+          Búsqueda IMEI: <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{imei}</span>
+        </div>
+        <div className="dash-activity-detail" style={{ fontSize: '12.5px', color: '#64748b' }}>
+          {detalles}
+        </div>
       </div>
-      <div className="dash-activity-meta">
-        <div className="dash-activity-user">{user}</div>
+      <div className="dash-activity-meta" style={{ textAlign: 'right', fontSize: '11px', color: '#94a3b8' }}>
+        <div className="dash-activity-user" style={{ fontWeight: 600, color: '#475569' }}>👤 {username}</div>
         <div className="dash-activity-time">{timestamp}</div>
       </div>
     </div>
@@ -147,15 +161,6 @@ const Dashboard: React.FC = () => {
     } catch { return null; }
   }, []);
 
-  const fetchRecentActivity = useCallback(async () => {
-    setRecentActivity([
-      { id: 1, action: 'Usuario registrado',    user: 'Juan Pérez',    timestamp: '10:30 AM', details: 'Nuevo usuario administrador' },
-      { id: 2, action: 'Dispositivo verificado', user: 'María García',  timestamp: '09:15 AM', details: 'IMEI 123456789012345 verificado' },
-      { id: 3, action: 'Reporte generado',       user: 'Carlos López',  timestamp: 'Ayer, 4:20 PM', details: 'Reporte mensual de dispositivos' },
-      { id: 4, action: 'Empresa creada',         user: 'Admin Sistema', timestamp: 'Ayer, 2:45 PM', details: 'Nueva empresa registrada: TechCorp' },
-    ]);
-  }, []);
-
   const fetchStatsData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -171,8 +176,12 @@ const Dashboard: React.FC = () => {
         dispositivosActivos: data.dispositivosActivos || 0, 
         totalUsuarios: data.totalUsuarios || 0, 
         usuariosActivos: data.usuariosActivos || 0, 
-        usuariosPorRol: data.usuariosPorRol || [] 
+        usuariosPorRol: data.usuariosPorRol || [],
+        totalEscaneos: data.totalEscaneos || 0,
+        escaneosExitosos: data.escaneosExitosos || 0,
+        escaneosFallidos: data.escaneosFallidos || 0,
       });
+      setRecentActivity(data.historialReciente || []);
       setError(null);
       return true;
     } catch { setError('Error de conexión con el servidor'); return false; }
@@ -193,7 +202,7 @@ const Dashboard: React.FC = () => {
         if (!user) { navigate('/login'); return; }
         if (user.rol !== 'Admin') { navigate('/'); return; }
         setIsAdmin(true);
-        await Promise.all([fetchStatsData(), fetchRecentActivity()]);
+        await fetchStatsData();
       } catch { setError('Error al cargar el dashboard'); }
       finally { setLoading(false); }
     };
@@ -219,7 +228,6 @@ const Dashboard: React.FC = () => {
   const user = getUserData();
   const disposPct = stats ? ((stats.dispositivosActivos / (stats.totalDispositivos || 1)) * 100).toFixed(1) : '0';
   const usuariosPct = stats ? ((stats.usuariosActivos / (stats.totalUsuarios || 1)) * 100).toFixed(1) : '0';
-  const roleColors = [tk.blue, tk.green, tk.purple, tk.orange, tk.red];
 
   return (
     <div className="dash-wrapper">
@@ -262,6 +270,30 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* ── Acciones Rápidas ── */}
+        <div className="dash-section-card" style={{ marginBottom: '24px' }}>
+          <div className="dash-section-header" style={{ marginBottom: '16px' }}>
+            <div className="dash-section-title">
+              <div className="dash-section-title-bar blue" />
+              <h3>Acciones Rápidas</h3>
+            </div>
+          </div>
+          <div className="dash-quick-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+            <button onClick={() => navigate('/verificacion')} className="dash-btn dash-btn-secondary" style={{ display: 'flex', justifyContent: 'flex-start', background: '#f8fafc', border: '1.5px solid #e2e8f0', width: '100%' }}>
+              🔍 Verificar IMEI
+            </button>
+            <button onClick={() => navigate('/dispositivos')} className="dash-btn dash-btn-secondary" style={{ display: 'flex', justifyContent: 'flex-start', background: '#f8fafc', border: '1.5px solid #e2e8f0', width: '100%' }}>
+              📱 Gestión de Dispositivos
+            </button>
+            <button onClick={() => navigate('/personas')} className="dash-btn dash-btn-secondary" style={{ display: 'flex', justifyContent: 'flex-start', background: '#f8fafc', border: '1.5px solid #e2e8f0', width: '100%' }}>
+              👥 Gestión de Personas
+            </button>
+            <button onClick={() => navigate('/usuarios')} className="dash-btn dash-btn-secondary" style={{ display: 'flex', justifyContent: 'flex-start', background: '#f8fafc', border: '1.5px solid #e2e8f0', width: '100%' }}>
+              👤 Gestión de Usuarios
+            </button>
+          </div>
+        </div>
+
         {/* ── Stats grid ── */}
         <div className="dash-stats-grid">
           <StatCard icon="🏢" label="Empresas"    value={stats?.totalEmpresas || 0}    variant="blue" sub="Solo visible para administradores" />
@@ -270,29 +302,51 @@ const Dashboard: React.FC = () => {
           <StatCard icon="📱" label="Dispositivos" value={stats?.totalDispositivos || 0} variant="orange" sub={`${stats?.dispositivosActivos || 0} activos · ${disposPct}% del total`} />
         </div>
 
-        {/* ── Bottom row: Roles + Activity ── */}
+        {/* ── Rendimiento de Escaneos ── */}
+        <div className="dash-section-header" style={{ marginTop: '28px', marginBottom: '16px' }}>
+          <div className="dash-section-title">
+            <div className="dash-section-title-bar green" />
+            <h3>Auditoría y Rendimiento de Verificaciones</h3>
+          </div>
+        </div>
+        <div className="dash-stats-grid" style={{ marginBottom: '24px' }}>
+          <StatCard icon="📊" label="Total Escaneos" value={stats?.totalEscaneos || 0} variant="blue" sub="Total de consultas de IMEI" />
+          <StatCard icon="✅" label="Escaneos Válidos" value={stats?.escaneosExitosos || 0} variant="green" sub="IMEIs registrados y activos" />
+          <StatCard icon="❌" label="Escaneos Fallidos" value={stats?.escaneosFallidos || 0} variant="orange" sub="IMEIs no encontrados/inactivos" />
+          <StatCard 
+            icon="📈" 
+            label="Tasa de Éxito" 
+            value={stats?.totalEscaneos && stats.totalEscaneos > 0 ? `${((stats.escaneosExitosos || 0) / stats.totalEscaneos * 100).toFixed(1)}%` : '0.0%'} 
+            variant="purple" 
+            sub="Porcentaje de consultas válidas" 
+          />
+        </div>
+
+        {/* ── Bottom row: Verification Results + Activity ── */}
         <div className="dash-bottom-grid">
 
-          {/* Roles distribution */}
+          {/* Verification Success Rate Breakdown */}
           <div className="dash-section-card">
             <div className="dash-section-header">
               <div className="dash-section-title">
                 <div className="dash-section-title-bar blue" />
-                <h3>Distribución por Rol</h3>
+                <h3>Resultados de Verificación</h3>
               </div>
             </div>
-            {stats?.usuariosPorRol && stats.usuariosPorRol.length > 0 ? (
-              <div className="dash-roles-grid">
-                {stats.usuariosPorRol.map((r, i) => (
-                  <RoleBar key={r.rol} rol={r.rol} cantidad={r.cantidad} total={stats.totalUsuarios} color={roleColors[i % roleColors.length]} />
-                ))}
-              </div>
-            ) : (
-              <div className="dash-empty-state">
-                <div className="dash-empty-icon">📊</div>
-                <span>Sin datos de roles disponibles</span>
-              </div>
-            )}
+            <div className="dash-roles-grid" style={{ flexDirection: 'column', gap: '16px', display: 'flex' }}>
+              <RoleBar 
+                rol="Escaneos Exitosos (Válidos)" 
+                cantidad={stats?.escaneosExitosos || 0} 
+                total={stats?.totalEscaneos || 0} 
+                color={tk.green} 
+              />
+              <RoleBar 
+                rol="Escaneos Fallidos (No válidos)" 
+                cantidad={stats?.escaneosFallidos || 0} 
+                total={stats?.totalEscaneos || 0} 
+                color={tk.red} 
+              />
+            </div>
           </div>
 
           {/* Recent activity */}
@@ -300,14 +354,28 @@ const Dashboard: React.FC = () => {
             <div className="dash-section-header">
               <div className="dash-section-title">
                 <div className="dash-section-title-bar green" />
-                <h3>Actividad Reciente</h3>
+                <h3>Actividad Reciente de Escaneos</h3>
               </div>
-              <span className="dash-section-badge">{recentActivity.length} eventos</span>
+              <span className="dash-section-badge">{recentActivity.length} consultas</span>
             </div>
             <div className="dash-activity-list">
-              {recentActivity.map((a, i) => (
-                <ActivityRow key={a.id} action={a.action} user={a.user} timestamp={a.timestamp} details={a.details} index={i} />
-              ))}
+              {recentActivity.length > 0 ? (
+                recentActivity.map((a) => (
+                  <ActivityRow 
+                    key={a.id} 
+                    imei={a.imei} 
+                    timestamp={a.timestamp} 
+                    resultado={a.resultado} 
+                    username={a.username} 
+                    detalles={a.detalles} 
+                  />
+                ))
+              ) : (
+                <div className="dash-empty-state">
+                  <div className="dash-empty-icon">🔍</div>
+                  <span>No hay consultas de IMEI registradas aún</span>
+                </div>
+              )}
             </div>
           </div>
 
