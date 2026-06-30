@@ -65,20 +65,24 @@ export const authService = {
         };
       }
       
-      localStorage.setItem('token', token);
+      // No guardamos el token en localStorage por seguridad XSS. Se guarda en Cookie HttpOnly.
       localStorage.setItem('user', JSON.stringify(userToSave));
       
       return response.data;
       
     } catch (error: any) {
-      localStorage.removeItem('token');
       localStorage.removeItem('user');
       throw error;
     }
   },
 
   // Logout
-  logout: (): void => {
+  logout: async (): Promise<void> => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch (e) {
+      console.error('Error durante el logout en el servidor:', e);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login';
@@ -125,9 +129,8 @@ export const authService = {
 
   // Verificar si está autenticado
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem('token');
     const user = authService.getCurrentUser();
-    return !!(token && user);
+    return !!user;
   },
 
   // Obtener token
