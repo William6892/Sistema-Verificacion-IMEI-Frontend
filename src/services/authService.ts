@@ -66,6 +66,8 @@ export const authService = {
       }
       
       // No guardamos el token en localStorage por seguridad XSS. Se guarda en Cookie HttpOnly.
+      // NOTA: Restaurado por requerimiento de compatibilidad
+      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userToSave));
       
       return response.data;

@@ -252,6 +252,7 @@ const VerificacionIMEI: React.FC<VerificacionIMEIProps> = ({ userRole, userEmpre
       if (response.status === 401) {
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
+        localStorage.removeItem('user');
         return { valido: false, mensaje: 'Sesión expirada. Por favor, inicie sesión nuevamente.' };
       }
       if (response.status === 400) {

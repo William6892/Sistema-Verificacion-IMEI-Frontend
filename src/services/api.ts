@@ -14,9 +14,13 @@ const api = axios.create({
   withCredentials: true // Habilitar el envío de cookies HttpOnly en peticiones cross-domain
 });
 
-// Interceptor para token (ya no se inyecta por cabecera, se envía por Cookie automática)
+// Interceptor para token (restaurado para compatibilidad con cabeceras de token)
 api.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
