@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import React, {
   lazy,
   memo,
@@ -84,7 +85,6 @@ const TABLE_COLUMNS: ColumnDef[] = [
   { key: 'acciones',      label: 'Acciones', sortable: false },
 ];
 
-const CSV_HEADERS = ['ID', 'IMEI', 'Persona', 'Empresa', 'Fecha Registro', 'Estado'];
 
 const createDefaultFilters = (empresaId = 0): FiltersState => ({
   empresaId,
@@ -126,20 +126,34 @@ const extractErrorMessage = (err: unknown, fallback = 'Ha ocurrido un error ines
   return fallback;
 };
 
-const exportToCSV = (dispositivos: Dispositivo[], filename = 'dispositivos.csv'): void => {
-  const rows = [
-    CSV_HEADERS,
-    ...dispositivos.map(d => [
-      String(d.id), d.imei ?? '', d.personaNombre ?? 'Sin asignar',
-      d.empresaNombre ?? '—', formatDate(d.fechaRegistro), d.activo ? 'Activo' : 'Inactivo',
-    ]),
+const exportToExcel = (dispositivos: Dispositivo[], filename = 'dispositivos_imei.xlsx'): void => {
+  // Construir filas de datos
+  const rows = dispositivos.map(d => ({
+    'ID':              d.id,
+    'IMEI':            d.imei ?? '',
+    'Persona':         d.personaNombre ?? 'Sin asignar',
+    'ID Persona':      d.personaId ?? '',
+    'Empresa':         d.empresaNombre ?? '—',
+    'Fecha Registro':  formatDate(d.fechaRegistro),
+    'Estado':          d.activo ? 'Activo' : 'Inactivo',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Ancho de columnas
+  ws['!cols'] = [
+    { wch: 8 },   // ID
+    { wch: 22 },  // IMEI
+    { wch: 30 },  // Persona
+    { wch: 12 },  // ID Persona
+    { wch: 28 },  // Empresa
+    { wch: 18 },  // Fecha Registro
+    { wch: 12 },  // Estado
   ];
-  const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
-  a.click();
-  URL.revokeObjectURL(url);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dispositivos');
+  XLSX.writeFile(wb, filename);
 };
 
 const sortDispositivos = (
@@ -755,7 +769,7 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
     onDispositivoSelect ? onDispositivoSelect(dev.id) : setSelectedDev(dev);
   }, [onDispositivoSelect, setSelectedDev]);
 
-  const handleExportCSV = useCallback(() => exportToCSV(dispositivos, 'dispositivos.csv'), [dispositivos]);
+  const handleExportExcel = useCallback(() => exportToExcel(dispositivos, 'dispositivos_imei.xlsx'), [dispositivos]);
 
   return (
     <div className="dispositivos-wrapper" style={{ padding: modo === 'embedded' ? 0 : undefined }}>
@@ -785,12 +799,13 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
               ))}
             </div>
 
-            {/* Exportar CSV */}
+            {/* Exportar Excel */}
             <button 
-              onClick={handleExportCSV} 
+              onClick={handleExportExcel}
+              title="Descargar todos los dispositivos en Excel (.xlsx)"
               className="dispositivos-btn dispositivos-btn-secondary"
             >
-              <Download size={16} /> Exportar
+              <Download size={16} /> Excel
             </button>
 
             {/* Filtros */}
