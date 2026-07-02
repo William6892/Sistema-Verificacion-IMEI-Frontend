@@ -762,14 +762,44 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
     isAdmin, clearError, retry,
   } = useDispositivos({ userRole, userEmpresaId, personaId });
 
-  const [viewMode,     setViewMode]     = useState<ViewMode>(ViewMode.Table);
-  const [showFilters,  setShowFilters]  = useState(false);
+  const [viewMode,       setViewMode]       = useState<ViewMode>(ViewMode.Table);
+  const [showFilters,    setShowFilters]    = useState(false);
+  const [exportLoading,  setExportLoading]  = useState(false);
 
   const handleRowClick = useCallback((dev: Dispositivo) => {
     onDispositivoSelect ? onDispositivoSelect(dev.id) : setSelectedDev(dev);
   }, [onDispositivoSelect, setSelectedDev]);
 
-  const handleExportExcel = useCallback(() => exportToExcel(dispositivos, 'dispositivos_imei.xlsx'), [dispositivos]);
+  const handleExportExcel = useCallback(async () => {
+    try {
+      setExportLoading(true);
+      // Trae TODOS los dispositivos ignorando la paginación actual
+      const params: Record<string, unknown> = {
+        ...filters,
+        page:   1,
+        limit:  9999,
+        search: debouncedSearch || undefined,
+      };
+      if (!isAdmin && userEmpresaId) params.empresaId = userEmpresaId;
+
+      let todos: Dispositivo[] = [];
+      if (personaId) {
+        const data = await dispositivosService.getDispositivosPorPersona(personaId);
+        todos = Array.isArray(data) ? (data as Dispositivo[]) : [];
+      } else {
+        const result = await dispositivosService.getDispositivos(params);
+        todos = Array.isArray(result.dispositivos)
+          ? result.dispositivos
+          : Array.isArray(result) ? (result as Dispositivo[]) : [];
+      }
+
+      exportToExcel(todos, 'dispositivos_imei.xlsx');
+    } catch {
+      // silencioso — el usuario verá que no se descargó
+    } finally {
+      setExportLoading(false);
+    }
+  }, [filters, debouncedSearch, isAdmin, userEmpresaId, personaId]);
 
   return (
     <div className="dispositivos-wrapper" style={{ padding: modo === 'embedded' ? 0 : undefined }}>
@@ -802,10 +832,14 @@ const DispositivosList: React.FC<DispositivosListProps> = ({
             {/* Exportar Excel */}
             <button 
               onClick={handleExportExcel}
-              title="Descargar todos los dispositivos en Excel (.xlsx)"
+              disabled={exportLoading}
+              title="Descargar TODOS los dispositivos en Excel (.xlsx)"
               className="dispositivos-btn dispositivos-btn-secondary"
+              style={{ opacity: exportLoading ? 0.7 : 1, cursor: exportLoading ? 'wait' : 'pointer' }}
             >
-              <Download size={16} /> Excel
+              {exportLoading
+                ? <><span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', verticalAlign: 'middle' }} /> Descargando...</>
+                : <><Download size={16} /> Excel</>}
             </button>
 
             {/* Filtros */}
